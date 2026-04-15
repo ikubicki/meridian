@@ -288,9 +288,9 @@ class finder
 		foreach ($files as $file => $ext_name)
 		{
 			$class = substr($file, 0, -strlen('.' . $this->php_ext));
-			if ($ext_name === '/' && preg_match('#^includes/#', $file))
+			if ($ext_name === '/' && preg_match('#^src/phpbb/common/#', $file))
 			{
-				$class = preg_replace('#^includes/#', '', $class);
+				$class = preg_replace('#^src/phpbb/common/#', '', $class);
 				$classes[] = 'phpbb_' . str_replace('/', '_', $class);
 			}
 			else
