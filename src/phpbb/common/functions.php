@@ -3749,7 +3749,7 @@ function phpbb_get_avatar($row, $alt, $ignore_config = false, $lazy = false)
 			$phpbb_path_helper = $phpbb_container->get('path_helper');
 			$web_path = $phpbb_path_helper->get_web_root_path();
 
-			$theme = "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme';
+			$theme = "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme';
 
 			$src = 'src="' . $theme . '/images/no_avatar.gif" data-src="' . $avatar_data['src'] . '"';
 		}
@@ -4115,9 +4115,9 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 
 		'T_ASSETS_VERSION'		=> $config['assets_version'],
 		'T_ASSETS_PATH'			=> "{$web_path}assets",
-		'T_THEME_PATH'			=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme',
-		'T_TEMPLATE_PATH'		=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/template',
-		'T_SUPER_TEMPLATE_PATH'	=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/template',
+		'T_THEME_PATH'			=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme',
+		'T_TEMPLATE_PATH'		=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/template',
+		'T_SUPER_TEMPLATE_PATH'	=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/template',
 		'T_IMAGES_PATH'			=> "{$web_path}images/",
 		'T_SMILIES_PATH'		=> "{$web_path}{$config['smilies_path']}/",
 		'T_AVATAR_PATH'			=> "{$web_path}{$config['avatar_path']}/",
@@ -4125,8 +4125,8 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'T_ICONS_PATH'			=> "{$web_path}{$config['icons_path']}/",
 		'T_RANKS_PATH'			=> "{$web_path}{$config['ranks_path']}/",
 		'T_UPLOAD_PATH'			=> "{$web_path}{$config['upload_path']}/",
-		'T_STYLESHEET_LINK'		=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme/stylesheet.css?assets_version=' . $config['assets_version'],
-		'T_STYLESHEET_LANG_LINK'=> "{$web_path}styles/" . rawurlencode($user->style['style_path']) . '/theme/' . $user->lang_name . '/stylesheet.css?assets_version=' . $config['assets_version'],
+		'T_STYLESHEET_LINK'		=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme/stylesheet.css?assets_version=' . $config['assets_version'],
+		'T_STYLESHEET_LANG_LINK'=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme/' . $user->lang_name . '/stylesheet.css?assets_version=' . $config['assets_version'],
 
 		'T_FONT_AWESOME_LINK'	=> !empty($config['allow_cdn']) && !empty($config['load_font_awesome_url']) ? $config['load_font_awesome_url'] : "{$web_path}assets/css/font-awesome.min.css?assets_version=" . $config['assets_version'],
 

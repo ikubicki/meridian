@@ -20,7 +20,7 @@ services:
             - '%tables.smilies%'
             - '%tables.styles%'
             - '%tables.words%'
-            - '%core.root_path%styles/'
+            - '%core.root_path%src/phpbb/styles/'
 
     text_formatter.parser:
         alias: text_formatter.s9e.parser

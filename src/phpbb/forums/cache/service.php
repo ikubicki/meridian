@@ -375,7 +375,7 @@ class service
 			$parsed_array = array();
 		}
 
-		$filename = $this->phpbb_root_path . 'styles/' . $style['style_path'] . '/style.cfg';
+		$filename = $this->phpbb_root_path . 'src/phpbb/styles/' . $style['style_path'] . '/style.cfg';
 
 		if (!file_exists($filename))
 		{

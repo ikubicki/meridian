@@ -103,12 +103,12 @@ class md_exporter
 		foreach ($styles as $style)
 		{
 			$file_list = $this->get_recursive_file_list(
-				$this->path . 'styles/' . $style . '/template/'
+				$this->path . 'src/phpbb/styles/' . $style . '/template/'
 			);
 
 			foreach ($file_list as $file)
 			{
-				$file_name = 'styles/' . $style . '/template/' . $file;
+				$file_name = 'src/phpbb/styles/' . $style . '/template/' . $file;
 				$this->validate_events_from_file($file_name, $this->crawl_file_for_events($file_name));
 			}
 		}
@@ -525,9 +525,9 @@ class md_exporter
 					throw new \LogicException("Invalid file '{$file}' not found for event '{$this->current_event}'", 2);
 				}
 
-				if (($this->filter !== 'adm') && strpos($file, 'styles/prosilver/template/') === 0)
+				if (($this->filter !== 'adm') && strpos($file, 'src/phpbb/styles/prosilver/template/') === 0)
 				{
-					$files_list['prosilver'][] = substr($file, strlen('styles/prosilver/template/'));
+					$files_list['prosilver'][] = substr($file, strlen('src/phpbb/styles/prosilver/template/'));
 				}
 				else if (($this->filter === 'adm') && strpos($file, 'adm/style/') === 0)
 				{
