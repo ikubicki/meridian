@@ -130,13 +130,17 @@ class helper
 		// We need to update the base url to move to the directory of the app.php file if the current script is not app.php
 		if ($page_name !== 'app.php' && !$this->config['force_server_vars'])
 		{
+			// Only use phpbb_root_path as a URL prefix when it is a relative path.
+			// Absolute filesystem paths must not be embedded into generated URLs.
+			$url_root_path = (isset($this->phpbb_root_path[0]) && $this->phpbb_root_path[0] === '/') ? '' : $this->phpbb_root_path;
+
 			if (empty($this->config['enable_mod_rewrite']))
 			{
-				$base_url = str_replace('/app.' . $this->php_ext, '/' . $this->phpbb_root_path . 'app.' . $this->php_ext, $base_url);
+				$base_url = str_replace('/app.' . $this->php_ext, '/' . $url_root_path . 'app.' . $this->php_ext, $base_url);
 			}
 			else
 			{
-				$base_url .= preg_replace(get_preg_expression('path_remove_dot_trailing_slash'), '$2', $this->phpbb_root_path);
+				$base_url .= preg_replace(get_preg_expression('path_remove_dot_trailing_slash'), '$2', $url_root_path);
 			}
 		}
 

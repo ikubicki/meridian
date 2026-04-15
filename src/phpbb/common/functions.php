@@ -1830,20 +1830,21 @@ function redirect($url, $return = false, $disable_cd_check = false)
  */
 function phpbb_get_install_redirect(string $phpbb_root_path): string
 {
-	$script_name = (!empty($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : getenv('REQUEST_URI');
+	// Use SCRIPT_NAME (the actual executed script, e.g. /app.php) rather than
+	// REQUEST_URI (which may be /favicon.ico or any other non-PHP path routed
+	// to app.php via try_files). This guarantees dirname() always returns the
+	// web root directory, not an arbitrary request path.
+	$script_name = (!empty($_SERVER['SCRIPT_NAME'])) ? $_SERVER['SCRIPT_NAME'] : getenv('SCRIPT_NAME');
 	if (!$script_name)
 	{
-		$script_name = (!empty($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : getenv('PHP_SELF');
+		$script_name = (!empty($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : '/index.php';
 	}
 
-	// Add trailing dot to prevent dirname() from returning parent directory if $script_name is a directory
-	$script_name = substr($script_name, -1) === '/' ? $script_name . '.' : $script_name;
+	$dir = rtrim(dirname($script_name), '/');
+	$script_path = $dir . '/install.php';
 
-	// $phpbb_root_path accounts for redirects from e.g. /adm
-	$script_path = trim(dirname($script_name)) . '/' . $phpbb_root_path . 'src/phpbb/install/app.php';
 	// Replace any number of consecutive backslashes and/or slashes with a single slash
-	// (could happen on some proxy setups and/or Windows servers)
-	return preg_replace('#[\\\\/]{2,}#', '/', $script_path);
+	return preg_replace('#[\\\\/]{2,}#', '/', $script_path) ?: '/install.php';
 }
 
 /**

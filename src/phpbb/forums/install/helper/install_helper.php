@@ -47,7 +47,18 @@ class install_helper
 	 */
 	public function is_phpbb_installed()
 	{
-			$config_path = $this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext;
+		// When config.php uses the PHPBB_INSTALLED constant (env-based config),
+		// trust that over the file-existence heuristic.
+		if (defined('PHPBB_INSTALLED'))
+		{
+			return true;
+		}
+		if (!defined('PHPBB_INSTALLED') && getenv('PHPBB_INSTALLED') !== false)
+		{
+			return false;
+		}
+
+		$config_path = $this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext;
 		$install_lock_path = $this->phpbb_root_path . 'cache/install_lock';
 
 		if (file_exists($config_path) && !file_exists($install_lock_path) && filesize($config_path))

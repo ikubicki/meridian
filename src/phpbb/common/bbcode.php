@@ -175,7 +175,7 @@ class bbcode
 				$phpbb_extension_manager
 			);
 
-			$template->set_style();
+			$template->set_style(array('src/phpbb/styles'));
 			$template->set_filenames(array('bbcode.html' => 'bbcode.html'));
 			$this->template_filename = $template->get_source_file_for_handle('bbcode.html');
 		}

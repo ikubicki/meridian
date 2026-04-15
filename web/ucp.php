@@ -15,10 +15,11 @@
 * @ignore
 */
 define('IN_PHPBB', true);
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-require($phpbb_root_path . 'src/phpbb/common/common.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_user.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_module.php');
+define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../');
+$phpbb_root_path = './';
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_user.php');
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_module.php');
 
 // Basic parameter data
 $id 	= $request->variable('i', '');
@@ -176,7 +177,7 @@ switch ($mode)
 			redirect(append_sid("{$phpbb_root_path}index.php"));
 		}
 
-		include($phpbb_root_path . 'src/phpbb/common/acp/auth.php');
+		include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/acp/auth.php');
 
 		$auth_admin = new auth_admin();
 		if (!$auth_admin->ghost_permissions($user_id, $user->data['user_id']))

@@ -191,7 +191,7 @@ li {
 
 #page-header {
 	text-align: right;
-	background: url("../images/phpbb_logo.svg") top left no-repeat;
+	background: url("/adm/images/phpbb_logo.svg") top left no-repeat;
 	height: 54px;
 	font-size: 0.85em;
 	margin-bottom: 10px;
@@ -199,7 +199,7 @@ li {
 
 .rtl #page-header {
 	text-align: left;
-	background: url("../images/phpbb_logo.svg") top right no-repeat;
+	background: url("/adm/images/phpbb_logo.svg") top right no-repeat;
 }
 
 #page-header h1 {
@@ -301,7 +301,7 @@ li {
 	}
 
 	#content {
-		background: #F3F3F3 url("../images/innerbox_bg.gif") repeat-x top;
+		background: #F3F3F3 url("/adm/images/innerbox_bg.gif") repeat-x top;
 		padding: 5px;
 	}
 
@@ -484,7 +484,7 @@ li {
 	margin: 0 0 2px;
 	padding: 3px 1px;
 	min-width: 550px;
-	background: #F3F3F3 url("../images/innerbox_bg.gif") repeat-x top;
+	background: #F3F3F3 url("/adm/images/innerbox_bg.gif") repeat-x top;
 	border: 1px #999999 solid;
 	border-radius: 5px;
 	box-shadow: #FFF 0 0 0 1px inset;
@@ -495,7 +495,7 @@ li {
 }
 
 .panel {
-	background: #F3F3F3 url("../images/innerbox_bg.gif") repeat-x top;
+	background: #F3F3F3 url("/adm/images/innerbox_bg.gif") repeat-x top;
 	padding: 5px 0;
 	border-radius: 5px;
 	overflow: hidden;
@@ -581,22 +581,22 @@ li {
 	text-decoration: none;
 	font-weight: bold;
 	color: #1180B7;
-	background: transparent url("../images/arrow_right.gif") 0% 50% no-repeat;
+	background: transparent url("/adm/images/arrow_right.gif") 0% 50% no-repeat;
 }
 
 .rtl #menu li#activemenu a span {
-	background: transparent url("../images/arrow_left.gif") 100% 50% no-repeat;
+	background: transparent url("/adm/images/arrow_left.gif") 100% 50% no-repeat;
 }
 
 #menu li#activemenu a:hover span, #menu li#activemenu span {
 	text-decoration: none;
 	font-weight: bold;
 	color: #BC2A4D;
-	background: #FFFFFF url("../images/arrow_right.gif") 1% 50% no-repeat;
+	background: #FFFFFF url("/adm/images/arrow_right.gif") 1% 50% no-repeat;
 }
 
 .rtl #menu li#activemenu a:hover span, .rtl #menu li#activemenu span {
-	background: #FFFFFF url("../images/arrow_left.gif") 99% 50% no-repeat;
+	background: #FFFFFF url("/adm/images/arrow_left.gif") 99% 50% no-repeat;
 }
 
 #menu li a:active, #menu li a:active span, #menu li#activemenu a:active span {
@@ -606,13 +606,13 @@ li {
 #menu li span.completed {
 	text-decoration: none;
 	padding: 3px 3px 3px 12px;
-	background: url("../images/arrow_down.gif") 1% 50% no-repeat;
+	background: url("/adm/images/arrow_down.gif") 1% 50% no-repeat;
 }
 
 .rtl #menu li span.completed {
 	text-decoration: none;
 	padding: 3px 12px 3px 3px;
-	background: url("../images/arrow_down.gif") 99% 50% no-repeat;
+	background: url("/adm/images/arrow_down.gif") 99% 50% no-repeat;
 }
 
 #menu .header {
@@ -703,7 +703,7 @@ table {
 th {
 	padding: 3px 4px;
 	color: #FFFFFF;
-	background: #70AED3 url("../images/gradient2b.gif") bottom left repeat-x;
+	background: #70AED3 url("/adm/images/gradient2b.gif") bottom left repeat-x;
 	border-top: 1px solid #6DACD2;
 	border-bottom: 1px solid #327AA5;
 	text-align: left;
@@ -950,7 +950,7 @@ table.fixed-width-table {
 	table.responsive caption {
 		padding: 3px 4px;
 		color: #FFFFFF;
-		background: #70AED3 url("../images/gradient2b.gif") bottom left repeat-x;
+		background: #70AED3 url("/adm/images/gradient2b.gif") bottom left repeat-x;
 		border-top: 1px solid #6DACD2;
 		border-bottom: 1px solid #327AA5;
 		text-align: left;
@@ -1557,7 +1557,7 @@ a.button2, input.button2 {
 	font-family: "Lucida Grande", Verdana, Helvetica, Arial, sans-serif;
 	color: #000;
 	font-size: 0.85em;
-	background: #EFEFEF url("../images/bg_button.gif") repeat-x top;
+	background: #EFEFEF url("/adm/images/bg_button.gif") repeat-x top;
 	cursor: pointer;
 }
 
@@ -1583,7 +1583,7 @@ a.button2, a.button2:link, a.button2:visited, a.button2:active {
 a.button1:hover, input.button1:hover,
 a.button2:hover, input.button2:hover {
 	border: 1px solid #BC2A4D;
-	background: #EFEFEF url("../images/bg_button.gif") repeat bottom;
+	background: #EFEFEF url("/adm/images/bg_button.gif") repeat bottom;
 	color: #BC2A4D;
 }
 
@@ -1621,7 +1621,7 @@ input.button1:focus, input.button2:focus {
 	height: 16px;
 	overflow: hidden;
 	text-decoration: none !important;
-	background: transparent url("../images/alert_close.png") 0 0 no-repeat;
+	background: transparent url("/adm/images/alert_close.png") 0 0 no-repeat;
 	margin-top: -7px;
 	margin-right: -31px;
 }
@@ -1682,7 +1682,7 @@ input.button1:focus, input.button2:focus {
 }
 
 #loading_indicator {
-	background: #000000 url("../images/loading.gif") center center no-repeat;
+	background: #000000 url("/adm/images/loading.gif") center center no-repeat;
 	border-radius: 5px;
 	display: none;
 	opacity: 0.8;
@@ -2082,7 +2082,7 @@ fieldset.permissions .padding {
 
 .permissions-category a {
 	float: left;
-	background: url("../images/bg_tabs_alt1.gif") no-repeat 0% -35px;
+	background: url("/adm/images/bg_tabs_alt1.gif") no-repeat 0% -35px;
 	margin: 0 1px 0 0;
 	padding: 0 0 0 6px;
 	text-decoration: none;
@@ -2096,7 +2096,7 @@ fieldset.permissions .padding {
 .permissions-category a span.tabbg {
 	float: left;
 	display: block;
-	background: url("../images/bg_tabs_alt2.gif") no-repeat 100% -35px;
+	background: url("/adm/images/bg_tabs_alt2.gif") no-repeat 100% -35px;
 	padding: 7px 12px 6px 6px;
 	color: #536482;
 	white-space: nowrap;
@@ -2517,11 +2517,11 @@ fieldset.permissions .padding {
 	padding: 4px;
 	width: 250px;
 	display: none;
-	background: url('../images/arrow_down.gif') no-repeat 245px .7em;
+	background: url('/adm/images/arrow_down.gif') no-repeat 245px .7em;
 }
 
 .rtl .roles-options > span {
-	background: url('../images/arrow_down.gif') no-repeat 7px .7em;
+	background: url('/adm/images/arrow_down.gif') no-repeat 7px .7em;
 }
 
 .roles-options li {

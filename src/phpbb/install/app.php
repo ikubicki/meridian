@@ -17,7 +17,7 @@
 define('IN_PHPBB', true);
 define('IN_INSTALL', true);
 
-$phpbb_root_path = '../../../';
+$phpbb_root_path = defined('PHPBB_ROOT_PATH') ? PHPBB_ROOT_PATH : '../../../';
 
 if (version_compare(PHP_VERSION, '7.2.0', '<'))
 {

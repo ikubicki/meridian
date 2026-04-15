@@ -15,8 +15,9 @@
 * @ignore
 */
 define('IN_PHPBB', true);
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-include($phpbb_root_path . 'src/phpbb/common/common.php');
+define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../');
+$phpbb_root_path = './';
+include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');
 
 // Start session management
 $user->session_begin();
@@ -678,11 +679,11 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 
 	if ($show_results == 'posts')
 	{
-		include($phpbb_root_path . 'src/phpbb/common/functions_posting.php');
+		include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_posting.php');
 	}
 	else
 	{
-		include($phpbb_root_path . 'src/phpbb/common/functions_display.php');
+		include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_display.php');
 	}
 
 	$user->add_lang('viewtopic');

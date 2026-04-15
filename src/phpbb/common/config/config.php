@@ -1,24 +1,16 @@
 <?php
-// phpBB configuration — loaded from environment variables
-// Set the following env vars (e.g. in docker-compose.yml or .env)
-
-$dbms     = getenv('PHPBB_DB_DRIVER') ?: 'phpbb\db\driver\mysqli';
-$dbhost   = getenv('PHPBB_DB_HOST')   ?: 'db';
-$dbport   = getenv('PHPBB_DB_PORT')   ?: '';
-$dbname   = getenv('PHPBB_DB_NAME')   ?: 'phpbb';
-$dbuser   = getenv('PHPBB_DB_USER')   ?: 'phpbb';
-$dbpasswd = getenv('PHPBB_DB_PASSWD') ?: '';
-$table_prefix = getenv('PHPBB_DB_PREFIX') ?: 'phpbb_';
-
+// phpBB 3.3.x auto-generated configuration file
+// Do not change anything in this file!
+$dbms = 'phpbb\\db\\driver\\mysqli';
+$dbhost = 'db';
+$dbport = '';
+$dbname = 'phpbb';
+$dbuser = 'phpbb';
+$dbpasswd = 'phpbb';
+$table_prefix = 'phpbb_';
 $phpbb_adm_relative_path = 'web/adm/';
-$acm_type = getenv('PHPBB_CACHE_DRIVER') ?: 'phpbb\cache\driver\file';
+$acm_type = 'phpbb\\cache\\driver\\file';
 
-$phpbb_environment = getenv('PHPBB_ENVIRONMENT') ?: 'production';
-
-if (getenv('PHPBB_INSTALLED') === 'true')
-{
-	@define('PHPBB_INSTALLED', true);
-}
-
-@define('PHPBB_ENVIRONMENT', $phpbb_environment);
+@define('PHPBB_INSTALLED', true);
+@define('PHPBB_ENVIRONMENT', 'production');
 // @define('DEBUG_CONTAINER', true);

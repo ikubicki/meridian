@@ -340,7 +340,7 @@ class user extends \phpbb\session
 			}
 		}
 
-		$template->set_style();
+		$template->set_style(array('src/phpbb/styles'));
 
 		$this->img_lang = $this->lang_name;
 

@@ -376,11 +376,16 @@
 		var position = url.indexOf(lookUp);
 
 		if (position === -1) {
-			lookUp = 'install';
+			lookUp = 'install.php';
 			position = url.indexOf(lookUp);
 
 			if (position === -1) {
-				return false;
+				lookUp = 'install';
+				position = url.indexOf(lookUp);
+
+				if (position === -1) {
+					return false;
+				}
 			}
 		}
 

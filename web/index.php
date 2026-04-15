@@ -18,9 +18,10 @@
 * @ignore
 */
 define('IN_PHPBB', true);
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-include($phpbb_root_path . 'src/phpbb/common/common.php');
-include($phpbb_root_path . 'src/phpbb/common/functions_display.php');
+define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../');
+$phpbb_root_path = './';
+include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');
+include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_display.php');
 
 // Start session management
 $user->session_begin();
