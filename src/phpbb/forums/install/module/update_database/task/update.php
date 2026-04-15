@@ -135,7 +135,7 @@ class update extends task_base
 
 		$migrations = $this->extension_manager
 			->get_finder()
-			->core_path('phpbb/db/migration/data/')
+			->core_path('src/phpbb/forums/db/migration/data/')
 			->extension_directory('/migrations')
 			->get_classes();
 

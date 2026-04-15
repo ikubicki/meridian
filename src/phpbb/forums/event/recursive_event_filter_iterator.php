@@ -61,8 +61,8 @@ class recursive_event_filter_iterator extends \RecursiveFilterIterator
 			&& strpos($relative_path, $this->root_path . 'files/') !== 0
 			&& strpos($relative_path, $this->root_path . 'src/phpbb/common/utf/') !== 0
 			&& strpos($relative_path, $this->root_path . 'src/phpbb/language/') !== 0
-			&& strpos($relative_path, $this->root_path . 'phpbb/db/migration/data/') !== 0
-			&& strpos($relative_path, $this->root_path . 'phpbb/event/') !== 0
+			&& strpos($relative_path, $this->root_path . 'src/phpbb/forums/db/migration/data/') !== 0
+			&& strpos($relative_path, $this->root_path . 'src/phpbb/forums/event/') !== 0
 			&& strpos($relative_path, $this->root_path . 'store/') !== 0
 			&& strpos($relative_path, $this->root_path . 'tests/') !== 0
 			&& strpos($relative_path, $this->root_path . 'vendor/') !== 0

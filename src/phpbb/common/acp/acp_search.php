@@ -588,7 +588,7 @@ class acp_search
 		return $finder
 			->extension_suffix('_backend')
 			->extension_directory('/search')
-			->core_path('phpbb/search/')
+			->core_path('src/phpbb/forums/search/')
 			->get_classes();
 	}
 

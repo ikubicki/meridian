@@ -110,7 +110,7 @@ function phpbb_clean_path($path)
 		// The container is not yet loaded, use a new instance
 		if (!class_exists('\phpbb\path_helper'))
 		{
-			require($phpbb_root_path . 'phpbb/path_helper.php');
+			require($phpbb_root_path . 'src/phpbb/forums/path_helper.php');
 		}
 
 		$request = new phpbb\request\request();

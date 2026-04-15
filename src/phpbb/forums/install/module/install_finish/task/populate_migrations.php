@@ -69,7 +69,7 @@ class populate_migrations extends \phpbb\install\task_base
 		$finder = $this->extension_manager->get_finder();
 
 		$migrations = $finder
-			->core_path('phpbb/db/migration/data/')
+			->core_path('src/phpbb/forums/db/migration/data/')
 			->set_extensions(array())
 			->get_classes();
 		$this->migrator->populate_migrations($migrations);

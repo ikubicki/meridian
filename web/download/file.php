@@ -34,8 +34,8 @@ if (isset($_GET['avatar']))
 {
 	require($phpbb_root_path . 'src/phpbb/common/startup.php');
 
-	require($phpbb_root_path . 'phpbb/class_loader.php');
-	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
+	require($phpbb_root_path . 'src/phpbb/forums/class_loader.php');
+	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}src/phpbb/forums/");
 	$phpbb_class_loader->register();
 
 	$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);

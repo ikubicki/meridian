@@ -26,7 +26,7 @@ class search_type extends \phpbb\db\migration\migration
 	{
 		return array(
 			array('if', array(
-				(is_file($this->phpbb_root_path . 'phpbb/search/' . $this->config['search_type'] . $this->php_ext)),
+				(is_file($this->phpbb_root_path . 'src/phpbb/forums/search/' . $this->config['search_type'] . $this->php_ext)),
 				array('config.update', array('search_type', '\\phpbb\\search\\' . $this->config['search_type'])),
 			)),
 		);

@@ -21,9 +21,9 @@ if (!defined('IN_PHPBB'))
 }
 
 require($phpbb_root_path . 'src/phpbb/common/startup.php');
-require($phpbb_root_path . 'phpbb/class_loader.php');
+require($phpbb_root_path . 'src/phpbb/forums/class_loader.php');
 
-$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
+$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}src/phpbb/forums/");
 $phpbb_class_loader->register();
 
 $phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
@@ -54,7 +54,7 @@ if (!defined('PHPBB_INSTALLED'))
 	$script_path = phpbb_get_install_redirect($phpbb_root_path);
 
 	// Eliminate . and .. from the path
-	require($phpbb_root_path . 'phpbb/filesystem/filesystem.php');
+	require($phpbb_root_path . 'src/phpbb/forums/filesystem/filesystem.php');
 	$phpbb_filesystem = new phpbb\filesystem\filesystem();
 	$script_path = $phpbb_filesystem->clean_path($script_path);
 

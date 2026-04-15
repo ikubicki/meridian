@@ -118,7 +118,7 @@ class create_schema_file extends \phpbb\install\task_base
 			}
 
 			$finder = new \phpbb\finder($this->filesystem, $this->phpbb_root_path, null, $this->php_ext);
-			$migrator_classes = $finder->core_path('phpbb/db/migration/data/')->get_classes();
+			$migrator_classes = $finder->core_path('src/phpbb/forums/db/migration/data/')->get_classes();
 			$factory = new \phpbb\db\tools\factory();
 			$db_tools = $factory->get($this->db, true);
 			$schema_generator = new \phpbb\db\migration\schema_generator(

@@ -38,7 +38,7 @@ class migration_tips extends \phpbb\console\command\command
 	{
 		$migrations = $this->extension_manager->get_finder()
 			->set_extensions(array())
-			->core_path('phpbb/db/migration/data/')
+			->core_path('src/phpbb/forums/db/migration/data/')
 			->get_classes();
 		$tips = $migrations;
 
