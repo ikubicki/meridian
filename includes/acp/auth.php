@@ -630,7 +630,7 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function display_role_mask(&$hold_ary)
 	{
-		global $db, $template, $user, $phpbb_root_path, $phpEx;
+		global $db, $template, $user, $phpbb_root_path;
 		global $phpbb_container;
 
 		if (!count($hold_ary))
@@ -697,7 +697,7 @@ class auth_admin extends \phpbb\auth\auth
 					$template->assign_block_vars('role_mask.groups', array(
 						'GROUP_ID'		=> $row['group_id'],
 						'GROUP_NAME'	=> $group_helper->get_name($row['group_name']),
-						'U_PROFILE'		=> append_sid("{$phpbb_root_path}memberlist.$phpEx", "mode=group&amp;g={$row['group_id']}"))
+						'U_PROFILE'		=> append_sid("{$phpbb_root_path}memberlist.php", "mode=group&amp;g={$row['group_id']}"))
 					);
 				}
 				$db->sql_freeresult($result);
@@ -1129,7 +1129,7 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function assign_cat_array(&$category_array, $tpl_cat, $tpl_mask, $ug_id, $forum_id, $s_view, $show_trace = false)
 	{
-		global $template, $phpbb_admin_path, $phpEx, $phpbb_container;
+		global $template, $phpbb_admin_path, $phpbb_container;
 
 		/** @var \phpbb\permissions $phpbb_permissions */
 		$phpbb_permissions = $phpbb_container->get('acl.permissions');
@@ -1170,8 +1170,8 @@ class auth_admin extends \phpbb\auth\auth
 						'FIELD_NAME'	=> $permission,
 						'S_FIELD_NAME'	=> 'setting[' . $ug_id . '][' . $forum_id . '][' . $permission . ']',
 
-						'U_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.$phpEx", "i=permissions&amp;mode=trace&amp;u=$ug_id&amp;f=$forum_id&amp;auth=$permission") : '',
-						'UA_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.$phpEx", "i=permissions&mode=trace&u=$ug_id&f=$forum_id&auth=$permission", false) : '',
+						'U_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.php", "i=permissions&amp;mode=trace&amp;u=$ug_id&amp;f=$forum_id&amp;auth=$permission") : '',
+						'UA_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.php", "i=permissions&mode=trace&u=$ug_id&f=$forum_id&auth=$permission", false) : '',
 
 						'PERMISSION'	=> $phpbb_permissions->get_permission_lang($permission),
 					));
@@ -1188,8 +1188,8 @@ class auth_admin extends \phpbb\auth\auth
 						'FIELD_NAME'	=> $permission,
 						'S_FIELD_NAME'	=> 'setting[' . $ug_id . '][' . $forum_id . '][' . $permission . ']',
 
-						'U_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.$phpEx", "i=permissions&amp;mode=trace&amp;u=$ug_id&amp;f=$forum_id&amp;auth=$permission") : '',
-						'UA_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.$phpEx", "i=permissions&mode=trace&u=$ug_id&f=$forum_id&auth=$permission", false) : '',
+						'U_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.php", "i=permissions&amp;mode=trace&amp;u=$ug_id&amp;f=$forum_id&amp;auth=$permission") : '',
+						'UA_TRACE'		=> ($show_trace) ? append_sid("{$phpbb_admin_path}index.php", "i=permissions&mode=trace&u=$ug_id&f=$forum_id&auth=$permission", false) : '',
 
 						'PERMISSION'	=> $phpbb_permissions->get_permission_lang($permission),
 					));

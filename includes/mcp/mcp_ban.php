@@ -26,7 +26,7 @@ class mcp_ban
 	function main($id, $mode)
 	{
 		global $db, $user, $auth, $template, $request, $phpbb_dispatcher;
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 
 		if (!function_exists('user_ban'))
 		{
@@ -224,7 +224,7 @@ class mcp_ban
 			'S_USERNAME_BAN'	=> ($mode == 'user') ? true : false,
 
 			'U_ACTION'			=> $this->u_action,
-			'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=searchuser&amp;form=mcp_ban&amp;field=ban'),
+			'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.php", 'mode=searchuser&amp;form=mcp_ban&amp;field=ban'),
 		));
 
 		if ($mode === 'email' && !$auth->acl_get('a_user'))

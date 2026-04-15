@@ -433,7 +433,7 @@ function user_add($user_row, $cp_data = false, $notifications_data = null)
 function user_delete($mode, $user_ids, $retain_username = true)
 {
 	global $cache, $config, $db, $user, $phpbb_dispatcher, $phpbb_container;
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 
 	$db->sql_transaction('begin');
 
@@ -2602,7 +2602,7 @@ function avatar_remove_db($avatar_name)
 */
 function group_delete($group_id, $group_name = false)
 {
-	global $db, $cache, $auth, $user, $phpbb_root_path, $phpEx, $phpbb_dispatcher, $phpbb_container, $phpbb_log;
+	global $db, $cache, $auth, $user, $phpbb_root_path, $phpbb_dispatcher, $phpbb_container, $phpbb_log;
 
 	if (!$group_name)
 	{
@@ -3627,7 +3627,7 @@ function group_update_listings($group_id)
 	{
 		if (!function_exists('phpbb_cache_moderators'))
 		{
-			global $phpbb_root_path, $phpEx;
+			global $phpbb_root_path;
 			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 		phpbb_cache_moderators($db, $cache, $auth);
@@ -3637,7 +3637,7 @@ function group_update_listings($group_id)
 	{
 		if (!function_exists('phpbb_update_foes'))
 		{
-			global $phpbb_root_path, $phpEx;
+			global $phpbb_root_path;
 			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 		phpbb_update_foes($db, $auth, array($group_id));

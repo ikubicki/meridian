@@ -29,11 +29,6 @@ if (!class_exists('bbcode'))
 		global $phpbb_root_path;
 	}
 
-	if (!isset($phpEx))
-	{
-		global $phpEx;
-	}
-
 	include($phpbb_root_path . 'includes/bbcode.php');
 }
 
@@ -1043,7 +1038,7 @@ class bbcode_firstpass extends bbcode
 	*/
 	function path_in_domain($url)
 	{
-		global $config, $phpEx, $user;
+		global $config, $user;
 
 		if ($config['force_server_vars'])
 		{
@@ -1055,7 +1050,7 @@ class bbcode_firstpass extends bbcode
 		}
 
 		// Is the user trying to link to a php file in this domain and script path?
-		if (strpos($url, ".{$phpEx}") !== false && strpos($url, $check_path) !== false)
+		if (strpos($url, '.php') !== false && strpos($url, $check_path) !== false)
 		{
 			$server_name = $user->host;
 
@@ -1066,7 +1061,7 @@ class bbcode_firstpass extends bbcode
 			}
 
 			// Check again in correct order...
-			$pos_ext = strpos($url, ".{$phpEx}");
+			$pos_ext = strpos($url, '.php');
 			$pos_path = strpos($url, $check_path);
 			$pos_domain = strpos($url, $server_name);
 
@@ -1531,7 +1526,7 @@ class parse_message extends bbcode_firstpass
 	*/
 	function parse_attachments($form_name, $mode, $forum_id, $submit, $preview, $refresh, $is_message = false)
 	{
-		global $config, $auth, $user, $phpbb_root_path, $phpEx, $db, $request;
+		global $config, $auth, $user, $phpbb_root_path, $db, $request;
 		global $phpbb_container, $phpbb_dispatcher;
 
 		$error = array();
@@ -1776,7 +1771,7 @@ class parse_message extends bbcode_firstpass
 
 						if (isset($this->plupload) && $this->plupload->is_active())
 						{
-							$download_url = append_sid("{$phpbb_root_path}download/file.{$phpEx}", 'mode=view&amp;id=' . $new_entry['attach_id']);
+							$download_url = append_sid("{$phpbb_root_path}download/file.php", 'mode=view&amp;id=' . $new_entry['attach_id']);
 
 							// Send the client the attachment data to maintain state
 							$json_response->send(array('data' => $this->attachment_data, 'download_url' => $download_url));

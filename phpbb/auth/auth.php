@@ -940,7 +940,7 @@ class auth
 	*/
 	function login($username, $password, $autologin = false, $viewonline = 1, $admin = 0)
 	{
-		global $db, $user, $phpbb_root_path, $phpEx, $phpbb_container;
+		global $db, $user, $phpbb_root_path, $phpbb_container;
 		global $phpbb_dispatcher;
 
 		/* @var $provider_collection \phpbb\auth\provider_collection */

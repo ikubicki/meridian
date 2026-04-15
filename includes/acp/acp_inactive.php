@@ -32,7 +32,7 @@ class acp_inactive
 	function main($id, $mode)
 	{
 		global $config, $db, $user, $auth, $template, $phpbb_container, $phpbb_log, $request;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx;
+		global $phpbb_root_path, $phpbb_admin_path;
 
 		if (!function_exists('user_active_flip'))
 		{
@@ -226,7 +226,7 @@ class acp_inactive
 							$messenger->assign_vars(array(
 								'USERNAME'		=> html_entity_decode($row['username'], ENT_COMPAT),
 								'REGISTER_DATE'	=> $user->format_date($row['user_regdate'], false, true),
-								'U_ACTIVATE'	=> generate_board_url() . "/ucp.$phpEx?mode=activate&u=" . $row['user_id'] . '&k=' . $row['user_actkey'])
+								'U_ACTIVATE'	=> generate_board_url() . "/ucp.php?mode=activate&u=" . $row['user_id'] . '&k=' . $row['user_actkey'])
 							);
 
 							$messenger->send($row['user_notify_type']);
@@ -286,13 +286,13 @@ class acp_inactive
 
 				'REMINDED_EXPLAIN'	=> $user->lang('USER_LAST_REMINDED', (int) $row['user_reminded'], $user->format_date($row['user_reminded_time'])),
 
-				'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour'], false, append_sid("{$phpbb_admin_path}index.$phpEx", 'i=users&amp;mode=overview&amp;redirect=acp_inactive')),
+				'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour'], false, append_sid("{$phpbb_admin_path}index.php", 'i=users&amp;mode=overview&amp;redirect=acp_inactive')),
 				'USERNAME'			=> get_username_string('username', $row['user_id'], $row['username'], $row['user_colour']),
 				'USER_COLOR'		=> get_username_string('colour', $row['user_id'], $row['username'], $row['user_colour']),
 				'USER_EMAIL'		=> $row['user_email'],
 
-				'U_USER_ADMIN'	=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=users&amp;mode=overview&amp;u={$row['user_id']}"),
-				'U_SEARCH_USER'	=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id={$row['user_id']}&amp;sr=posts") : '',
+				'U_USER_ADMIN'	=> append_sid("{$phpbb_admin_path}index.php", "i=users&amp;mode=overview&amp;u={$row['user_id']}"),
+				'U_SEARCH_USER'	=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.php", "author_id={$row['user_id']}&amp;sr=posts") : '',
 			));
 		}
 

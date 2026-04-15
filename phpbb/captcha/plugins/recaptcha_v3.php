@@ -262,14 +262,14 @@ class recaptcha_v3 extends captcha_abstract
 		 * @var string						$phpbb_root_path	phpBB root path
 		 * @var string						$phpEx				php File extensions
 		 */
-		global $config, $language, $template, $phpbb_root_path, $phpEx;
+		global $config, $language, $template, $phpbb_root_path;
 
 		if ($this->is_solved())
 		{
 			return false;
 		}
 
-		$contact = phpbb_get_board_contact_link($config, $phpbb_root_path, $phpEx);
+		$contact = phpbb_get_board_contact_link($config, $phpbb_root_path);
 		$explain = $this->type !== CONFIRM_POST ? 'CONFIRM_EXPLAIN' : 'POST_CONFIRM_EXPLAIN';
 
 		$domain = $config['recaptcha_v3_domain'] ?? self::GOOGLE;

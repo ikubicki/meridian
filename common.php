@@ -23,10 +23,10 @@ if (!defined('IN_PHPBB'))
 require($phpbb_root_path . 'includes/startup.php');
 require($phpbb_root_path . 'phpbb/class_loader.php');
 
-$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
+$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
 $phpbb_class_loader->register();
 
-$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path, $phpEx);
+$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 extract($phpbb_config_php_file->get_all());
 
 if (!defined('PHPBB_ENVIRONMENT'))
@@ -51,7 +51,7 @@ if (!defined('PHPBB_INSTALLED'))
 		$server_port = 443;
 	}
 
-	$script_path = phpbb_get_install_redirect($phpbb_root_path, $phpEx);
+	$script_path = phpbb_get_install_redirect($phpbb_root_path);
 
 	// Eliminate . and .. from the path
 	require($phpbb_root_path . 'phpbb/filesystem/filesystem.php');
@@ -97,13 +97,13 @@ else
 	set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'msg_handler');
 }
 
-$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/", $phpEx);
+$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/");
 $phpbb_class_loader_ext->register();
 
 // Set up container
 try
 {
-	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpEx);
+	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
 
 	// Check that cache directory is writable before trying to build container
 	$cache_dir = $phpbb_container_builder->get_cache_dir();

@@ -50,7 +50,7 @@ class config_php_file
 	* @param string $phpbb_root_path phpBB Root Path
 	* @param string $php_ext php file extension
 	*/
-	function __construct($phpbb_root_path, $php_ext)
+	function __construct($phpbb_root_path, $php_ext = 'php')
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;

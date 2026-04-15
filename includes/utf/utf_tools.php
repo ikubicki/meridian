@@ -294,7 +294,7 @@ function utf8_recode($string, $encoding)
 		trigger_error('Unknown encoding: ' . $encoding, E_USER_ERROR);
 	}
 
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 
 	// iso-8859-* character encoding
 	if (preg_match('/iso[_ -]?8859[_ -]?(\\d+)/', $encoding, $array))
@@ -572,7 +572,7 @@ function utf8_decode_ncr_callback($m)
 function utf8_case_fold($text, $option = 'full')
 {
 	static $uniarray = array();
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 
 	// common is always set
 	if (!isset($uniarray['c']))
@@ -1353,7 +1353,7 @@ function utf8_normalize_nfc($strings)
 */
 function utf8_clean_string($text)
 {
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 
 	static $homographs = array();
 	if (empty($homographs))

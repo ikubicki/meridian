@@ -32,7 +32,7 @@ class acp_language
 	function main($id, $mode)
 	{
 		global $config, $db, $user, $template, $phpbb_log, $phpbb_container;
-		global $phpbb_root_path, $phpEx, $request, $phpbb_dispatcher;
+		global $phpbb_root_path, $request, $phpbb_dispatcher;
 
 		if (!function_exists('validate_language_iso_name'))
 		{
@@ -162,7 +162,7 @@ class acp_language
 
 						if (file_exists($phpbb_root_path . 'language/' . $lang_iso . '/' . $relative_path))
 						{
-							if (substr($relative_path, 0 - strlen($phpEx)) === $phpEx)
+							if (substr($relative_path, -3) === 'php')
 							{
 								$missing_vars = $this->compare_language_files($config['default_lang'], $lang_iso, $relative_path);
 

@@ -25,7 +25,7 @@ if (!defined('IN_PHPBB'))
 function adm_page_header($page_title)
 {
 	global $config, $user, $template;
-	global $phpbb_root_path, $phpbb_admin_path, $phpEx, $SID, $_SID;
+	global $phpbb_root_path, $phpbb_admin_path, $SID, $_SID;
 	global $phpbb_dispatcher, $phpbb_container;
 
 	if (defined('HEADER_INC'))
@@ -76,10 +76,10 @@ function adm_page_header($page_title)
 		'ROOT_PATH'				=> $phpbb_root_path,
 		'ADMIN_ROOT_PATH'		=> $phpbb_admin_path,
 
-		'U_LOGOUT'				=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=logout'),
-		'U_ADM_LOGOUT'			=> append_sid("{$phpbb_admin_path}index.$phpEx", 'action=admlogout'),
-		'U_ADM_INDEX'			=> append_sid("{$phpbb_admin_path}index.$phpEx"),
-		'U_INDEX'				=> append_sid("{$phpbb_root_path}index.$phpEx"),
+		'U_LOGOUT'				=> append_sid("{$phpbb_root_path}ucp.php", 'mode=logout'),
+		'U_ADM_LOGOUT'			=> append_sid("{$phpbb_admin_path}index.php", 'action=admlogout'),
+		'U_ADM_INDEX'			=> append_sid("{$phpbb_admin_path}index.php"),
+		'U_INDEX'				=> append_sid("{$phpbb_root_path}index.php"),
 
 		'T_IMAGES_PATH'			=> "{$phpbb_root_path}images/",
 		'T_SMILIES_PATH'		=> "{$phpbb_root_path}{$config['smilies_path']}/",

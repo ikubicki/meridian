@@ -127,7 +127,7 @@ class container_builder
 	 * @param string $phpbb_root_path Path to the phpbb includes directory.
 	 * @param string $php_ext php file extension
 	 */
-	public function __construct($phpbb_root_path, $php_ext)
+	public function __construct($phpbb_root_path, $php_ext = 'php')
 	{
 		$this->phpbb_root_path	= $phpbb_root_path;
 		$this->php_ext			= $php_ext;

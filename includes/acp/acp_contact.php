@@ -29,7 +29,7 @@ class acp_contact
 	public function main($id, $mode)
 	{
 		global $user, $request, $template;
-		global $config, $phpbb_root_path, $phpEx, $phpbb_container;
+		global $config, $phpbb_root_path, $phpbb_container;
 
 		$user->add_lang(array('acp/board', 'posting'));
 

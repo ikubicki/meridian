@@ -563,7 +563,7 @@ class p_master
 	*/
 	function load_active($mode = false, $module_url = false, $execute_module = true)
 	{
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx, $user, $template, $request;
+		global $phpbb_root_path, $phpbb_admin_path, $user, $template, $request;
 
 		$module_path = $this->include_path . $this->p_class;
 		$icat = $request->variable('icat', '');
@@ -576,16 +576,16 @@ class p_master
 		// new modules use the full class names, old ones are always called <type>_<name>, e.g. acp_board
 		if (!class_exists($this->p_name))
 		{
-			if (!file_exists("$module_path/{$this->p_name}.$phpEx"))
+			if (!file_exists("$module_path/{$this->p_name}.php"))
 			{
-				trigger_error($user->lang('MODULE_NOT_FIND', "$module_path/{$this->p_name}.$phpEx"), E_USER_ERROR);
+				trigger_error($user->lang('MODULE_NOT_FIND', "$module_path/{$this->p_name}.php"), E_USER_ERROR);
 			}
 
-			include("$module_path/{$this->p_name}.$phpEx");
+			include("$module_path/{$this->p_name}.php");
 
 			if (!class_exists($this->p_name))
 			{
-				trigger_error($user->lang('MODULE_FILE_INCORRECT_CLASS', "$module_path/{$this->p_name}.$phpEx", $this->p_name), E_USER_ERROR);
+				trigger_error($user->lang('MODULE_FILE_INCORRECT_CLASS', "$module_path/{$this->p_name}.php", $this->p_name), E_USER_ERROR);
 			}
 		}
 
@@ -632,7 +632,7 @@ class p_master
 			}
 
 			// Not being able to overwrite ;)
-			$this->module->u_action = append_sid("{$phpbb_admin_path}index.$phpEx", 'i=' . $this->get_module_identifier($this->p_name)) . (($icat) ? '&amp;icat=' . $icat : '') . "&amp;mode={$this->p_mode}";
+			$this->module->u_action = append_sid("{$phpbb_admin_path}index.php", 'i=' . $this->get_module_identifier($this->p_name)) . (($icat) ? '&amp;icat=' . $icat : '') . "&amp;mode={$this->p_mode}";
 		}
 		else
 		{
@@ -1064,7 +1064,7 @@ class p_master
 	*/
 	function add_mod_info($module_class)
 	{
-		global $config, $user, $phpEx, $phpbb_extension_manager;
+		global $config, $user, $phpbb_extension_manager;
 
 		$finder = $phpbb_extension_manager->get_finder();
 
@@ -1077,7 +1077,7 @@ class p_master
 		{
 			$default_lang_files = $finder
 				->prefix('info_' . strtolower($module_class) . '_')
-				->suffix(".$phpEx")
+				->suffix(".php")
 				->extension_directory('/language/' . basename($config['default_lang']))
 				->core_path('language/' . basename($config['default_lang']) . '/mods/')
 				->find();
@@ -1088,7 +1088,7 @@ class p_master
 		{
 			$english_lang_files = $finder
 				->prefix('info_' . strtolower($module_class) . '_')
-				->suffix(".$phpEx")
+				->suffix(".php")
 				->extension_directory('/language/en')
 				->core_path('language/en/mods/')
 				->find();
@@ -1097,7 +1097,7 @@ class p_master
 		// Find files in the user's language
 		$user_lang_files = $finder
 			->prefix('info_' . strtolower($module_class) . '_')
-			->suffix(".$phpEx")
+			->suffix(".php")
 			->extension_directory('/language/' . $user->lang_name)
 			->core_path('language/' . $user->lang_name . '/mods/')
 			->find();

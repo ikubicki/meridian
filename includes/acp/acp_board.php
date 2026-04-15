@@ -31,7 +31,7 @@ class acp_board
 	function main($id, $mode)
 	{
 		global $user, $template, $request, $language;
-		global $config, $phpbb_root_path, $phpEx;
+		global $config, $phpbb_root_path;
 		global $cache, $phpbb_container, $phpbb_dispatcher, $phpbb_log;
 
 		/** @var \phpbb\language\language $language Language object */

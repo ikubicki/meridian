@@ -105,7 +105,7 @@ function phpbb_clean_path($path)
 	}
 	else if (!$phpbb_path_helper)
 	{
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 
 		// The container is not yet loaded, use a new instance
 		if (!class_exists('\phpbb\path_helper'))
@@ -121,7 +121,7 @@ function phpbb_clean_path($path)
 			new phpbb\filesystem\filesystem(),
 			$request,
 			$phpbb_root_path,
-			$phpEx
+			'php'
 		);
 	}
 
@@ -188,7 +188,7 @@ function update_foes($group_id = false, $user_id = false)
 */
 function get_user_rank($user_rank, $user_posts, &$rank_title, &$rank_img, &$rank_img_src)
 {
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 	if (!function_exists('phpbb_get_user_rank'))
 	{
 		include($phpbb_root_path . 'includes/functions_display.php');

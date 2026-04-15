@@ -662,7 +662,7 @@ class messenger
 	*/
 	function msg_jabber()
 	{
-		global $config, $user, $phpbb_root_path, $phpEx;
+		global $config, $user, $phpbb_root_path;
 
 		if (empty($config['jab_enable']) || empty($config['jab_host']) || empty($config['jab_username']) || empty($config['jab_password']))
 		{
@@ -799,10 +799,10 @@ class queue
 	*/
 	function __construct()
 	{
-		global $phpEx, $phpbb_root_path, $phpbb_filesystem, $phpbb_container;
+		global $phpbb_root_path, $phpbb_filesystem, $phpbb_container;
 
 		$this->data = array();
-		$this->cache_file = $phpbb_container->getParameter('core.cache_dir') . "queue.$phpEx";
+		$this->cache_file = $phpbb_container->getParameter('core.cache_dir') . "queue.php";
 		$this->filesystem = $phpbb_filesystem;
 	}
 
@@ -830,7 +830,7 @@ class queue
 	*/
 	function process()
 	{
-		global $config, $phpEx, $phpbb_root_path, $user, $phpbb_dispatcher;
+		global $config, $phpbb_root_path, $user, $phpbb_dispatcher;
 
 		$lock = new \phpbb\lock\flock($this->cache_file);
 		$lock->acquire();
@@ -1174,7 +1174,7 @@ function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 	// Ok we have error checked as much as we can to this point let's get on it already.
 	if (!class_exists('\phpbb\error_collector'))
 	{
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 		include($phpbb_root_path . 'includes/error_collector.php');
 	}
 	$collector = new \phpbb\error_collector;
@@ -1929,7 +1929,7 @@ function mail_encode($str, $eol = "\r\n")
  */
 function phpbb_mail($to, $subject, $msg, $headers, $eol, &$err_msg)
 {
-	global $config, $phpbb_root_path, $phpEx, $phpbb_dispatcher;
+	global $config, $phpbb_root_path, $phpbb_dispatcher;
 
 	// Convert Numeric Character References to UTF-8 chars (ie. Emojis)
 	$subject = utf8_decode_ncr($subject);

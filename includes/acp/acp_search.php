@@ -51,7 +51,7 @@ class acp_search
 	function settings($id, $mode)
 	{
 		global $user, $template, $phpbb_log, $request;
-		global $config, $phpbb_admin_path, $phpEx;
+		global $config, $phpbb_admin_path;
 
 		$submit = $request->is_set_post('submit');
 
@@ -169,7 +169,7 @@ class acp_search
 							{
 								$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_CONFIG_SEARCH');
 							}
-							$extra_message = '<br />' . $user->lang['SWITCHED_SEARCH_BACKEND'] . '<br /><a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=search&amp;mode=index') . '">&raquo; ' . $user->lang['GO_TO_SEARCH_INDEX'] . '</a>';
+							$extra_message = '<br />' . $user->lang['SWITCHED_SEARCH_BACKEND'] . '<br /><a href="' . append_sid("{$phpbb_admin_path}index.php", 'i=search&amp;mode=index') . '">&raquo; ' . $user->lang['GO_TO_SEARCH_INDEX'] . '</a>';
 						}
 						else
 						{
@@ -240,7 +240,7 @@ class acp_search
 	function index($id, $mode)
 	{
 		global $db, $language, $user, $template, $phpbb_log, $request;
-		global $config, $phpbb_admin_path, $phpEx;
+		global $config, $phpbb_admin_path;
 
 		$action = $request->variable('action', '');
 		$this->state = explode(',', $config['search_indexing_state']);
@@ -302,7 +302,7 @@ class acp_search
 					if (method_exists($this->search, 'delete_index'))
 					{
 						// pass a reference to myself so the $search object can make use of save_state() and attributes
-						if ($error = $this->search->delete_index($this, append_sid("{$phpbb_admin_path}index.$phpEx", "i=$id&mode=$mode&action=delete&hash=" . generate_link_hash('acp_search'), false)))
+						if ($error = $this->search->delete_index($this, append_sid("{$phpbb_admin_path}index.php", "i=$id&mode=$mode&action=delete&hash=" . generate_link_hash('acp_search'), false)))
 						{
 							$this->state = array('');
 							$this->save_state();
@@ -390,7 +390,7 @@ class acp_search
 					if (method_exists($this->search, 'create_index'))
 					{
 						// pass a reference to acp_search so the $search object can make use of save_state() and attributes
-						if ($error = $this->search->create_index($this, append_sid("{$phpbb_admin_path}index.$phpEx", "i=$id&mode=$mode&action=create", false)))
+						if ($error = $this->search->create_index($this, append_sid("{$phpbb_admin_path}index.php", "i=$id&mode=$mode&action=create", false)))
 						{
 							$this->state = array('');
 							$this->save_state();
@@ -661,7 +661,7 @@ class acp_search
 	*/
 	function init_search($type, &$search, &$error)
 	{
-		global $phpbb_root_path, $phpEx, $user, $auth, $config, $db, $phpbb_dispatcher;
+		global $phpbb_root_path, $user, $auth, $config, $db, $phpbb_dispatcher;
 
 		if (!class_exists($type) || !method_exists($type, 'keyword_search'))
 		{
@@ -670,7 +670,7 @@ class acp_search
 		}
 
 		$error = false;
-		$search = new $type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+		$search = new $type($error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher);
 
 		return $error;
 	}

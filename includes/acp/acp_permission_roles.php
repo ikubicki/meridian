@@ -27,7 +27,7 @@ class acp_permission_roles
 	function main($id, $mode)
 	{
 		global $db, $user, $template, $phpbb_container;
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 		global $request, $phpbb_log;
 
 		if (!function_exists('user_get_id_name'))

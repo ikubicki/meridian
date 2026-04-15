@@ -29,7 +29,7 @@ class ucp_activate
 
 	function main($id, $mode)
 	{
-		global $config, $phpbb_root_path, $phpEx, $request;
+		global $config, $phpbb_root_path, $request;
 		global $db, $user, $auth, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
 
 		$user_id = $request->variable('u', 0);
@@ -49,7 +49,7 @@ class ucp_activate
 
 		if ($user_row['user_type'] <> USER_INACTIVE && !$user_row['user_newpasswd'])
 		{
-			meta_refresh(3, append_sid("{$phpbb_root_path}index.$phpEx"));
+			meta_refresh(3, append_sid("{$phpbb_root_path}index.php"));
 			trigger_error('ALREADY_ACTIVATED');
 		}
 
@@ -172,7 +172,7 @@ class ucp_activate
 		$vars = array('user_row', 'message');
 		extract($phpbb_dispatcher->trigger_event('core.ucp_activate_after', compact($vars)));
 
-		meta_refresh(3, append_sid("{$phpbb_root_path}index.$phpEx"));
+		meta_refresh(3, append_sid("{$phpbb_root_path}index.php"));
 		trigger_error($user->lang[$message]);
 	}
 }

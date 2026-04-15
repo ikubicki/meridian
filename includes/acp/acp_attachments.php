@@ -52,7 +52,7 @@ class acp_attachments
 	function main($id, $mode)
 	{
 		global $db, $user, $auth, $template, $cache, $phpbb_container, $phpbb_filesystem, $phpbb_dispatcher;
-		global $config, $phpbb_admin_path, $phpbb_root_path, $phpEx, $phpbb_log, $request;
+		global $config, $phpbb_admin_path, $phpbb_root_path, $phpbb_log, $request;
 
 		$this->id = $id;
 		$this->db = $db;
@@ -282,7 +282,7 @@ class acp_attachments
 					'S_DEFINED_IPS'			=> ($defined_ips != '') ? true : false,
 					'S_WARNING'				=> (count($error)) ? true : false,
 
-					'U_EXTENSION_GROUPS'	=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=$id&amp;mode=ext_groups"),
+					'U_EXTENSION_GROUPS'	=> append_sid("{$phpbb_admin_path}index.php", "i=$id&amp;mode=ext_groups"),
 
 					'WARNING_MSG'			=> implode('<br />', $error),
 					'DEFINED_IPS'			=> $defined_ips,
@@ -799,7 +799,7 @@ class acp_attachments
 							'S_NO_IMAGE'				=> $no_image_select,
 							'S_FORUM_IDS'				=> (count($forum_ids)) ? true : false,
 
-							'U_EXTENSIONS'		=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=$id&amp;mode=extensions"),
+							'U_EXTENSIONS'		=> append_sid("{$phpbb_admin_path}index.php", "i=$id&amp;mode=extensions"),
 							'U_BACK'			=> $this->u_action,
 
 							'L_LEGEND'			=> $user->lang[strtoupper($action) . '_EXTENSION_GROUP'])
@@ -1294,7 +1294,7 @@ class acp_attachments
 
 						'S_IN_MESSAGE'		=> (bool) $row['in_message'],
 
-						'U_VIEW_TOPIC'		=> append_sid("{$phpbb_root_path}viewtopic.$phpEx", "p={$row['post_msg_id']}") . "#p{$row['post_msg_id']}",
+						'U_VIEW_TOPIC'		=> append_sid("{$phpbb_root_path}viewtopic.php", "p={$row['post_msg_id']}") . "#p{$row['post_msg_id']}",
 						'U_FILE'			=> append_sid($phpbb_root_path . 'download/file.php', 'mode=view&amp;id=' . $row['attach_id']))
 					);
 				}

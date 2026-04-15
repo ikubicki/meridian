@@ -26,7 +26,7 @@ class acp_groups
 	function main($id, $mode)
 	{
 		global $config, $db, $user, $auth, $template, $cache;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx;
+		global $phpbb_root_path, $phpbb_admin_path;
 		global $request, $phpbb_container, $phpbb_dispatcher;
 
 		/** @var \phpbb\language\language $language Language object */
@@ -740,7 +740,7 @@ class acp_groups
 				switch ($back_link)
 				{
 					case 'acp_users_groups':
-						$u_back = append_sid("{$phpbb_admin_path}index.$phpEx", 'i=users&amp;mode=groups&amp;u=' . $request->variable('u', 0));
+						$u_back = append_sid("{$phpbb_admin_path}index.php", 'i=users&amp;mode=groups&amp;u=' . $request->variable('u', 0));
 					break;
 
 					default:
@@ -857,7 +857,7 @@ class acp_groups
 				while ($row = $db->sql_fetchrow($result))
 				{
 					$template->assign_block_vars('leader', array(
-						'U_USER_EDIT'		=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=users&amp;action=edit&amp;u={$row['user_id']}"),
+						'U_USER_EDIT'		=> append_sid("{$phpbb_admin_path}index.php", "i=users&amp;action=edit&amp;u={$row['user_id']}"),
 
 						'USERNAME'			=> $row['username'],
 						'USERNAME_COLOUR'	=> $row['user_colour'],
@@ -898,7 +898,7 @@ class acp_groups
 
 					'U_ACTION'			=> $this->u_action . "&amp;g=$group_id",
 					'U_BACK'			=> $this->u_action,
-					'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=searchuser&amp;form=list&amp;field=usernames'),
+					'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.php", 'mode=searchuser&amp;form=list&amp;field=usernames'),
 					'U_DEFAULT_ALL'		=> "{$this->u_action}&amp;action=set_default_on_all&amp;g=$group_id",
 				));
 
@@ -925,7 +925,7 @@ class acp_groups
 					}
 
 					$template->assign_block_vars('member', array(
-						'U_USER_EDIT'		=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=users&amp;action=edit&amp;u={$row['user_id']}"),
+						'U_USER_EDIT'		=> append_sid("{$phpbb_admin_path}index.php", "i=users&amp;action=edit&amp;u={$row['user_id']}"),
 
 						'USERNAME'			=> $row['username'],
 						'USERNAME_COLOUR'	=> $row['user_colour'],

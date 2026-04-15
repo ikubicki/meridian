@@ -63,7 +63,6 @@ class fulltext_sphinx
 	 * PHP Extension
 	 * @var string
 	 */
-	protected $php_ext;
 
 	/**
 	 * Auth object
@@ -133,10 +132,9 @@ class fulltext_sphinx
 	 * @param \phpbb\user $user User object
 	 * @param \phpbb\event\dispatcher_interface	$phpbb_dispatcher	Event dispatcher object
 	 */
-	public function __construct(&$error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher)
+	public function __construct(&$error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher)
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->php_ext = $phpEx;
 		$this->config = $config;
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
 		$this->user = $user;
@@ -156,7 +154,7 @@ class fulltext_sphinx
 
 		if (!class_exists('SphinxClient'))
 		{
-			require($this->phpbb_root_path . 'includes/sphinxapi.' . $this->php_ext);
+			require($this->phpbb_root_path . 'includes/sphinxapi.php');
 		}
 
 		// Initialize sphinx client
@@ -254,7 +252,7 @@ class fulltext_sphinx
 			return false;
 		}
 
-		include($this->phpbb_root_path . 'config.' . $this->php_ext);
+include($this->phpbb_root_path . 'config.php');
 
 		/* Now that we're sure everything was entered correctly,
 		generate a config for the index. We use a config value

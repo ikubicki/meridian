@@ -29,7 +29,7 @@ class ucp_resend
 
 	function main($id, $mode)
 	{
-		global $config, $phpbb_root_path, $phpEx;
+		global $config, $phpbb_root_path;
 		global $db, $user, $auth, $template, $request;
 
 		$username	= $request->variable('username', '', true);
@@ -107,7 +107,7 @@ class ucp_resend
 				$messenger->assign_vars(array(
 					'WELCOME_MSG'	=> html_entity_decode(sprintf($user->lang['WELCOME_SUBJECT'], $config['sitename']), ENT_COMPAT),
 					'USERNAME'		=> html_entity_decode($user_row['username'], ENT_COMPAT),
-					'U_ACTIVATE'	=> generate_board_url() . "/ucp.$phpEx?mode=activate&u={$user_row['user_id']}&k={$user_row['user_actkey']}")
+					'U_ACTIVATE'	=> generate_board_url() . "/ucp.php?mode=activate&u={$user_row['user_id']}&k={$user_row['user_actkey']}")
 				);
 
 				if ($coppa)
@@ -141,8 +141,8 @@ class ucp_resend
 
 					$messenger->assign_vars(array(
 						'USERNAME'			=> html_entity_decode($user_row['username'], ENT_COMPAT),
-						'U_USER_DETAILS'	=> generate_board_url() . "/memberlist.$phpEx?mode=viewprofile&u={$user_row['user_id']}",
-						'U_ACTIVATE'		=> generate_board_url() . "/ucp.$phpEx?mode=activate&u={$user_row['user_id']}&k={$user_row['user_actkey']}")
+						'U_USER_DETAILS'	=> generate_board_url() . "/memberlist.php?mode=viewprofile&u={$user_row['user_id']}",
+						'U_ACTIVATE'		=> generate_board_url() . "/ucp.php?mode=activate&u={$user_row['user_id']}&k={$user_row['user_actkey']}")
 					);
 
 					$messenger->send($row['user_notify_type']);
@@ -152,10 +152,10 @@ class ucp_resend
 
 			$this->update_activation_expiration();
 
-			meta_refresh(3, append_sid("{$phpbb_root_path}index.$phpEx"));
+			meta_refresh(3, append_sid("{$phpbb_root_path}index.php"));
 
 			$message = ($config['require_activation'] == USER_ACTIVATION_ADMIN) ? $user->lang['ACTIVATION_EMAIL_SENT_ADMIN'] : $user->lang['ACTIVATION_EMAIL_SENT'];
-			$message .= '<br /><br />' . sprintf($user->lang['RETURN_INDEX'], '<a href="' . append_sid("{$phpbb_root_path}index.$phpEx") . '">', '</a>');
+			$message .= '<br /><br />' . sprintf($user->lang['RETURN_INDEX'], '<a href="' . append_sid("{$phpbb_root_path}index.php") . '">', '</a>');
 			trigger_error($message);
 		}
 

@@ -87,7 +87,7 @@ class fulltext_mysql extends \phpbb\search\base
 	 * @param \phpbb\user $user User object
 	 * @param \phpbb\event\dispatcher_interface	$phpbb_dispatcher	Event dispatcher object
 	 */
-	public function __construct(&$error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher)
+	public function __construct(&$error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher)
 	{
 		$this->config = $config;
 		$this->db = $db;

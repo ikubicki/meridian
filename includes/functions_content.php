@@ -635,7 +635,7 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 		{
 			if (!class_exists('bbcode'))
 			{
-				global $phpbb_root_path, $phpEx;
+				global $phpbb_root_path;
 				include($phpbb_root_path . 'includes/bbcode.php');
 			}
 
@@ -693,7 +693,7 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 */
 function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bbcode = false, $allow_urls = false, $allow_smilies = false, $allow_img_bbcode = true, $allow_flash_bbcode = true, $allow_quote_bbcode = true, $allow_url_bbcode = true, $mode = 'post')
 {
-	global $phpbb_root_path, $phpEx, $phpbb_dispatcher;
+	global $phpbb_root_path, $phpbb_dispatcher;
 
 	/**
 	* Use this event to modify the text before it is prepared for storage
@@ -1138,7 +1138,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	}
 
 	global $template, $cache, $user, $phpbb_dispatcher;
-	global $extensions, $config, $phpbb_root_path, $phpEx;
+	global $extensions, $config, $phpbb_root_path;
 
 	//
 	$compiled_attachments = array();
@@ -1300,14 +1300,14 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 				$display_cat = ATTACHMENT_CATEGORY_NONE;
 			}
 
-			$download_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id']);
+			$download_link = append_sid("{$phpbb_root_path}download/file.php", 'id=' . $attachment['attach_id']);
 			$l_downloaded_viewed = 'VIEWED_COUNTS';
 
 			switch ($display_cat)
 			{
 				// Images
 				case ATTACHMENT_CATEGORY_IMAGE:
-					$inline_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id']);
+					$inline_link = append_sid("{$phpbb_root_path}download/file.php", 'id=' . $attachment['attach_id']);
 					$download_link .= '&amp;mode=view';
 
 					$block_array += array(
@@ -1320,7 +1320,7 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 
 				// Images, but display Thumbnail
 				case ATTACHMENT_CATEGORY_THUMB:
-					$thumbnail_link = append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $attachment['attach_id'] . '&amp;t=1');
+					$thumbnail_link = append_sid("{$phpbb_root_path}download/file.php", 'id=' . $attachment['attach_id'] . '&amp;t=1');
 					$download_link .= '&amp;mode=view';
 
 					$block_array += array(
@@ -1536,10 +1536,10 @@ function get_username_string($mode, $user_id, $username, $username_colour = '', 
 	// We cache some common variables we need within this function
 	if (empty($_profile_cache))
 	{
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 
 		/** @html Username spans and links for usage in the template */
-		$_profile_cache['base_url'] = append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=viewprofile&amp;u={USER_ID}');
+		$_profile_cache['base_url'] = append_sid("{$phpbb_root_path}memberlist.php", 'mode=viewprofile&amp;u={USER_ID}');
 		$_profile_cache['tpl_noprofile'] = '<span class="username">{USERNAME}</span>';
 		$_profile_cache['tpl_noprofile_colour'] = '<span style="color: {USERNAME_COLOUR};" class="username-coloured">{USERNAME}</span>';
 		$_profile_cache['tpl_profile'] = '<a href="{PROFILE_URL}" class="username">{USERNAME}</a>';

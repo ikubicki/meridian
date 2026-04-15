@@ -29,7 +29,7 @@ class ucp_attachments
 
 	function main($id, $mode)
 	{
-		global $template, $user, $db, $config, $phpEx, $phpbb_root_path, $phpbb_container, $request, $auth;
+		global $template, $user, $db, $config, $phpbb_root_path, $phpbb_container, $request, $auth;
 
 		$start		= $request->variable('start', 0);
 		$sort_key	= $request->variable('sk', 'a');
@@ -160,11 +160,11 @@ class ucp_attachments
 			{
 				if ($row['in_message'])
 				{
-					$view_topic = append_sid("{$phpbb_root_path}ucp.$phpEx", "i=pm&amp;p={$row['post_msg_id']}");
+					$view_topic = append_sid("{$phpbb_root_path}ucp.php", "i=pm&amp;p={$row['post_msg_id']}");
 				}
 				else
 				{
-					$view_topic = append_sid("{$phpbb_root_path}viewtopic.$phpEx", "p={$row['post_msg_id']}") . "#p{$row['post_msg_id']}";
+					$view_topic = append_sid("{$phpbb_root_path}viewtopic.php", "p={$row['post_msg_id']}") . "#p{$row['post_msg_id']}";
 				}
 
 				$template->assign_block_vars('attachrow', array(
@@ -184,7 +184,7 @@ class ucp_attachments
 					'S_IN_MESSAGE'		=> $row['in_message'],
 					'S_LOCKED'			=> !$this->can_delete_file($row),
 
-					'U_VIEW_ATTACHMENT'	=> append_sid("{$phpbb_root_path}download/file.$phpEx", 'id=' . $row['attach_id']),
+					'U_VIEW_ATTACHMENT'	=> append_sid("{$phpbb_root_path}download/file.php", 'id=' . $row['attach_id']),
 					'U_VIEW_TOPIC'		=> $view_topic)
 				);
 

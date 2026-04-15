@@ -86,7 +86,7 @@ abstract class captcha_abstract
 
 	function get_template()
 	{
-		global $config, $user, $template, $phpEx, $phpbb_root_path;
+		global $config, $user, $template, $phpbb_root_path;
 
 		if ($this->is_solved())
 		{
@@ -95,7 +95,7 @@ abstract class captcha_abstract
 		else
 		{
 			$link = append_sid($phpbb_root_path . 'ucp.php',  'mode=confirm&amp;confirm_id=' . $this->confirm_id . '&amp;type=' . $this->type);
-			$contact_link = phpbb_get_board_contact_link($config, $phpbb_root_path, $phpEx);
+			$contact_link = phpbb_get_board_contact_link($config, $phpbb_root_path);
 			$explain = $user->lang(($this->type != CONFIRM_POST) ? 'CONFIRM_EXPLAIN' : 'POST_CONFIRM_EXPLAIN', '<a href="' . $contact_link . '">', '</a>');
 
 			$template->assign_vars(array(
@@ -115,7 +115,7 @@ abstract class captcha_abstract
 
 	function get_demo_template($id)
 	{
-		global $config, $template, $request, $phpbb_admin_path, $phpEx;
+		global $config, $template, $request, $phpbb_admin_path;
 
 		$variables = '';
 

@@ -71,7 +71,6 @@ class file extends \phpbb\cache\driver\base
 			return;
 		}
 
-		global $phpEx;
 
 		if (!$this->_write('data_global'))
 		{
@@ -95,7 +94,7 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function tidy()
 	{
-		global $config, $phpEx;
+		global $config;
 
 		$dir = @opendir($this->cache_dir);
 
@@ -203,7 +202,6 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function destroy($var_name, $table = '')
 	{
-		global $phpEx;
 
 		if ($var_name == 'sql' && !empty($table))
 		{
@@ -264,7 +262,7 @@ class file extends \phpbb\cache\driver\base
 
 		if ($var_name[0] == '_')
 		{
-			$this->remove_file($this->cache_dir . 'data' . $var_name . ".$phpEx", true);
+			$this->remove_file($this->cache_dir . 'data' . $var_name . ".php", true);
 		}
 		else if (isset($this->vars[$var_name]))
 		{
@@ -284,9 +282,8 @@ class file extends \phpbb\cache\driver\base
 	{
 		if ($var_name[0] == '_')
 		{
-			global $phpEx;
 			$var_name = $this->clean_varname($var_name);
-			return file_exists($this->cache_dir . 'data' . $var_name . ".$phpEx");
+			return file_exists($this->cache_dir . 'data' . $var_name . ".php");
 		}
 		else
 		{
@@ -360,10 +357,9 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function _read($filename)
 	{
-		global $phpEx;
 
 		$filename = $this->clean_varname($filename);
-		$file = "{$this->cache_dir}$filename.$phpEx";
+		$file = "{$this->cache_dir}$filename.php";
 
 		$type = substr($filename, 0, strpos($filename, '_'));
 
@@ -544,10 +540,9 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function _write($filename, $data = null, $expires = 0, $query = '')
 	{
-		global $phpEx;
 
 		$filename = $this->clean_varname($filename);
-		$file = "{$this->cache_dir}$filename.$phpEx";
+		$file = "{$this->cache_dir}$filename.php";
 
 		$lock = new \phpbb\lock\flock($file);
 		$lock->acquire();

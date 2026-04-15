@@ -32,7 +32,6 @@ abstract class form
 	/** @var string */
 	protected $phpbb_root_path;
 	/** @var string */
-	protected $phpEx;
 
 	/** @var array */
 	protected $errors = array();
@@ -51,10 +50,9 @@ abstract class form
 	* @param string $phpbb_root_path
 	* @param string $phpEx
 	*/
-	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\user $user, $phpbb_root_path, $phpEx)
+	public function __construct(\phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\user $user, $phpbb_root_path)
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->phpEx = $phpEx;
 		$this->user = $user;
 		$this->auth = $auth;
 		$this->config = $config;
@@ -111,7 +109,7 @@ abstract class form
 	*/
 	public function get_return_message()
 	{
-		return sprintf($this->user->lang['RETURN_INDEX'], '<a href="' . append_sid($this->phpbb_root_path . 'index.' . $this->phpEx) . '">', '</a>');
+		return sprintf($this->user->lang['RETURN_INDEX'], '<a href="' . append_sid($this->phpbb_root_path . 'index.php') . '">', '</a>');
 	}
 
 	/**
@@ -151,9 +149,9 @@ abstract class form
 				$this->message->cc_sender();
 			}
 
-			$this->message->send($messenger, phpbb_get_board_contact($this->config, $this->phpEx));
+			$this->message->send($messenger, phpbb_get_board_contact($this->config));
 
-			meta_refresh(3, append_sid($this->phpbb_root_path . 'index.' . $this->phpEx));
+				meta_refresh(3, append_sid($this->phpbb_root_path . 'index.php'));
 			trigger_error($this->user->lang['EMAIL_SENT'] . '<br /><br />' . $this->get_return_message());
 		}
 	}

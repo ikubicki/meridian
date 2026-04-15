@@ -31,7 +31,7 @@ class ucp_profile
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $phpbb_root_path, $phpEx;
+		global $config, $db, $user, $auth, $template, $phpbb_root_path;
 		global $request, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
 
 		$user->add_lang('posting');
@@ -187,7 +187,7 @@ class ucp_profile
 
 							$messenger->assign_vars(array(
 								'USERNAME'		=> html_entity_decode($data['username'], ENT_COMPAT),
-								'U_ACTIVATE'	=> "$server_url/ucp.$phpEx?mode=activate&u={$user->data['user_id']}&k=$user_actkey")
+								'U_ACTIVATE'	=> "$server_url/ucp.php?mode=activate&u={$user->data['user_id']}&k=$user_actkey")
 							);
 
 							$messenger->send(NOTIFY_EMAIL);

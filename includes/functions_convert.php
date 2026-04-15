@@ -1371,11 +1371,11 @@ function extract_variables_from_file($_filename)
 
 function get_path($src_path, $src_url, $test_file)
 {
-	global $phpbb_root_path, $phpEx;
+	global $phpbb_root_path;
 
 	$board_config = get_config();
 
-	$test_file = preg_replace('/\.php$/i', ".$phpEx", $test_file);
+	$test_file = preg_replace('/\.php$/i', ".php", $test_file);
 	$src_path = path($src_path);
 
 	if (@file_exists($phpbb_root_path . $src_path . $test_file))
@@ -1809,7 +1809,7 @@ function sync_post_count($offset, $limit)
 */
 function add_bots()
 {
-	global $db, $convert, $user, $config, $phpbb_root_path, $phpEx;
+	global $db, $convert, $user, $config, $phpbb_root_path;
 
 	$db->sql_query($convert->truncate_statement . BOTS_TABLE);
 
@@ -2166,7 +2166,7 @@ function fix_empty_primary_groups()
 */
 function remove_invalid_users()
 {
-	global $db, $phpEx, $phpbb_root_path;
+	global $db, $phpbb_root_path;
 
 	// username_clean is UNIQUE
 	$sql = 'SELECT user_id

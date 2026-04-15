@@ -25,7 +25,7 @@ class acp_prune
 
 	function main($id, $mode)
 	{
-		global $user, $phpEx, $phpbb_root_path;
+		global $user, $phpbb_root_path;
 
 		$user->add_lang('acp/prune');
 
@@ -257,7 +257,7 @@ class acp_prune
 	function prune_users($id, $mode)
 	{
 		global $db, $user, $auth, $template, $phpbb_log, $request;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx, $phpbb_container;
+		global $phpbb_root_path, $phpbb_admin_path, $phpbb_container;
 
 		/** @var \phpbb\group\helper $group_helper */
 		$group_helper = $phpbb_container->get('group_helper');
@@ -327,7 +327,7 @@ class acp_prune
 						'USERNAME'			=> $usernames[$user_id],
 						'USER_ID'           => $user_id,
 						'U_PROFILE'			=> get_username_string('profile', $user_id, $usernames[$user_id]),
-						'U_USER_ADMIN'		=> ($auth->acl_get('a_user')) ? append_sid("{$phpbb_admin_path}index.$phpEx", 'i=users&amp;mode=overview&amp;u=' . $user_id, true, $user->session_id) : '',
+						'U_USER_ADMIN'		=> ($auth->acl_get('a_user')) ? append_sid("{$phpbb_admin_path}index.php", 'i=users&amp;mode=overview&amp;u=' . $user_id, true, $user->session_id) : '',
 					));
 				}
 
@@ -388,7 +388,7 @@ class acp_prune
 			'S_ACTIVE_OPTIONS'	=> $s_find_active_time,
 			'S_GROUP_LIST'		=> $s_group_list,
 			'S_COUNT_OPTIONS'	=> $s_find_count,
-			'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.$phpEx", 'mode=searchuser&amp;form=acp_prune&amp;field=users'),
+			'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.php", 'mode=searchuser&amp;form=acp_prune&amp;field=users'),
 		));
 	}
 

@@ -27,7 +27,7 @@ class acp_forums
 	function main($id, $mode)
 	{
 		global $db, $user, $auth, $template, $cache, $request, $phpbb_dispatcher;
-		global $phpbb_admin_path, $phpbb_root_path, $phpEx, $phpbb_log;
+		global $phpbb_admin_path, $phpbb_root_path, $phpbb_log;
 
 		$user->add_lang('acp/forums');
 		$this->tpl_name = 'acp_forums';
@@ -229,9 +229,9 @@ class acp_forums
 						// redirect directly to permission settings screen if authed
 						if ($action == 'add' && !$copied_permissions && $auth->acl_get('a_fauth'))
 						{
-							$message .= '<br /><br />' . sprintf($user->lang['REDIRECT_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=permissions' . $acl_url) . '">', '</a>');
+							$message .= '<br /><br />' . sprintf($user->lang['REDIRECT_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.php", 'i=permissions' . $acl_url) . '">', '</a>');
 
-							meta_refresh(4, append_sid("{$phpbb_admin_path}index.$phpEx", 'i=permissions' . $acl_url));
+							meta_refresh(4, append_sid("{$phpbb_admin_path}index.php", 'i=permissions' . $acl_url));
 						}
 
 						trigger_error($message . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id));
@@ -800,7 +800,7 @@ class acp_forums
 					// Redirect to permissions
 					if ($auth->acl_get('a_fauth'))
 					{
-						$message .= '<br /><br />' . sprintf($user->lang['REDIRECT_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=permissions' . $acl_url) . '">', '</a>');
+						$message .= '<br /><br />' . sprintf($user->lang['REDIRECT_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.php", 'i=permissions' . $acl_url) . '">', '</a>');
 					}
 
 					trigger_error($message . adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id));
@@ -1858,7 +1858,7 @@ class acp_forums
 	*/
 	function delete_forum_content($forum_id)
 	{
-		global $db, $config, $phpbb_root_path, $phpEx, $phpbb_container, $phpbb_dispatcher;
+		global $db, $config, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher;
 
 		include_once($phpbb_root_path . 'includes/functions_posting.php');
 
@@ -2190,17 +2190,17 @@ class acp_forums
 	*/
 	function copy_permission_page($forum_data)
 	{
-		global $phpEx, $phpbb_admin_path, $template, $user;
+		global $phpbb_admin_path, $template, $user;
 
 		$acl_url = '&amp;mode=setting_forum_local&amp;forum_id[]=' . $forum_data['forum_id'];
 		$action = append_sid($this->u_action . "&amp;parent_id={$this->parent_id}&amp;f={$forum_data['forum_id']}&amp;action=copy_perm");
 
-		$l_acl = sprintf($user->lang['COPY_TO_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=permissions' . $acl_url) . '">', '</a>');
+		$l_acl = sprintf($user->lang['COPY_TO_ACL'], '<a href="' . append_sid("{$phpbb_admin_path}index.php", 'i=permissions' . $acl_url) . '">', '</a>');
 
 		$this->tpl_name = 'acp_forums_copy_perm';
 
 		$template->assign_vars(array(
-			'U_ACL'				=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=permissions' . $acl_url),
+			'U_ACL'				=> append_sid("{$phpbb_admin_path}index.php", 'i=permissions' . $acl_url),
 			'L_ACL_LINK'		=> $l_acl,
 			'L_BACK_LINK'		=> adm_back_link($this->u_action . '&amp;parent_id=' . $this->parent_id),
 			'S_COPY_ACTION'		=> $action,

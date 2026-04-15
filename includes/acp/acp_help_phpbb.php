@@ -25,7 +25,7 @@ class acp_help_phpbb
 
 	function main($id, $mode)
 	{
-		global $config, $request, $template, $user, $phpbb_dispatcher, $phpbb_admin_path, $phpbb_root_path, $phpEx;
+		global $config, $request, $template, $user, $phpbb_dispatcher, $phpbb_admin_path, $phpbb_root_path;
 
 		if (!class_exists('phpbb_questionnaire_data_collector'))
 		{
@@ -110,7 +110,7 @@ class acp_help_phpbb
 			'S_COLLECT_STATS'		=> (!empty($config['help_send_statistics'])) ? true : false,
 			'S_STATS'				=> $collector->get_data_raw(),
 			'S_STATS_DATA'			=> json_encode($collector->get_data_raw()),
-			'U_ACP_MAIN'			=> append_sid("{$phpbb_admin_path}index.$phpEx"),
+			'U_ACP_MAIN'			=> append_sid("{$phpbb_admin_path}index.php"),
 			'U_ACTION'				=> $this->u_action,
 			// Pass earliest time we should try to send stats again
 			'COLLECT_STATS_TIME'	=> intval($config['help_send_statistics_time']) + 86400,

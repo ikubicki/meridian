@@ -119,14 +119,14 @@ class user extends \phpbb\session
 	*/
 	function setup($lang_set = false, $style_id = false)
 	{
-		global $db, $request, $template, $config, $auth, $phpEx, $phpbb_root_path, $cache;
+		global $db, $request, $template, $config, $auth, $phpbb_root_path, $cache;
 		global $phpbb_dispatcher, $phpbb_container;
 
 		$this->language->set_default_language($config['default_lang']);
 
 		if ($this->data['user_id'] != ANONYMOUS)
 		{
-			$user_lang_name = (file_exists($this->lang_path . $this->data['user_lang'] . "/common.$phpEx")) ? $this->data['user_lang'] : basename($config['default_lang']);
+			$user_lang_name = (file_exists($this->lang_path . $this->data['user_lang'] . "/common.php")) ? $this->data['user_lang'] : basename($config['default_lang']);
 			$user_date_format = $this->data['user_dateformat'];
 			$user_timezone = $this->data['user_timezone'];
 		}
@@ -145,7 +145,7 @@ class user extends \phpbb\session
 			if ($lang_override)
 			{
 				$use_lang = basename($lang_override);
-				$user_lang_name = (file_exists($this->lang_path . $use_lang . "/common.$phpEx")) ? $use_lang : basename($config['default_lang']);
+				$user_lang_name = (file_exists($this->lang_path . $use_lang . "/common.php")) ? $use_lang : basename($config['default_lang']);
 				$this->data['user_lang'] = $user_lang_name;
 			}
 			else
@@ -171,7 +171,7 @@ class user extends \phpbb\session
 					$accept_lang = substr($accept_lang, 0, 2) . '_' . strtoupper(substr($accept_lang, 3, 2));
 					$accept_lang = basename($accept_lang);
 
-					if (file_exists($this->lang_path . $accept_lang . "/common.$phpEx"))
+					if (file_exists($this->lang_path . $accept_lang . "/common.php"))
 					{
 						$user_lang_name = $config['default_lang'] = $accept_lang;
 						break;
@@ -182,7 +182,7 @@ class user extends \phpbb\session
 						$accept_lang = substr($accept_lang, 0, 2);
 						$accept_lang = basename($accept_lang);
 
-						if (file_exists($this->lang_path . $accept_lang . "/common.$phpEx"))
+						if (file_exists($this->lang_path . $accept_lang . "/common.php"))
 						{
 							$user_lang_name = $config['default_lang'] = $accept_lang;
 							break;
@@ -442,9 +442,9 @@ class user extends \phpbb\session
 		// ucp profile reg_details page ... of course do not redirect if we're already in the ucp
 		if (!defined('IN_ADMIN') && !defined('ADMIN_START') && $config['chg_passforce'] && !empty($this->data['is_registered']) && $auth->acl_get('u_chgpasswd') && $this->data['user_passchg'] < time() - ($config['chg_passforce'] * 86400))
 		{
-			if (strpos($this->page['query_string'], 'mode=reg_details') === false && $this->page['page_name'] != "ucp.$phpEx")
+			if (strpos($this->page['query_string'], 'mode=reg_details') === false && $this->page['page_name'] != "ucp.php")
 			{
-				redirect(append_sid("{$phpbb_root_path}ucp.$phpEx", 'i=profile&amp;mode=reg_details'));
+				redirect(append_sid("{$phpbb_root_path}ucp.php", 'i=profile&amp;mode=reg_details'));
 			}
 		}
 
@@ -830,7 +830,7 @@ class user extends \phpbb\session
 
 		if (!function_exists('remove_newly_registered'))
 		{
-			global $phpbb_root_path, $phpEx;
+			global $phpbb_root_path;
 
 			include($phpbb_root_path . 'includes/functions_user.php');
 		}

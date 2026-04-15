@@ -79,7 +79,6 @@ class fulltext_native extends \phpbb\search\base
 	 * PHP Extension
 	 * @var string
 	 */
-	protected $php_ext;
 
 	/**
 	 * Config object
@@ -117,10 +116,9 @@ class fulltext_native extends \phpbb\search\base
 	* @param	\phpbb\user	$user	User object
 	* @param	\phpbb\event\dispatcher_interface	$phpbb_dispatcher	Event dispatcher object
 	*/
-	public function __construct(&$error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher)
+	public function __construct(&$error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher)
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->php_ext = $phpEx;
 		$this->config = $config;
 		$this->db = $db;
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
@@ -133,7 +131,7 @@ class fulltext_native extends \phpbb\search\base
 		*/
 		if (!function_exists('utf8_decode_ncr'))
 		{
-			include($this->phpbb_root_path . 'includes/utf/utf_tools.' . $this->php_ext);
+			include($this->phpbb_root_path . 'includes/utf/utf_tools.php');
 		}
 
 		$error = false;
@@ -2001,7 +1999,7 @@ class fulltext_native extends \phpbb\search\base
 			if (!isset($conv_loaded[$idx]))
 			{
 				$conv_loaded[$idx] = 1;
-				$file = $this->phpbb_root_path . 'includes/utf/data/search_indexer_' . $idx . '.' . $this->php_ext;
+$file = $this->phpbb_root_path . 'includes/utf/data/search_indexer_' . $idx . '.php';
 
 				if (file_exists($file))
 				{

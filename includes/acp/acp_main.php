@@ -27,7 +27,7 @@ class acp_main
 	function main($id, $mode)
 	{
 		global $config, $db, $cache, $user, $auth, $template, $request, $phpbb_log;
-		global $phpbb_root_path, $phpbb_admin_path, $phpEx, $phpbb_container, $phpbb_dispatcher, $phpbb_filesystem;
+		global $phpbb_root_path, $phpbb_admin_path, $phpbb_container, $phpbb_dispatcher, $phpbb_filesystem;
 
 		// Show restore permissions notice
 		if ($user->data['user_perm_from'] && $auth->acl_get('a_switchperm'))
@@ -46,9 +46,9 @@ class acp_main
 
 			$template->assign_vars(array(
 				'S_RESTORE_PERMISSIONS'		=> true,
-				'U_RESTORE_PERMISSIONS'		=> append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=restore_perm'),
+				'U_RESTORE_PERMISSIONS'		=> append_sid("{$phpbb_root_path}ucp.php", 'mode=restore_perm'),
 				'PERM_FROM'					=> $perm_from,
-				'L_PERMISSIONS_TRANSFERRED_EXPLAIN'	=> sprintf($user->lang['PERMISSIONS_TRANSFERRED_EXPLAIN'], $perm_from, append_sid("{$phpbb_root_path}ucp.$phpEx", 'mode=restore_perm')),
+				'L_PERMISSIONS_TRANSFERRED_EXPLAIN'	=> sprintf($user->lang['PERMISSIONS_TRANSFERRED_EXPLAIN'], $perm_from, append_sid("{$phpbb_root_path}ucp.php", 'mode=restore_perm')),
 			));
 
 			return;
@@ -61,7 +61,7 @@ class acp_main
 			if ($action === 'admlogout')
 			{
 				$user->unset_admin();
-				redirect(append_sid("{$phpbb_root_path}index.$phpEx"));
+				redirect(append_sid("{$phpbb_root_path}index.php"));
 			}
 
 			if (!confirm_box(true))
@@ -191,7 +191,7 @@ class acp_main
 
 						if (!function_exists('update_last_username'))
 						{
-							include($phpbb_root_path . "includes/functions_user.$phpEx");
+							include($phpbb_root_path . "includes/functions_user.php");
 						}
 						update_last_username();
 
@@ -602,11 +602,11 @@ class acp_main
 			'BOARD_VERSION'		=> $config['version'],
 
 			'U_ACTION'			=> $this->u_action,
-			'U_ADMIN_LOG'		=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=logs&amp;mode=admin'),
-			'U_INACTIVE_USERS'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=inactive&amp;mode=list'),
-			'U_VERSIONCHECK'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=update&amp;mode=version_check'),
-			'U_VERSIONCHECK_FORCE'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'versioncheck_force=1'),
-			'U_ATTACH_ORPHAN'	=> append_sid("{$phpbb_admin_path}index.$phpEx", 'i=acp_attachments&mode=orphan'),
+			'U_ADMIN_LOG'		=> append_sid("{$phpbb_admin_path}index.php", 'i=logs&amp;mode=admin'),
+			'U_INACTIVE_USERS'	=> append_sid("{$phpbb_admin_path}index.php", 'i=inactive&amp;mode=list'),
+			'U_VERSIONCHECK'	=> append_sid("{$phpbb_admin_path}index.php", 'i=update&amp;mode=version_check'),
+			'U_VERSIONCHECK_FORCE'	=> append_sid("{$phpbb_admin_path}index.php", 'versioncheck_force=1'),
+			'U_ATTACH_ORPHAN'	=> append_sid("{$phpbb_admin_path}index.php", 'i=acp_attachments&mode=orphan'),
 
 			'S_VERSIONCHECK'	=> ($auth->acl_get('a_board')) ? true : false,
 			'S_ACTION_OPTIONS'	=> ($auth->acl_get('a_board')) ? true : false,
@@ -656,12 +656,12 @@ class acp_main
 
 					'REMINDED_EXPLAIN'	=> $user->lang('USER_LAST_REMINDED', (int) $row['user_reminded'], $user->format_date($row['user_reminded_time'])),
 
-					'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour'], false, append_sid("{$phpbb_admin_path}index.$phpEx", 'i=users&amp;mode=overview')),
+					'USERNAME_FULL'		=> get_username_string('full', $row['user_id'], $row['username'], $row['user_colour'], false, append_sid("{$phpbb_admin_path}index.php", 'i=users&amp;mode=overview')),
 					'USERNAME'			=> get_username_string('username', $row['user_id'], $row['username'], $row['user_colour']),
 					'USER_COLOR'		=> get_username_string('colour', $row['user_id'], $row['username'], $row['user_colour']),
 
-					'U_USER_ADMIN'	=> append_sid("{$phpbb_admin_path}index.$phpEx", "i=users&amp;mode=overview&amp;u={$row['user_id']}"),
-					'U_SEARCH_USER'	=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.$phpEx", "author_id={$row['user_id']}&amp;sr=posts") : '',
+					'U_USER_ADMIN'	=> append_sid("{$phpbb_admin_path}index.php", "i=users&amp;mode=overview&amp;u={$row['user_id']}"),
+					'U_SEARCH_USER'	=> ($auth->acl_get('u_search')) ? append_sid("{$phpbb_root_path}search.php", "author_id={$row['user_id']}&amp;sr=posts") : '',
 				));
 			}
 
@@ -688,13 +688,13 @@ class acp_main
 		{
 			$error = false;
 			$search_type = $config['search_type'];
-			$search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+			$search = new $search_type($error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher);
 
 			if (!$search->index_created())
 			{
 				$template->assign_vars(array(
 					'S_SEARCH_INDEX_MISSING'	=> true,
-					'L_NO_SEARCH_INDEX'			=> $user->lang('NO_SEARCH_INDEX', $search->get_name(), '<a href="' . append_sid("{$phpbb_admin_path}index.$phpEx", 'i=acp_search&amp;mode=index') . '">', '</a>'),
+					'L_NO_SEARCH_INDEX'			=> $user->lang('NO_SEARCH_INDEX', $search->get_name(), '<a href="' . append_sid("{$phpbb_admin_path}index.php", 'i=acp_search&amp;mode=index') . '">', '</a>'),
 				));
 			}
 		}

@@ -34,7 +34,7 @@ class acp_profile
 	function main($id, $mode)
 	{
 		global $config, $db, $user, $template;
-		global $phpbb_root_path, $phpEx;
+		global $phpbb_root_path;
 		global $request, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
 
 		if (!function_exists('generate_smilies'))

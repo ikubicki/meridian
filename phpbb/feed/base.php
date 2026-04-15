@@ -46,7 +46,6 @@ abstract class base implements feed_interface
 	protected $phpbb_dispatcher;
 
 	/** @var string */
-	protected $phpEx;
 
 	/**
 	 * SQL Query to be executed to get feed items
@@ -97,8 +96,7 @@ abstract class base implements feed_interface
 		\phpbb\user $user,
 		\phpbb\auth\auth $auth,
 		\phpbb\content_visibility $content_visibility,
-		\phpbb\event\dispatcher_interface $phpbb_dispatcher,
-		$phpEx
+		\phpbb\event\dispatcher_interface $phpbb_dispatcher
 	)
 	{
 		$this->config = $config;
@@ -109,7 +107,6 @@ abstract class base implements feed_interface
 		$this->auth = $auth;
 		$this->content_visibility = $content_visibility;
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
-		$this->phpEx = $phpEx;
 
 		$this->set_keys();
 
@@ -325,7 +322,7 @@ abstract class base implements feed_interface
 			return $this->user->lang['GUEST'];
 		}
 
-		return '<a href="' . $this->helper->append_sid('memberlist.' . $this->phpEx, 'mode=viewprofile&amp;u=' . $author_id) . '">' . $row[$this->get('creator')] . '</a>';
+		return '<a href="' . $this->helper->append_sid('memberlist.php', 'mode=viewprofile&amp;u=' . $author_id) . '">' . $row[$this->get('creator')] . '</a>';
 	}
 
 	/**

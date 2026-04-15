@@ -60,14 +60,13 @@ class acp_styles
 	protected $phpbb_root_path;
 
 	/** @var string */
-	protected $php_ext;
 
 	/** @var \phpbb\event\dispatcher_interface */
 	protected $dispatcher;
 
 	public function main($id, $mode)
 	{
-		global $db, $user, $phpbb_admin_path, $phpbb_root_path, $phpEx, $template, $request, $cache, $auth, $config, $phpbb_dispatcher, $phpbb_container;
+		global $db, $user, $phpbb_admin_path, $phpbb_root_path, $template, $request, $cache, $auth, $config, $phpbb_dispatcher, $phpbb_container;
 
 		$this->db = $db;
 		$this->user = $user;
@@ -78,13 +77,12 @@ class acp_styles
 		$this->text_formatter_cache = $phpbb_container->get('text_formatter.cache');
 		$this->config = $config;
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->php_ext = $phpEx;
 		$this->dispatcher = $phpbb_dispatcher;
 
 		$this->default_style = $config['default_style'];
 		$this->styles_path = $this->phpbb_root_path . $this->styles_path_absolute . '/';
 
-		$this->u_base_action = append_sid("{$phpbb_admin_path}index.{$this->php_ext}", "i={$id}");
+		$this->u_base_action = append_sid("{$phpbb_admin_path}index.php", "i={$id}");
 		$this->s_hidden_fields = array(
 			'mode'		=> $mode,
 		);
@@ -1025,7 +1023,7 @@ class acp_styles
 
 			// Preview
 			$actions[] = array(
-				'U_ACTION'	=> append_sid($this->phpbb_root_path . 'index.' . $this->php_ext, 'style=' . $style['style_id']),
+				'U_ACTION'	=> append_sid($this->phpbb_root_path . 'index.php', 'style=' . $style['style_id']),
 				'L_ACTION'	=> $this->user->lang['PREVIEW']
 			);
 		}

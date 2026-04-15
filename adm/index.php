@@ -19,7 +19,6 @@ define('NEED_SID', true);
 
 // Include files
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './../';
-$phpEx = substr(strrchr(__FILE__, '.'), 1);
 require($phpbb_root_path . 'common.php');
 require($phpbb_root_path . 'includes/functions_acp.php');
 require($phpbb_root_path . 'includes/functions_admin.php');
@@ -75,7 +74,7 @@ $module->set_active($module_id, $mode);
 
 // Assign data to the template engine for the list of modules
 // We do this before loading the active module for correct menu display in trigger_error
-$module->assign_tpl_vars(append_sid("{$phpbb_admin_path}index.$phpEx"));
+$module->assign_tpl_vars(append_sid("{$phpbb_admin_path}index.php"));
 
 // Load and execute the relevant module
 $module->load_active();
