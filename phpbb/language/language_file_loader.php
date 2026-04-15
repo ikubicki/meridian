@@ -72,7 +72,7 @@ class language_file_loader
 		$locale = (array) $locale;
 
 		// Determine path to language directory
-		$path = $this->phpbb_root_path . 'language/';
+		$path = $this->phpbb_root_path . 'src/phpbb/language/';
 
 		$this->load_file($path, $component, $locale, $lang);
 	}
@@ -169,7 +169,7 @@ class language_file_loader
 			// If we are in install, try to use the updated version, when available
 			if (defined('IN_INSTALL'))
 			{
-				$install_language_path = str_replace('language/', 'install/update/new/language/', $language_file_path);
+				$install_language_path = str_replace('src/phpbb/language/', 'install/update/new/language/', $language_file_path);
 				if (file_exists($install_language_path))
 				{
 					return $install_language_path;

@@ -3095,7 +3095,7 @@ function add_permission_language()
 	$lang_files = $finder
 		->prefix('permissions_')
 		->suffix(".php")
-		->core_path('language/')
+		->core_path('src/phpbb/language/')
 		->extension_directory('/language')
 		->find();
 

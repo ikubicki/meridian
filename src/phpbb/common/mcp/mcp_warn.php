@@ -535,8 +535,8 @@ function add_warning($user_row, $warning, $send_pm = true, $post_id = 0)
 		{
 			$lang = array();
 
-$user_row['user_lang'] = (file_exists($phpbb_root_path . 'language/' . basename($user_row['user_lang']) . '/mcp.php')) ? $user_row['user_lang'] : $config['default_lang'];
-					include($phpbb_root_path . 'language/' . basename($user_row['user_lang']) . '/mcp.php');
+$user_row['user_lang'] = (file_exists($phpbb_root_path . 'src/phpbb/language/' . basename($user_row['user_lang']) . '/mcp.php')) ? $user_row['user_lang'] : $config['default_lang'];
+							include($phpbb_root_path . 'src/phpbb/language/' . basename($user_row['user_lang']) . '/mcp.php');
 
 			$warn_pm_subject = $lang['WARNING_PM_SUBJECT'];
 			$warn_pm_body = sprintf($lang['WARNING_PM_BODY'], $warning);

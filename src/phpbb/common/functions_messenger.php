@@ -240,7 +240,7 @@ class messenger
 		}
 		else
 		{
-			$template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'language/';
+			$template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'src/phpbb/language/';
 			$template_path .= $template_lang . '/email';
 
 			$template_paths = array(
@@ -253,7 +253,7 @@ class messenger
 			// do not know the default language alternative
 			if ($template_lang !== $board_language)
 			{
-				$fallback_template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'language/';
+				$fallback_template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'src/phpbb/language/';
 				$fallback_template_path .= $board_language . '/email';
 
 				$template_paths[] = $fallback_template_path . $template_dir_prefix;
@@ -266,7 +266,7 @@ class messenger
 			// If everything fails just fall back to en template
 			if ($template_lang !== 'en' && $board_language !== 'en')
 			{
-				$fallback_template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'language/';
+				$fallback_template_path = (!empty($user->lang_path)) ? $user->lang_path : $phpbb_root_path . 'src/phpbb/language/';
 				$fallback_template_path .= 'en/email';
 
 				$template_paths[] = $fallback_template_path . $template_dir_prefix;

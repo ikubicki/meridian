@@ -550,7 +550,7 @@ function validate_config_vars($config_vars, &$cfg_array, &$error)
 
 				$cfg_array[$config_name] = basename($cfg_array[$config_name]);
 
-				if (!file_exists($phpbb_root_path . 'language/' . $cfg_array[$config_name] . '/'))
+				if (!file_exists($phpbb_root_path . 'src/phpbb/language/' . $cfg_array[$config_name] . '/'))
 				{
 					$error[] = $user->lang['WRONG_DATA_LANG'];
 				}

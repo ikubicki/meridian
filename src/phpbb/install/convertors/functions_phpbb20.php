@@ -1421,7 +1421,7 @@ function phpbb_attachment_extension_group_name()
 	while ($row = $db->sql_fetchrow($result))
 	{
 		$lang_dir = basename($row['lang_dir']);
-		$lang_file = $phpbb_root_path . 'language/' . $lang_dir . '/acp/attachments.php';
+		$lang_file = $phpbb_root_path . 'src/phpbb/language/' . $lang_dir . '/acp/attachments.php';
 
 		if (!file_exists($lang_file))
 		{

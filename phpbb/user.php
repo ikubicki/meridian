@@ -61,7 +61,7 @@ class user extends \phpbb\session
 	{
 		global $phpbb_root_path;
 
-		$this->lang_path = $phpbb_root_path . 'language/';
+			$this->lang_path = $phpbb_root_path . 'src/phpbb/language/';
 		$this->language = $lang;
 		$this->datetime = $datetime_class;
 

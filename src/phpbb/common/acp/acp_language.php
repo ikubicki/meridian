@@ -142,7 +142,7 @@ class acp_language
 						$iterator = new \RecursiveIteratorIterator(
 							new \phpbb\recursive_dot_prefix_filter_iterator(
 								new \RecursiveDirectoryIterator(
-									$phpbb_root_path . 'language/' . $config['default_lang'] . '/',
+									$phpbb_root_path . 'src/phpbb/language/' . $config['default_lang'] . '/',
 									\FilesystemIterator::SKIP_DOTS
 								)
 							),
@@ -160,7 +160,7 @@ class acp_language
 						$relative_path = $iterator->getInnerIterator()->getSubPathname();
 						$relative_path = str_replace(DIRECTORY_SEPARATOR, '/', $relative_path);
 
-						if (file_exists($phpbb_root_path . 'language/' . $lang_iso . '/' . $relative_path))
+						if (file_exists($phpbb_root_path . 'src/phpbb/language/' . $lang_iso . '/' . $relative_path))
 						{
 							if (substr($relative_path, -3) === 'php')
 							{
@@ -438,8 +438,8 @@ class acp_language
 	{
 		global $phpbb_root_path;
 
-		$source_file = $phpbb_root_path . 'language/' . $source_lang . '/' . $file;
-		$dest_file = $phpbb_root_path . 'language/' . $dest_lang . '/' . $file;
+		$source_file = $phpbb_root_path . 'src/phpbb/language/' . $source_lang . '/' . $file;
+		$dest_file = $phpbb_root_path . 'src/phpbb/language/' . $dest_lang . '/' . $file;
 
 		if (!file_exists($dest_file))
 		{

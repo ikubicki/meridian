@@ -1079,7 +1079,7 @@ class p_master
 				->prefix('info_' . strtolower($module_class) . '_')
 				->suffix(".php")
 				->extension_directory('/language/' . basename($config['default_lang']))
-				->core_path('language/' . basename($config['default_lang']) . '/mods/')
+				->core_path('src/phpbb/language/' . basename($config['default_lang']) . '/mods/')
 				->find();
 		}
 
@@ -1090,7 +1090,7 @@ class p_master
 				->prefix('info_' . strtolower($module_class) . '_')
 				->suffix(".php")
 				->extension_directory('/language/en')
-				->core_path('language/en/mods/')
+				->core_path('src/phpbb/language/en/mods/')
 				->find();
 		}
 
@@ -1099,7 +1099,7 @@ class p_master
 			->prefix('info_' . strtolower($module_class) . '_')
 			->suffix(".php")
 			->extension_directory('/language/' . $user->lang_name)
-			->core_path('language/' . $user->lang_name . '/mods/')
+			->core_path('src/phpbb/language/' . $user->lang_name . '/mods/')
 			->find();
 
 		$lang_files = array_merge($english_lang_files, $default_lang_files, $user_lang_files);
