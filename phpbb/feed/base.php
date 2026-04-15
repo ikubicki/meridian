@@ -86,7 +86,6 @@ abstract class base implements feed_interface
 	 * @param \phpbb\auth\auth					$auth		Auth object
 	 * @param \phpbb\content_visibility			$content_visibility		Auth object
 	 * @param \phpbb\event\dispatcher_interface	$phpbb_dispatcher		Event dispatcher object
-	 * @param string								$phpEx		php file extension
 	 */
 	public function __construct(
 		\phpbb\feed\helper $helper,

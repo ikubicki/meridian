@@ -125,7 +125,6 @@ class fulltext_sphinx
 	 *
 	 * @param string|bool $error Any error that occurs is passed on through this reference variable otherwise false
 	 * @param string $phpbb_root_path Relative path to phpBB root
-	 * @param string $phpEx PHP file extension
 	 * @param \phpbb\auth\auth $auth Auth object
 	 * @param \phpbb\config\config $config Config object
 	 * @param \phpbb\db\driver\driver_interface $db Database object
@@ -252,7 +251,7 @@ class fulltext_sphinx
 			return false;
 		}
 
-include($this->phpbb_root_path . 'config.php');
+include($this->phpbb_root_path . 'config/config.php');
 
 		/* Now that we're sure everything was entered correctly,
 		generate a config for the index. We use a config value

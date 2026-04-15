@@ -130,7 +130,6 @@ function installer_msg_handler($errno, $msg_text, $errfile, $errline)
  * Register class loaders for installer
  *
  * @param string $phpbb_root_path phpBB root path
- * @param string $phpEx PHP file extension
  */
 function installer_class_loader($phpbb_root_path)
 {
