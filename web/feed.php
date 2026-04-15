@@ -24,7 +24,7 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 **/
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-include($phpbb_root_path . 'common.php');
+include($phpbb_root_path . 'src/phpbb/common/common.php');
 
 /** @var \phpbb\controller\helper $controller_helper */
 $controller_helper = $phpbb_container->get('controller.helper');

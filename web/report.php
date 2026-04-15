@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 */
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-include($phpbb_root_path . 'common.php');
+include($phpbb_root_path . 'src/phpbb/common/common.php');
 
 // Start session management
 $user->session_begin();

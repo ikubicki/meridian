@@ -16,7 +16,7 @@
 */
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
-require($phpbb_root_path . 'common.php');
+require($phpbb_root_path . 'src/phpbb/common/common.php');
 require($phpbb_root_path . 'includes/functions_user.php');
 require($phpbb_root_path . 'includes/functions_module.php');
 

@@ -146,7 +146,7 @@ if (isset($_GET['avatar']))
 }
 
 // implicit else: we are not in avatar mode
-include($phpbb_root_path . 'common.php');
+include($phpbb_root_path . 'src/phpbb/common/common.php');
 require($phpbb_root_path . 'includes/functions_download' . '.php');
 
 $attach_id = $request->variable('id', 0);
