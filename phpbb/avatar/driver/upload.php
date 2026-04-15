@@ -65,7 +65,7 @@ class upload extends \phpbb\avatar\driver\driver
 		$root_path = $this->path_helper->get_web_root_path();
 
 		return array(
-			'src' => $root_path . 'download/file.' . $this->php_ext . '?avatar=' . $row['avatar'],
+				'src' => $root_path . 'web/download/file.' . $this->php_ext . '?avatar=' . $row['avatar'],
 			'width' => $row['avatar_width'],
 			'height' => $row['avatar_height'],
 		);

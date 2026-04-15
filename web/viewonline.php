@@ -370,7 +370,7 @@ foreach ($session_data_rowset as $row)
 			$location_url = append_sid("{$phpbb_root_path}index.php");
 		break;
 
-		case 'download/file':
+		case 'web/download/file':
 			$location = $user->lang['DOWNLOADING_FILE'];
 			$location_url = append_sid("{$phpbb_root_path}index.php");
 		break;

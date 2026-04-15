@@ -15,7 +15,7 @@
 * @ignore
 */
 define('IN_PHPBB', true);
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './../';
+$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../../';
 
 // Thank you sun.
 if (isset($_SERVER['CONTENT_TYPE']))
@@ -293,7 +293,7 @@ else
 
 	if ($display_cat == ATTACHMENT_CATEGORY_IMAGE && $mode === 'view' && (strpos($attachment['mimetype'], 'image') === 0) && (strpos(strtolower($user->browser), 'msie') !== false) && !phpbb_is_greater_ie_version($user->browser, 7))
 	{
-		wrap_img_in_html(append_sid($phpbb_root_path . 'download/file.php', 'id=' . $attachment['attach_id']), $attachment['real_filename']);
+		wrap_img_in_html(append_sid($phpbb_root_path . 'web/download/file.php', 'id=' . $attachment['attach_id']), $attachment['real_filename']);
 		file_gc();
 	}
 	else

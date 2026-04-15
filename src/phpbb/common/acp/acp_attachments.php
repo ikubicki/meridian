@@ -1107,7 +1107,7 @@ class acp_attachments
 						'PHYSICAL_FILENAME'	=> utf8_basename($row['physical_filename']),
 						'ATTACH_ID'			=> $row['attach_id'],
 						'POST_ID'			=> (!empty($post_ids[$row['attach_id']])) ? $post_ids[$row['attach_id']] : '',
-						'U_FILE'			=> append_sid($phpbb_root_path . 'download/file.php', 'mode=view&amp;id=' . $row['attach_id']),
+						'U_FILE'			=> append_sid($phpbb_root_path . 'web/download/file.php', 'mode=view&amp;id=' . $row['attach_id']),
 					]);
 				}
 				$db->sql_freeresult($result);
@@ -1295,7 +1295,7 @@ class acp_attachments
 						'S_IN_MESSAGE'		=> (bool) $row['in_message'],
 
 						'U_VIEW_TOPIC'		=> append_sid("{$phpbb_root_path}viewtopic.php", "p={$row['post_msg_id']}") . "#p{$row['post_msg_id']}",
-						'U_FILE'			=> append_sid($phpbb_root_path . 'download/file.php', 'mode=view&amp;id=' . $row['attach_id']))
+						'U_FILE'			=> append_sid($phpbb_root_path . 'web/download/file.php', 'mode=view&amp;id=' . $row['attach_id']))
 					);
 				}
 

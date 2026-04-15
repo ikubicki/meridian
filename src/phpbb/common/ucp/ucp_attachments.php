@@ -184,7 +184,7 @@ class ucp_attachments
 					'S_IN_MESSAGE'		=> $row['in_message'],
 					'S_LOCKED'			=> !$this->can_delete_file($row),
 
-					'U_VIEW_ATTACHMENT'	=> append_sid("{$phpbb_root_path}download/file.php", 'id=' . $row['attach_id']),
+					'U_VIEW_ATTACHMENT'	=> append_sid("{$phpbb_root_path}web/download/file.php", 'id=' . $row['attach_id']),
 					'U_VIEW_TOPIC'		=> $view_topic)
 				);
 
