@@ -72,6 +72,11 @@
 			"dev-master": "3.3.x-dev"
 		}
 	},
+	"autoload": {
+		"psr-4": {
+			"phpbb\\": "src/phpbb/forums/"
+		}
+	},
 	"config": {
 		"platform": {
 			"php": "7.2"

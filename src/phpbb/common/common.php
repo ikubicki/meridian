@@ -21,10 +21,6 @@ if (!defined('IN_PHPBB'))
 }
 
 require($phpbb_root_path . 'src/phpbb/common/startup.php');
-require($phpbb_root_path . 'src/phpbb/forums/class_loader.php');
-
-$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}src/phpbb/forums/");
-$phpbb_class_loader->register();
 
 $phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 extract($phpbb_config_php_file->get_all());
@@ -134,7 +130,6 @@ if ($phpbb_container->getParameter('debug.error_handler'))
 	\phpbb\debug\debug::enable();
 }
 
-$phpbb_class_loader->set_cache($phpbb_container->get('cache.driver'));
 $phpbb_class_loader_ext->set_cache($phpbb_container->get('cache.driver'));
 
 $phpbb_container->get('dbal.conn')->set_debug_sql_explain($phpbb_container->getParameter('debug.sql_explain'));
