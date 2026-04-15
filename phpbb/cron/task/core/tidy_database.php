@@ -45,7 +45,7 @@ class tidy_database extends \phpbb\cron\task\base
 	{
 		if (!function_exists('tidy_database'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_admin.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_admin.' . $this->php_ext);
 		}
 		tidy_database();
 	}

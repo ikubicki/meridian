@@ -153,7 +153,7 @@ class fulltext_sphinx
 
 		if (!class_exists('SphinxClient'))
 		{
-			require($this->phpbb_root_path . 'includes/sphinxapi.php');
+			require($this->phpbb_root_path . 'src/phpbb/common/sphinxapi.php');
 		}
 
 		// Initialize sphinx client

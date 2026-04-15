@@ -82,7 +82,7 @@ abstract class messenger_base extends \phpbb\notification\method\base
 		// We do not send emails to banned users
 		if (!function_exists('phpbb_get_banned_user_ids'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_user.' . $this->php_ext);
 		}
 		$banned_users = phpbb_get_banned_user_ids($user_ids);
 
@@ -92,7 +92,7 @@ abstract class messenger_base extends \phpbb\notification\method\base
 		// Load the messenger
 		if (!class_exists('messenger'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_messenger.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_messenger.' . $this->php_ext);
 		}
 		$messenger = new \messenger();
 

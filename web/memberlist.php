@@ -17,7 +17,7 @@
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
 include($phpbb_root_path . 'src/phpbb/common/common.php');
-include($phpbb_root_path . 'includes/functions_display.php');
+include($phpbb_root_path . 'src/phpbb/common/functions_display.php');
 
 $mode = $request->variable('mode', '');
 
@@ -106,7 +106,7 @@ switch ($mode)
 		// Display a listing of board admins, moderators
 		if (!function_exists('user_get_id_name'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.php');
+			include($phpbb_root_path . 'src/phpbb/common/functions_user.php');
 		}
 
 		$page_title = $user->lang['THE_TEAM'];
@@ -428,7 +428,7 @@ switch ($mode)
 					if (check_form_key('memberlist_messaging'))
 					{
 
-						include_once($phpbb_root_path . 'includes/functions_messenger.php');
+						include_once($phpbb_root_path . 'src/phpbb/common/functions_messenger.php');
 
 						$subject = sprintf($user->lang['IM_JABBER_SUBJECT'], $user->data['username'], $config['server_name']);
 						$message = $request->variable('message', '', true);
@@ -699,7 +699,7 @@ switch ($mode)
 		{
 			if (!class_exists('p_master'))
 			{
-				include($phpbb_root_path . 'includes/functions_module.php');
+				include($phpbb_root_path . 'src/phpbb/common/functions_module.php');
 			}
 			$module = new p_master();
 
@@ -905,7 +905,7 @@ switch ($mode)
 	case 'email':
 		if (!class_exists('messenger'))
 		{
-			include($phpbb_root_path . 'includes/functions_messenger.php');
+			include($phpbb_root_path . 'src/phpbb/common/functions_messenger.php');
 		}
 
 		$user_id	= $request->variable('u', 0);
@@ -1341,7 +1341,7 @@ switch ($mode)
 			{
 				if (!class_exists('p_master'))
 				{
-					include($phpbb_root_path . 'includes/functions_module.php');
+					include($phpbb_root_path . 'src/phpbb/common/functions_module.php');
 				}
 				$module = new p_master;
 				$module->list_modules('ucp');

@@ -52,7 +52,7 @@ class prune_all_forums extends \phpbb\cron\task\base
 	{
 		if (!function_exists('auto_prune'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_admin.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_admin.' . $this->php_ext);
 		}
 
 		$sql = 'SELECT forum_id, prune_next, enable_prune, prune_days, prune_viewed, enable_shadow_prune, prune_shadow_days, prune_shadow_freq, prune_shadow_next, forum_flags, prune_freq

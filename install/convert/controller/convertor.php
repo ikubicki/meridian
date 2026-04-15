@@ -261,8 +261,8 @@ class convertor
 	{
 		$this->setup_navigation('settings');
 
-		require_once ($this->phpbb_root_path . 'includes/constants.' . $this->php_ext);
-		require_once ($this->phpbb_root_path . 'includes/functions_convert.' . $this->php_ext);
+		require_once ($this->phpbb_root_path . 'src/phpbb/common/constants.' . $this->php_ext);
+		require_once ($this->phpbb_root_path . 'src/phpbb/common/functions_convert.' . $this->php_ext);
 
 		// Include convertor if available
 		$convertor_file_path = $this->phpbb_root_path . 'install/convertors/convert_' . $converter . '.' . $this->php_ext;
@@ -389,8 +389,8 @@ class convertor
 		$this->cache->purge();
 		$this->installer_cache->purge();
 
-		require_once($this->phpbb_root_path . 'includes/constants.' . $this->php_ext);
-		require_once($this->phpbb_root_path . 'includes/functions_convert.' . $this->php_ext);
+		require_once($this->phpbb_root_path . 'src/phpbb/common/constants.' . $this->php_ext);
+		require_once($this->phpbb_root_path . 'src/phpbb/common/functions_convert.' . $this->php_ext);
 
 		$sql = 'SELECT config_value
 			FROM ' . $this->config_table . '
@@ -435,7 +435,7 @@ class convertor
 
 		$phpbb_root_path = $this->phpbb_root_path;
 
-		require_once($this->phpbb_root_path . 'includes/functions_convert.' . $this->php_ext);
+		require_once($this->phpbb_root_path . 'src/phpbb/common/functions_convert.' . $this->php_ext);
 
 		// Include convertor if available
 		$convertor_file_path = $this->phpbb_root_path . 'install/convertors/convert_' . $convertor . '.' . $this->php_ext;

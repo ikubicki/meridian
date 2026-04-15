@@ -451,7 +451,7 @@ class content_visibility
 
 		if (!function_exists('truncate_string'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_content.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_content.' . $this->php_ext);
 		}
 
 		$data = array(
@@ -545,7 +545,7 @@ class content_visibility
 		{
 			if (!function_exists('update_post_information'))
 			{
-				include($this->phpbb_root_path . 'includes/functions_posting.' . $this->php_ext);
+				include($this->phpbb_root_path . 'src/phpbb/common/functions_posting.' . $this->php_ext);
 			}
 
 			// update_post_information can only update the last post info ...
@@ -562,7 +562,7 @@ class content_visibility
 		{
 			if (!function_exists('sync'))
 			{
-				include($this->phpbb_root_path . 'includes/functions_admin.' . $this->php_ext);
+				include($this->phpbb_root_path . 'src/phpbb/common/functions_admin.' . $this->php_ext);
 			}
 
 			// ... so we need to use sync, if the first post is changed.
@@ -736,7 +736,7 @@ class content_visibility
 
 		if (!function_exists('truncate_string'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_content.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_content.' . $this->php_ext);
 		}
 
 		// Note, we do not set a reason for the posts, just for the topic

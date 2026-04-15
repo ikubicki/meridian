@@ -67,7 +67,7 @@ class reparse extends \phpbb\console\command\command
 	*/
 	public function __construct(\phpbb\user $user, \phpbb\lock\db $reparse_lock, \phpbb\textreparser\manager $reparser_manager, \phpbb\di\service_collection $reparsers)
 	{
-		require_once __DIR__ . '/../../../../includes/functions_content.php';
+require_once __DIR__ . '/../../../../src/phpbb/common/functions_content.php';
 
 		$this->reparse_lock = $reparse_lock;
 		$this->reparser_manager = $reparser_manager;

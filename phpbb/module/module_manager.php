@@ -110,7 +110,7 @@ class module_manager
 	 */
 	public function get_module_infos($module_class, $module = '', $use_all_available = false)
 	{
-		$directory = $this->phpbb_root_path . 'includes/' . $module_class . '/info/';
+		$directory = $this->phpbb_root_path . 'src/phpbb/common/' . $module_class . '/info/';
 		$fileinfo = array();
 
 		$finder = $this->extension_manager->get_finder($use_all_available);
@@ -118,7 +118,7 @@ class module_manager
 		$modules = $finder
 			->extension_suffix('_module')
 			->extension_directory("/$module_class")
-			->core_path("includes/$module_class/info/")
+			->core_path("src/phpbb/common/$module_class/info/")
 			->core_prefix($module_class . '_')
 			->get_classes(true);
 

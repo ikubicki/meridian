@@ -72,7 +72,7 @@ class prune_forum extends \phpbb\cron\task\base implements \phpbb\cron\task\para
 	{
 		if (!function_exists('auto_prune'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_admin.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_admin.' . $this->php_ext);
 		}
 
 		$log_prune = true;

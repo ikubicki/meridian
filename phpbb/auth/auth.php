@@ -957,7 +957,7 @@ class auth
 				// we are going to use the user_add function so include functions_user.php if it wasn't defined yet
 				if (!function_exists('user_add'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.php');
+					include($phpbb_root_path . 'src/phpbb/common/functions_user.php');
 				}
 
 				user_add($login['user_row'], (isset($login['cp_data'])) ? $login['cp_data'] : false);

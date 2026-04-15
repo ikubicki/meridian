@@ -67,7 +67,7 @@ class finder
 		$hook_files = array();
 
 		// Now search for hooks...
-		$dh = @opendir($this->phpbb_root_path . 'includes/hooks/');
+		$dh = @opendir($this->phpbb_root_path . 'src/phpbb/common/hooks/');
 
 		if ($dh)
 		{

@@ -107,7 +107,7 @@ class md5_phpbb2 extends base
 		{
 			if (!function_exists('utf8_to_cp1252'))
 			{
-				include($this->phpbb_root_path . 'includes/utf/data/recode_basic.' . $this->php_ext);
+				include($this->phpbb_root_path . 'src/phpbb/common/utf/data/recode_basic.' . $this->php_ext);
 			}
 
 			if ($this->helper->string_compare(md5($password_old_format), $hash) || $this->helper->string_compare(md5(\utf8_to_cp1252($password_old_format)), $hash)

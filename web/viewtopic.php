@@ -17,9 +17,9 @@
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
 include($phpbb_root_path . 'src/phpbb/common/common.php');
-include($phpbb_root_path . 'includes/functions_display.php');
-include($phpbb_root_path . 'includes/bbcode.php');
-include($phpbb_root_path . 'includes/functions_user.php');
+include($phpbb_root_path . 'src/phpbb/common/functions_display.php');
+include($phpbb_root_path . 'src/phpbb/common/bbcode.php');
+include($phpbb_root_path . 'src/phpbb/common/functions_user.php');
 
 // Start session management
 $user->session_begin();

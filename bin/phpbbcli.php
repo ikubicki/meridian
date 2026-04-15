@@ -23,7 +23,7 @@ if (php_sapi_name() != 'cli')
 define('IN_PHPBB', true);
 
 $phpbb_root_path = __DIR__ . '/../';
-require($phpbb_root_path . 'includes/startup.php');
+require($phpbb_root_path . 'src/phpbb/common/startup.php');
 require($phpbb_root_path . 'phpbb/class_loader.php');
 
 $phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
@@ -37,11 +37,11 @@ if (!defined('PHPBB_ENVIRONMENT'))
 	@define('PHPBB_ENVIRONMENT', 'production');
 }
 
-require($phpbb_root_path . 'includes/constants.php');
-require($phpbb_root_path . 'includes/functions.php');
-require($phpbb_root_path . 'includes/functions_admin.php');
-require($phpbb_root_path . 'includes/utf/utf_tools.php');
-require($phpbb_root_path . 'includes/functions_compatibility.php');
+require($phpbb_root_path . 'src/phpbb/common/constants.php');
+require($phpbb_root_path . 'src/phpbb/common/functions.php');
+require($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
+require($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
+require($phpbb_root_path . 'src/phpbb/common/functions_compatibility.php');
 
 $phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
 $phpbb_container = $phpbb_container_builder->with_config($phpbb_config_php_file);
@@ -66,7 +66,7 @@ else
 
 $phpbb_container = $phpbb_container_builder->get_container();
 $phpbb_container->get('request')->enable_super_globals();
-require($phpbb_root_path . 'includes/compatibility_globals.php');
+require($phpbb_root_path . 'src/phpbb/common/compatibility_globals.php');
 
 register_compatibility_globals();
 

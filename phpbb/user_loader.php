@@ -219,7 +219,7 @@ class user_loader
 
 		if (!function_exists('phpbb_get_user_rank'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_display.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_display.' . $this->php_ext);
 		}
 
 		$rank = array(

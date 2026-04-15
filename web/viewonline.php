@@ -65,7 +65,7 @@ if ($mode == 'whois' && $auth->acl_get('a_') && $session_id)
 {
 	if (!function_exists('user_get_id_name'))
 	{
-		include($phpbb_root_path . 'includes/functions_user.php');
+		include($phpbb_root_path . 'src/phpbb/common/functions_user.php');
 	}
 
 	$sql = 'SELECT u.user_id, u.username, u.user_type, s.session_ip

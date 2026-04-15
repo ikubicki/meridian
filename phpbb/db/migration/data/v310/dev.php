@@ -224,7 +224,7 @@ class dev extends \phpbb\db\migration\container_aware_migration
 		// acp_modules calls adm_back_link, which is undefined at this point
 		if (!function_exists('adm_back_link'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_acp.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_acp.' . $this->php_ext);
 		}
 		$module_manager = $this->container->get('module.manager');
 		$module_manager->move_module($language_module_id, $language_management_module_id, 'acp');

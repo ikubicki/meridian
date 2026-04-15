@@ -113,7 +113,7 @@ class notify_user extends \phpbb\install\task_base
 
 		if ($this->config['email_enable'])
 		{
-			include ($this->phpbb_root_path . 'includes/functions_messenger.' . $this->php_ext);
+			include ($this->phpbb_root_path . 'src/phpbb/common/functions_messenger.' . $this->php_ext);
 
 			$messenger = new \messenger(false);
 			$messenger->template('installed', $this->install_config->get('user_language', 'en'));

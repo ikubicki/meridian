@@ -60,7 +60,7 @@ class bot_update extends \phpbb\db\migration\migration
 
 			if (!function_exists('user_add'))
 			{
-				include($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+				include($this->phpbb_root_path . 'src/phpbb/common/functions_user.' . $this->php_ext);
 			}
 
 			$user_row = array(
@@ -97,7 +97,7 @@ class bot_update extends \phpbb\db\migration\migration
 		// Update bots
 		if (!function_exists('user_delete'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_user.' . $this->php_ext);
 		}
 
 		$bots_updates = array(

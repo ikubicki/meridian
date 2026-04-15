@@ -78,7 +78,7 @@ class prune_shadow_topics extends \phpbb\cron\task\base implements \phpbb\cron\t
 	{
 		if (!function_exists('auto_prune'))
 		{
-			include($this->phpbb_root_path . 'includes/functions_admin.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/functions_admin.' . $this->php_ext);
 		}
 
 		if ($this->forum_data['prune_shadow_days'])

@@ -101,7 +101,7 @@ class fulltext_mysql extends \phpbb\search\base
 		 */
 		if (!function_exists('utf8_strlen'))
 		{
-			include($phpbb_root_path . 'includes/utf/utf_tools.php');
+			include($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
 		}
 
 		$error = false;

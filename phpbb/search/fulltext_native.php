@@ -131,7 +131,7 @@ class fulltext_native extends \phpbb\search\base
 		*/
 		if (!function_exists('utf8_decode_ncr'))
 		{
-			include($this->phpbb_root_path . 'includes/utf/utf_tools.php');
+			include($this->phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
 		}
 
 		$error = false;
@@ -1999,7 +1999,7 @@ class fulltext_native extends \phpbb\search\base
 			if (!isset($conv_loaded[$idx]))
 			{
 				$conv_loaded[$idx] = 1;
-$file = $this->phpbb_root_path . 'includes/utf/data/search_indexer_' . $idx . '.php';
+$file = $this->phpbb_root_path . 'src/phpbb/common/utf/data/search_indexer_' . $idx . '.php';
 
 				if (file_exists($file))
 				{

@@ -243,7 +243,7 @@ function installer_shutdown_function($display_errors)
 	}
 }
 
-phpbb_require_updated('includes/startup.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/startup.php', $phpbb_root_path);
 phpbb_require_updated('phpbb/class_loader.php', $phpbb_root_path);
 
 installer_class_loader($phpbb_root_path);
@@ -253,12 +253,12 @@ $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relati
 $phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
 
 // Include files
-phpbb_require_updated('includes/compatibility_globals.php', $phpbb_root_path);
-phpbb_require_updated('includes/functions.php', $phpbb_root_path);
-phpbb_require_updated('includes/functions_content.php', $phpbb_root_path);
-phpbb_include_updated('includes/functions_compatibility.php', $phpbb_root_path);
-phpbb_require_updated('includes/functions_user.php', $phpbb_root_path);
-phpbb_require_updated('includes/utf/utf_tools.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/compatibility_globals.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/functions.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/functions_content.php', $phpbb_root_path);
+phpbb_include_updated('src/phpbb/common/functions_compatibility.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/functions_user.php', $phpbb_root_path);
+phpbb_require_updated('src/phpbb/common/utf/utf_tools.php', $phpbb_root_path);
 
 // Set PHP error handler to ours
 set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'installer_msg_handler');

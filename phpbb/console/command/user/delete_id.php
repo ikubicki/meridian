@@ -154,7 +154,7 @@ class delete_id extends command
 				{
 					if (!function_exists('user_delete'))
 					{
-						require($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+						require($this->phpbb_root_path . 'src/phpbb/common/functions_user.' . $this->php_ext);
 					}
 
 					user_delete($mode, $user_row['user_id'], $user_row['username']);

@@ -114,7 +114,7 @@ class create_schema_file extends \phpbb\install\task_base
 			{
 				// We need to include the constants file for the table constants
 				// when we generate the schema from the migration files.
-				include ($this->phpbb_root_path . 'includes/constants.' . $this->php_ext);
+				include ($this->phpbb_root_path . 'src/phpbb/common/constants.' . $this->php_ext);
 			}
 
 			$finder = new \phpbb\finder($this->filesystem, $this->phpbb_root_path, null, $this->php_ext);

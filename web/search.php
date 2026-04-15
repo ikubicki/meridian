@@ -678,11 +678,11 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 
 	if ($show_results == 'posts')
 	{
-		include($phpbb_root_path . 'includes/functions_posting.php');
+		include($phpbb_root_path . 'src/phpbb/common/functions_posting.php');
 	}
 	else
 	{
-		include($phpbb_root_path . 'includes/functions_display.php');
+		include($phpbb_root_path . 'src/phpbb/common/functions_display.php');
 	}
 
 	$user->add_lang('viewtopic');

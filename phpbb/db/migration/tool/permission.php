@@ -55,7 +55,7 @@ class permission implements \phpbb\db\migration\tool\tool_interface
 
 		if (!class_exists('auth_admin'))
 		{
-			include($this->phpbb_root_path . 'includes/acp/auth.' . $this->php_ext);
+			include($this->phpbb_root_path . 'src/phpbb/common/acp/auth.' . $this->php_ext);
 		}
 		$this->auth_admin = new \auth_admin();
 	}

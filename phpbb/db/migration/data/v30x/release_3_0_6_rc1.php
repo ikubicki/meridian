@@ -357,7 +357,7 @@ class release_3_0_6_rc1 extends \phpbb\db\migration\migration
 		}
 
 		// Clear permissions...
-		include_once($this->phpbb_root_path . 'includes/acp/auth.' . $this->php_ext);
+		include_once($this->phpbb_root_path . 'src/phpbb/common/acp/auth.' . $this->php_ext);
 		$auth_admin = new \auth_admin();
 		$auth_admin->acl_clear_prefetch();
 	}

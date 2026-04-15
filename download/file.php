@@ -32,7 +32,7 @@ else if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'
 
 if (isset($_GET['avatar']))
 {
-	require($phpbb_root_path . 'includes/startup.php');
+	require($phpbb_root_path . 'src/phpbb/common/startup.php');
 
 	require($phpbb_root_path . 'phpbb/class_loader.php');
 	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
@@ -51,10 +51,10 @@ if (isset($_GET['avatar']))
 		exit;
 	}
 
-	require($phpbb_root_path . 'includes/constants.php');
-	require($phpbb_root_path . 'includes/functions.php');
-	require($phpbb_root_path . 'includes/functions_download' . '.php');
-	require($phpbb_root_path . 'includes/utf/utf_tools.php');
+	require($phpbb_root_path . 'src/phpbb/common/constants.php');
+	require($phpbb_root_path . 'src/phpbb/common/functions.php');
+	require($phpbb_root_path . 'src/phpbb/common/functions_download' . '.php');
+	require($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
 
 	// Setup class loader first
 	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/");
@@ -147,7 +147,7 @@ if (isset($_GET['avatar']))
 
 // implicit else: we are not in avatar mode
 include($phpbb_root_path . 'src/phpbb/common/common.php');
-require($phpbb_root_path . 'includes/functions_download' . '.php');
+require($phpbb_root_path . 'src/phpbb/common/functions_download' . '.php');
 
 $attach_id = $request->variable('id', 0);
 $mode = $request->variable('mode', '');

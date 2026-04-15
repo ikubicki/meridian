@@ -68,8 +68,8 @@ class convertor
 		$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 		extract($phpbb_config_php_file->get_all());
 
-		require_once($phpbb_root_path . 'includes/constants.php');
-		require_once($phpbb_root_path . 'includes/functions_convert.php');
+		require_once($phpbb_root_path . 'src/phpbb/common/constants.php');
+		require_once($phpbb_root_path . 'src/phpbb/common/functions_convert.php');
 
 		$dbms = $phpbb_config_php_file->convert_30_dbms_to_31($dbms);
 
@@ -232,7 +232,7 @@ class convertor
 			trigger_error($error);
 		}
 
-		include_once($phpbb_root_path . 'includes/message_parser.php');
+		include_once($phpbb_root_path . 'src/phpbb/common/message_parser.php');
 		$message_parser = new \parse_message();
 
 		$jump = $request->variable('jump', 0);
@@ -910,7 +910,7 @@ class convertor
 		global $convert;
 		global $phpbb_container;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.php');
+		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 
 		$this->template->assign_block_vars('checks', array(
 			'S_LEGEND'	=> true,
@@ -1020,7 +1020,7 @@ class convertor
 		global $db, $phpbb_root_path, $convert, $config, $language, $user;
 		global $cache, $auth, $phpbb_container, $phpbb_log;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.php');
+		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 
 		$db->sql_query('DELETE FROM ' . CONFIG_TABLE . "
 			WHERE config_name = 'convert_progress'
@@ -1095,7 +1095,7 @@ class convertor
 		global $user, $src_db, $same_db, $db, $phpbb_root_path, $config, $cache;
 		global $convert;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.php');
+		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 
 		$this->template->assign_block_vars('checks', array(
 			'S_LEGEND'	=> true,

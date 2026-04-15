@@ -231,7 +231,7 @@ class add extends command
 	{
 		if (!function_exists('validate_data'))
 		{
-			require($this->phpbb_root_path . 'includes/functions_user.' . $this->php_ext);
+			require($this->phpbb_root_path . 'src/phpbb/common/functions_user.' . $this->php_ext);
 		}
 
 		$error = validate_data($this->data, array(
@@ -303,7 +303,7 @@ class add extends command
 
 		if (!class_exists('messenger'))
 		{
-			require($this->phpbb_root_path . 'includes/functions_messenger.' . $this->php_ext);
+			require($this->phpbb_root_path . 'src/phpbb/common/functions_messenger.' . $this->php_ext);
 		}
 
 		$messenger = new \messenger(false);

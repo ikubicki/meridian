@@ -46,11 +46,11 @@ class local_url_bbcode extends \phpbb\db\migration\migration
 			{
 				if (function_exists('phpbb_require_updated'))
 				{
-					phpbb_require_updated('includes/acp/acp_bbcodes.' . $this->php_ext, $this->phpbb_root_path);
+					phpbb_require_updated('src/phpbb/common/acp/acp_bbcodes.' . $this->php_ext, $this->phpbb_root_path);
 				}
 				else
 				{
-					require($this->phpbb_root_path . 'includes/acp/acp_bbcodes.' . $this->php_ext);
+					require($this->phpbb_root_path . 'src/phpbb/common/acp/acp_bbcodes.' . $this->php_ext);
 				}
 			}
 
