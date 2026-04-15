@@ -121,7 +121,7 @@ class helper
 		$this->request = $request;
 		$this->router = $router;
 		$this->phpbb_root_path = $phpbb_root_path;
-		$this->phpbb_admin_path = $phpbb_root_path . 'adm/';
+		$this->phpbb_admin_path = $phpbb_root_path . 'web/adm/';
 	}
 
 	/**

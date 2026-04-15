@@ -224,7 +224,7 @@ class acp_extensions
 							'name' 		=> 'adm',
 							'ext_path' 	=> 'adm/style/',
 						),
-					), array($phpbb_root_path . 'adm/style'));
+					), array($phpbb_root_path . 'web/adm/style'));
 
 					$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_EXT_ENABLE', time(), array($ext_name));
 				}
