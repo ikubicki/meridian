@@ -132,15 +132,15 @@ function installer_msg_handler($errno, $msg_text, $errfile, $errline)
  * @param string $phpbb_root_path phpBB root path
  * @param string $phpEx PHP file extension
  */
-function installer_class_loader($phpbb_root_path, $phpEx)
+function installer_class_loader($phpbb_root_path)
 {
-	$phpbb_class_loader_new = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}install/update/new/phpbb/", $phpEx);
+	$phpbb_class_loader_new = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}install/update/new/phpbb/");
 	$phpbb_class_loader_new->register();
-	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
+	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/");
 	$phpbb_class_loader->register();
-	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\convert\\', "{$phpbb_root_path}install/convert/", $phpEx);
+	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\convert\\', "{$phpbb_root_path}install/convert/");
 	$phpbb_class_loader->register();
-	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/", $phpEx);
+	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/");
 	$phpbb_class_loader_ext->register();
 }
 
@@ -162,9 +162,8 @@ function installer_shutdown_function($display_errors)
 		// Manually define phpBB root path and phpEx. These will not be passed
 		// on from app.php
 		$phpbb_root_path = __DIR__ . '/../';
-		$phpEx = 'php';
 
-		installer_class_loader($phpbb_root_path, $phpEx);
+		installer_class_loader($phpbb_root_path);
 		$supported_error_levels = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED;
 
 		$cache = new \phpbb\cache\driver\file(__DIR__ . '/../cache/installer/');
@@ -245,22 +244,22 @@ function installer_shutdown_function($display_errors)
 	}
 }
 
-phpbb_require_updated('includes/startup.' . $phpEx, $phpbb_root_path);
-phpbb_require_updated('phpbb/class_loader.' . $phpEx, $phpbb_root_path);
+phpbb_require_updated('includes/startup.php', $phpbb_root_path);
+phpbb_require_updated('phpbb/class_loader.php', $phpbb_root_path);
 
-installer_class_loader($phpbb_root_path, $phpEx);
+installer_class_loader($phpbb_root_path);
 
 // In case $phpbb_adm_relative_path is not set (in case of an update), use the default.
 $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relative_path : 'adm/';
 $phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
 
 // Include files
-phpbb_require_updated('includes/compatibility_globals.' . $phpEx, $phpbb_root_path);
-phpbb_require_updated('includes/functions.' . $phpEx, $phpbb_root_path);
-phpbb_require_updated('includes/functions_content.' . $phpEx, $phpbb_root_path);
-phpbb_include_updated('includes/functions_compatibility.' . $phpEx, $phpbb_root_path);
-phpbb_require_updated('includes/functions_user.' . $phpEx, $phpbb_root_path);
-phpbb_require_updated('includes/utf/utf_tools.' . $phpEx, $phpbb_root_path);
+phpbb_require_updated('includes/compatibility_globals.php', $phpbb_root_path);
+phpbb_require_updated('includes/functions.php', $phpbb_root_path);
+phpbb_require_updated('includes/functions_content.php', $phpbb_root_path);
+phpbb_include_updated('includes/functions_compatibility.php', $phpbb_root_path);
+phpbb_require_updated('includes/functions_user.php', $phpbb_root_path);
+phpbb_require_updated('includes/utf/utf_tools.php', $phpbb_root_path);
 
 // Set PHP error handler to ours
 set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'installer_msg_handler');
@@ -271,7 +270,7 @@ register_shutdown_function('installer_shutdown_function', $ini_display_errors);
 // Suppress errors until we have created the containers
 @ini_set('display_errors', 0);
 
-$phpbb_installer_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpEx);
+$phpbb_installer_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
 $phpbb_installer_container_builder
 	->with_environment('installer')
 	->without_extensions();

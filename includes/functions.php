@@ -1826,7 +1826,6 @@ function redirect($url, $return = false, $disable_cd_check = false)
  * Returns the install redirect path for phpBB.
  *
  * @param string $phpbb_root_path The root path of the phpBB installation.
- * @param string $phpEx The file extension of php files, e.g., "php".
  * @return string The install redirect path.
  */
 function phpbb_get_install_redirect(string $phpbb_root_path): string
@@ -4435,7 +4434,6 @@ function phpbb_to_numeric($input)
 * Get the board contact details (e.g. for emails)
 *
 * @param \phpbb\config\config	$config
-* @param string					$phpEx
 * @return string
 */
 function phpbb_get_board_contact(\phpbb\config\config $config)
@@ -4455,7 +4453,6 @@ function phpbb_get_board_contact(\phpbb\config\config $config)
 *
 * @param \phpbb\config\config	$config
 * @param string					$phpbb_root_path
-* @param string					$phpEx
 * @return string
 */
 function phpbb_get_board_contact_link(\phpbb\config\config $config, $phpbb_root_path)

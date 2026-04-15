@@ -18,15 +18,14 @@ define('IN_PHPBB', true);
 define('IN_INSTALL', true);
 
 $phpbb_root_path = '../';
-$phpEx = substr(strrchr(__FILE__, '.'), 1);
 
 if (version_compare(PHP_VERSION, '7.2.0', '<'))
 {
 	die('You are running an unsupported PHP version (' . PHP_VERSION . '). Please upgrade to PHP 7.2.0 or higher before trying to install or update to phpBB 3.3');
 }
 
-$startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.' . $phpEx;
-$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.' . $phpEx;
+$startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.php';
+$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.php';
 require($startup_path);
 
 /** @var \phpbb\filesystem\filesystem $phpbb_filesystem */

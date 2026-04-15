@@ -61,15 +61,15 @@ class convertor
 	 */
 	function convert_data($converter)
 	{
-		global $user, $phpbb_root_path, $phpEx, $db, $lang, $config, $cache, $auth;
+		global $user, $phpbb_root_path, $db, $lang, $config, $cache, $auth;
 		global $convert, $convert_row, $message_parser, $skip_rows, $language;
 		global $request, $phpbb_dispatcher, $phpbb_container;
 
-		$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path, $phpEx);
+		$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 		extract($phpbb_config_php_file->get_all());
 
-		require_once($phpbb_root_path . 'includes/constants.' . $phpEx);
-		require_once($phpbb_root_path . 'includes/functions_convert.' . $phpEx);
+		require_once($phpbb_root_path . 'includes/constants.php');
+		require_once($phpbb_root_path . 'includes/functions_convert.php');
 
 		$dbms = $phpbb_config_php_file->convert_30_dbms_to_31($dbms);
 
@@ -177,18 +177,18 @@ class convertor
 		$get_info = false;
 
 		// check security implications of direct inclusion
-		if (!file_exists('./convertors/convert_' . $convert->convertor_tag . '.' . $phpEx))
+		if (!file_exists('./convertors/convert_' . $convert->convertor_tag . '.php'))
 		{
 			$this->error($user->lang['CONVERT_NOT_EXIST'], __LINE__, __FILE__);
 		}
 
-		if (file_exists('./convertors/functions_' . $convert->convertor_tag . '.' . $phpEx))
+		if (file_exists('./convertors/functions_' . $convert->convertor_tag . '.php'))
 		{
-			include_once('./convertors/functions_' . $convert->convertor_tag . '.' . $phpEx);
+			include_once('./convertors/functions_' . $convert->convertor_tag . '.php');
 		}
 
 		$get_info = true;
-		include('./convertors/convert_' . $convert->convertor_tag . '.' . $phpEx);
+		include('./convertors/convert_' . $convert->convertor_tag . '.php');
 
 		// Map some variables...
 		$convert->convertor_data = $convertor_data;
@@ -197,7 +197,7 @@ class convertor
 
 		// Now include the real data
 		$get_info = false;
-		include('./convertors/convert_' . $convert->convertor_tag . '.' . $phpEx);
+		include('./convertors/convert_' . $convert->convertor_tag . '.php');
 
 		$convert->convertor_data = $convertor_data;
 		$convert->tables = $tables;
@@ -225,14 +225,14 @@ class convertor
 		}
 
 		$error = false;
-		$convert->fulltext_search = new $search_type($error, $phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+		$convert->fulltext_search = new $search_type($error, $phpbb_root_path, $auth, $config, $db, $user, $phpbb_dispatcher);
 
 		if ($error)
 		{
 			trigger_error($error);
 		}
 
-		include_once($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/message_parser.php');
 		$message_parser = new \parse_message();
 
 		$jump = $request->variable('jump', 0);
@@ -906,11 +906,11 @@ class convertor
 	 */
 	function sync_forums($converter, $sync_batch)
 	{
-		global $user, $db, $phpbb_root_path, $phpEx, $config, $cache;
+		global $user, $db, $phpbb_root_path, $config, $cache;
 		global $convert;
 		global $phpbb_container;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+		include_once ($phpbb_root_path . 'includes/functions_admin.php');
 
 		$this->template->assign_block_vars('checks', array(
 			'S_LEGEND'	=> true,
@@ -1017,10 +1017,10 @@ class convertor
 	 */
 	function finish_conversion()
 	{
-		global $db, $phpbb_root_path, $phpEx, $convert, $config, $language, $user;
+		global $db, $phpbb_root_path, $convert, $config, $language, $user;
 		global $cache, $auth, $phpbb_container, $phpbb_log;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+		include_once ($phpbb_root_path . 'includes/functions_admin.php');
 
 		$db->sql_query('DELETE FROM ' . CONFIG_TABLE . "
 			WHERE config_name = 'convert_progress'
@@ -1029,7 +1029,7 @@ class convertor
 				OR config_name = 'convert_db_user'");
 		$db->sql_query('DELETE FROM ' . SESSIONS_TABLE);
 
-		@unlink($phpbb_container->getParameter('core.cache_dir') . 'data_global.' . $phpEx);
+		@unlink($phpbb_container->getParameter('core.cache_dir') . 'data_global.php');
 		phpbb_cache_moderators($db, $cache, $auth);
 
 		// And finally, add a note to the log
@@ -1051,7 +1051,7 @@ class convertor
 	 */
 	function final_jump($final_jump)
 	{
-		global $user, $src_db, $same_db, $db, $phpbb_root_path, $phpEx, $config, $cache;
+		global $user, $src_db, $same_db, $db, $phpbb_root_path, $config, $cache;
 		global $convert;
 
 		$this->template->assign_block_vars('checks', array(
@@ -1092,10 +1092,10 @@ class convertor
 	{
 		/** @var \phpbb\db\driver\driver_interface $src_db */
 		/** @var \phpbb\cache\driver\driver_interface $cache */
-		global $user, $src_db, $same_db, $db, $phpbb_root_path, $phpEx, $config, $cache;
+		global $user, $src_db, $same_db, $db, $phpbb_root_path, $config, $cache;
 		global $convert;
 
-		include_once ($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+		include_once ($phpbb_root_path . 'includes/functions_admin.php');
 
 		$this->template->assign_block_vars('checks', array(
 			'S_LEGEND'	=> true,
@@ -1396,7 +1396,7 @@ class convertor
 	 */
 	function process_row(&$schema, &$sql_data, &$insert_values)
 	{
-		global $user, $phpbb_root_path, $phpEx, $db, $lang, $config, $cache;
+		global $user, $phpbb_root_path, $db, $lang, $config, $cache;
 		global $convert, $convert_row;
 
 		$sql_flag = false;

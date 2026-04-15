@@ -25,13 +25,12 @@ define('IN_INSTALL', true);
 define('PHPBB_ENVIRONMENT', 'production');
 define('PHPBB_VERSION', '3.3.15');
 $phpbb_root_path = __DIR__ . '/../';
-$phpEx = substr(strrchr(__FILE__, '.'), 1);
 
 //
 // Let's do the common.php logic
 //
-$startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.' . $phpEx;
-$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.' . $phpEx;
+$startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.php';
+$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.php';
 require($startup_path);
 
 $input = new ArgvInput();

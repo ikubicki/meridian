@@ -431,13 +431,10 @@ class convertor
 	 */
 	public function proccess_settings_form($convertor)
 	{
-		global $phpbb_root_path, $phpEx, $get_info;
+		global $phpbb_root_path, $get_info;
 
 		$phpbb_root_path = $this->phpbb_root_path;
-		$phpEx = $this->php_ext;
-		$get_info = true;
 
-		require_once($this->phpbb_root_path . 'includes/constants.' . $this->php_ext);
 		require_once($this->phpbb_root_path . 'includes/functions_convert.' . $this->php_ext);
 
 		// Include convertor if available

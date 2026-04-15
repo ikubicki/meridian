@@ -323,7 +323,7 @@ function phpbb_insert_forums()
 function phpbb_set_encoding($text, $grab_user_lang = true)
 {
 	global $lang_enc_array, $convert_row;
-	global $convert, $phpEx;
+	global $convert;
 
 	/*static $lang_enc_array = array(
 		'korean'						=> 'euc-kr',
@@ -404,7 +404,7 @@ function phpbb_set_encoding($text, $grab_user_lang = true)
 
 	if (!isset($lang_enc_array[$get_lang]))
 	{
-		$filename = $convert->options['forum_path'] . '/language/lang_' . $get_lang . '/lang_main.' . $phpEx;
+		$filename = $convert->options['forum_path'] . '/language/lang_' . $get_lang . '/lang_main.php';
 
 		if (!file_exists($filename))
 		{
@@ -413,7 +413,7 @@ function phpbb_set_encoding($text, $grab_user_lang = true)
 
 		if (!isset($lang_enc_array[$get_lang]))
 		{
-			include($convert->options['forum_path'] . '/language/lang_' . $get_lang . '/lang_main.' . $phpEx);
+			include($convert->options['forum_path'] . '/language/lang_' . $get_lang . '/lang_main.php');
 			$lang_enc_array[$get_lang] = $lang['ENCODING'];
 			unset($lang);
 		}
@@ -1410,7 +1410,7 @@ function phpbb_attachment_category($cat_id)
 */
 function phpbb_attachment_extension_group_name()
 {
-	global $db, $phpbb_root_path, $phpEx;
+	global $db, $phpbb_root_path;
 
 	// Update file extension group names to use language strings.
 	$sql = 'SELECT lang_dir
@@ -1421,7 +1421,7 @@ function phpbb_attachment_extension_group_name()
 	while ($row = $db->sql_fetchrow($result))
 	{
 		$lang_dir = basename($row['lang_dir']);
-		$lang_file = $phpbb_root_path . 'language/' . $lang_dir . '/acp/attachments.' . $phpEx;
+		$lang_file = $phpbb_root_path . 'language/' . $lang_dir . '/acp/attachments.php';
 
 		if (!file_exists($lang_file))
 		{
@@ -1885,10 +1885,10 @@ function phpbb_check_username_collisions()
 
 function phpbb_convert_timezone($timezone)
 {
-	global $config, $db, $phpbb_root_path, $phpEx, $table_prefix;
+	global $config, $db, $phpbb_root_path, $table_prefix;
 
 	$factory = new \phpbb\db\tools\factory();
-	$timezone_migration = new \phpbb\db\migration\data\v310\timezone($config, $db, $factory->get($db), $phpbb_root_path, $phpEx, $table_prefix);
+	$timezone_migration = new \phpbb\db\migration\data\v310\timezone($config, $db, $factory->get($db), $phpbb_root_path, $table_prefix);
 	return $timezone_migration->convert_phpbb30_timezone($timezone, 0);
 }
 
