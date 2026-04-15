@@ -6,4 +6,3 @@ store/*
 !store/index.htm
 files/*
 !files/index.htm
-src/phpbb/common/config/config.php
