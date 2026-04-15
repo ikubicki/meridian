@@ -61,7 +61,7 @@ services:
         class: phpbb\class_loader
         arguments:
             - \
-            - '%core.root_path%ext/'
+            - '%core.root_path%src/phpbb/ext/'
             - '%core.php_ext%'
         calls:
             - [register, []]

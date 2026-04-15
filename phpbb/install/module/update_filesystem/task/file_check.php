@@ -180,13 +180,13 @@ class file_check extends task_base
 
 			// Do not copy default extension again if the previous version was
 			// packaged with it but it does not exist (e.g. deleted by admin)
-			if (strpos($file, $this->phpbb_root_path . 'ext/') !== false)
+			if (strpos($file, $this->phpbb_root_path . 'src/phpbb/ext/') !== false)
 			{
 				$skip_file = false;
 				foreach ($default_update_extensions as $ext_name)
 				{
-					if (strpos($file, $this->phpbb_root_path . 'ext/' . $ext_name) !== false &&
-						!$this->filesystem->exists($this->phpbb_root_path . 'ext/' . $ext_name . '/composer.json'))
+					if (strpos($file, $this->phpbb_root_path . 'src/phpbb/ext/' . $ext_name) !== false &&
+						!$this->filesystem->exists($this->phpbb_root_path . 'src/phpbb/ext/' . $ext_name . '/composer.json'))
 					{
 						$skip_file = true;
 						break;

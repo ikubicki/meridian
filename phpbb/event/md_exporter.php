@@ -51,7 +51,7 @@ class md_exporter
 		$this->path = $this->root_path;
 		if ($extension)
 		{
-			$this->path .= 'ext/' . $extension . '/';
+			$this->path .= 'src/phpbb/ext/' . $extension . '/';
 		}
 
 		$this->events = array();

@@ -93,7 +93,7 @@ class finder
 
 		foreach ($extensions as $ext_name)
 		{
-			$this->extensions[$ext_name] = $this->phpbb_root_path . 'ext/' . $ext_name . '/';
+			$this->extensions[$ext_name] = $this->phpbb_root_path . 'src/phpbb/ext/' . $ext_name . '/';
 		}
 		return $this;
 	}
@@ -451,7 +451,7 @@ class finder
 			}
 			else
 			{
-				$location = 'ext/';
+				$location = 'src/phpbb/ext/';
 				$name .= '/';
 				$suffix = $this->query['extension_suffix'];
 				$prefix = $this->query['extension_prefix'];

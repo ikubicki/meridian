@@ -685,7 +685,7 @@ function phpbb_load_extensions_autoloaders($phpbb_root_path)
 	$iterator = new \RecursiveIteratorIterator(
 		new \phpbb\recursive_dot_prefix_filter_iterator(
 			new \RecursiveDirectoryIterator(
-				$phpbb_root_path . 'ext/',
+				$phpbb_root_path . 'src/phpbb/ext/',
 				\FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS
 			)
 		),

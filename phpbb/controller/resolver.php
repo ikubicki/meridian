@@ -102,7 +102,7 @@ class resolver implements ControllerResolverInterface
 		// 0 vendor, 1 extension name, ...
 		if (!is_null($this->template) && isset($controller_dir[1]))
 		{
-			$controller_style_dir = 'ext/' . $controller_dir[0] . '/' . $controller_dir[1] . '/styles';
+			$controller_style_dir = 'src/phpbb/ext/' . $controller_dir[0] . '/' . $controller_dir[1] . '/styles';
 
 			if (is_dir($this->phpbb_root_path . $controller_style_dir))
 			{

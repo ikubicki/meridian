@@ -78,7 +78,7 @@ class install_extensions extends \phpbb\install\task_base
 		$this->extension_manager = $container->get('ext.manager');
 		$this->db				= $container->get('dbal.conn');
 		$this->finder = new \Symfony\Component\Finder\Finder();
-		$this->finder->in($phpbb_root_path . 'ext/')
+		$this->finder->in($phpbb_root_path . 'src/phpbb/ext/')
 			->ignoreUnreadableDirs()
 			->depth('< 3')
 			->files()

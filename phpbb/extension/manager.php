@@ -119,7 +119,7 @@ class manager
 	{
 		$name = str_replace('.', '', $name);
 
-		return (($phpbb_relative) ? $this->phpbb_root_path : '') . 'ext/' . $name . '/';
+		return (($phpbb_relative) ? $this->phpbb_root_path : '') . 'src/phpbb/ext/' . $name . '/';
 	}
 
 	/**
@@ -377,14 +377,14 @@ class manager
 	public function all_available()
 	{
 		$available = array();
-		if (!is_dir($this->phpbb_root_path . 'ext/'))
+		if (!is_dir($this->phpbb_root_path . 'src/phpbb/ext/'))
 		{
 			return $available;
 		}
 
 		$iterator = new \RecursiveIteratorIterator(
 			new \phpbb\recursive_dot_prefix_filter_iterator(
-				new \RecursiveDirectoryIterator($this->phpbb_root_path . 'ext/', \FilesystemIterator::NEW_CURRENT_AND_KEY | \FilesystemIterator::FOLLOW_SYMLINKS)
+				new \RecursiveDirectoryIterator($this->phpbb_root_path . 'src/phpbb/ext/', \FilesystemIterator::NEW_CURRENT_AND_KEY | \FilesystemIterator::FOLLOW_SYMLINKS)
 			),
 			\RecursiveIteratorIterator::SELF_FIRST
 		);

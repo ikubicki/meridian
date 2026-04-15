@@ -139,7 +139,7 @@ function installer_class_loader($phpbb_root_path)
 	$phpbb_class_loader->register();
 	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\convert\\', "{$phpbb_root_path}install/convert/");
 	$phpbb_class_loader->register();
-	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/");
+	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}src/phpbb/ext/");
 	$phpbb_class_loader_ext->register();
 }
 

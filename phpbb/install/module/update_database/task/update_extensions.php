@@ -102,7 +102,7 @@ class update_extensions extends task_base
 		$this->db				= $container->get('dbal.conn');
 		$this->update_helper = $update_helper;
 		$this->finder = new Finder();
-		$this->finder->in($phpbb_root_path . 'ext/')
+		$this->finder->in($phpbb_root_path . 'src/phpbb/ext/')
 			->ignoreUnreadableDirs()
 			->depth('< 3')
 			->files()
