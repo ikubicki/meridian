@@ -47,7 +47,7 @@ class install_helper
 	 */
 	public function is_phpbb_installed()
 	{
-		$config_path = $this->phpbb_root_path . 'config/config.' . $this->php_ext;
+			$config_path = $this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext;
 		$install_lock_path = $this->phpbb_root_path . 'cache/install_lock';
 
 		if (file_exists($config_path) && !file_exists($install_lock_path) && filesize($config_path))

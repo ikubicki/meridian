@@ -412,7 +412,7 @@ class container_builder
 	 */
 	protected function get_config_path()
 	{
-		return $this->config_path ?: $this->phpbb_root_path . 'config';
+		return $this->config_path ?: $this->phpbb_root_path . 'src/phpbb/common/config';
 	}
 
 	/**

@@ -251,7 +251,7 @@ class fulltext_sphinx
 			return false;
 		}
 
-include($this->phpbb_root_path . 'config/config.php');
+include($this->phpbb_root_path . 'src/phpbb/common/config/config.php');
 
 		/* Now that we're sure everything was entered correctly,
 		generate a config for the index. We use a config value

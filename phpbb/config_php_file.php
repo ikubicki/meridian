@@ -54,7 +54,7 @@ class config_php_file
 	{
 		$this->phpbb_root_path = $phpbb_root_path;
 		$this->php_ext = $php_ext;
-		$this->config_file = $this->phpbb_root_path . 'config/config.' . $this->php_ext;
+		$this->config_file = $this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext;
 	}
 
 	/**

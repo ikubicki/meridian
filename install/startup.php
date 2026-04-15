@@ -275,7 +275,7 @@ $phpbb_installer_container_builder
 	->without_extensions();
 
 $other_config_path = $phpbb_root_path . 'install/update/new/config';
-$config_path = (file_exists($other_config_path . '/installer/config.yml')) ? $other_config_path : $phpbb_root_path . 'config';
+$config_path = (file_exists($other_config_path . '/installer/config.yml')) ? $other_config_path : $phpbb_root_path . 'src/phpbb/common/config';
 
 $phpbb_installer_container = $phpbb_installer_container_builder
 	->with_config_path($config_path)

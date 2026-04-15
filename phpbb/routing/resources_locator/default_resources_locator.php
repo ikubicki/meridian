@@ -60,7 +60,7 @@ class default_resources_locator implements resources_locator_interface
 	 */
 	public function locate_resources()
 	{
-		$resources = [['config/' . $this->environment . '/routing/environment.yml', 'yaml']];
+		$resources = [['src/phpbb/common/config/' . $this->environment . '/routing/environment.yml', 'yaml']];
 
 		$resources = $this->append_ext_resources($resources);
 

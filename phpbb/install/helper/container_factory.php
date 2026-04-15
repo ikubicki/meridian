@@ -130,7 +130,7 @@ class container_factory
 
 		// Check whether container can be built
 		// We need config.php for that so let's check if it has been set up yet
-		if (!filesize($this->phpbb_root_path . 'config/config.' . $this->php_ext))
+		if (!filesize($this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext))
 		{
 			throw new cannot_build_container_exception();
 		}
@@ -150,7 +150,7 @@ class container_factory
 		global $phpbb_container, $table_prefix;
 
 		$other_config_path = $this->phpbb_root_path . 'install/update/new/config';
-		$config_path = (is_dir($other_config_path)) ? $other_config_path : $this->phpbb_root_path . 'config';
+		$config_path = (is_dir($other_config_path)) ? $other_config_path : $this->phpbb_root_path . 'src/phpbb/common/config';
 
 		$this->container = $phpbb_container_builder
 			->with_environment('production')

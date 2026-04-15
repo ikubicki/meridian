@@ -97,7 +97,7 @@ class create_config_file extends \phpbb\install\task_base
 		$config_written = true;
 
 		// Create config.php
-		$path_to_config = $this->phpbb_root_path . 'config/config.' . $this->php_ext;
+		$path_to_config = $this->phpbb_root_path . 'src/phpbb/common/config/config.' . $this->php_ext;
 
 		$fp = @fopen($path_to_config, 'w');
 		if (!$fp)

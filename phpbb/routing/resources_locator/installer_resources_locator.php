@@ -69,7 +69,7 @@ class installer_resources_locator implements resources_locator_interface
 		else
 		{
 			$resources = array(
-				array('config/' . $this->environment . '/routing/environment.yml', 'yaml')
+				array('src/phpbb/common/config/' . $this->environment . '/routing/environment.yml', 'yaml')
 			);
 		}
 
