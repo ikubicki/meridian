@@ -310,11 +310,11 @@ function utf8_recode($string, $encoding)
 			case '15':
 				if (!function_exists('iso_8859_' . $array[1]))
 				{
-					if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx))
+					if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.php'))
 					{
 						trigger_error('Basic reencoder file is missing', E_USER_ERROR);
 					}
-					include($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx);
+					include($phpbb_root_path . 'includes/utf/data/recode_basic.php');
 				}
 				return call_user_func('iso_8859_' . $array[1], $string);
 			break;
@@ -342,11 +342,11 @@ function utf8_recode($string, $encoding)
 			case '874':
 				if (!function_exists('cp' . $array[1]))
 				{
-					if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx))
+					if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.php'))
 					{
 						trigger_error('Basic reencoder file is missing', E_USER_ERROR);
 					}
-					include($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx);
+					include($phpbb_root_path . 'includes/utf/data/recode_basic.php');
 				}
 				return call_user_func('cp' . $array[1], $string);
 			break;
@@ -362,11 +362,11 @@ function utf8_recode($string, $encoding)
 	{
 		if (!function_exists('tis_620'))
 		{
-			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx))
+			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_basic.php'))
 			{
 				trigger_error('Basic reencoder file is missing', E_USER_ERROR);
 			}
-			include($phpbb_root_path . 'includes/utf/data/recode_basic.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/data/recode_basic.php');
 		}
 		return tis_620($string);
 	}
@@ -376,11 +376,11 @@ function utf8_recode($string, $encoding)
 	{
 		if (!function_exists('sjis'))
 		{
-			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx))
+			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.php'))
 			{
 				trigger_error('CJK reencoder file is missing', E_USER_ERROR);
 			}
-			include($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/data/recode_cjk.php');
 		}
 		return sjis($string);
 	}
@@ -390,11 +390,11 @@ function utf8_recode($string, $encoding)
 	{
 		if (!function_exists('euc_kr'))
 		{
-			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx))
+			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.php'))
 			{
 				trigger_error('CJK reencoder file is missing', E_USER_ERROR);
 			}
-			include($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/data/recode_cjk.php');
 		}
 		return euc_kr($string);
 	}
@@ -404,11 +404,11 @@ function utf8_recode($string, $encoding)
 	{
 		if (!function_exists('big5'))
 		{
-			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx))
+			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.php'))
 			{
 				trigger_error('CJK reencoder file is missing', E_USER_ERROR);
 			}
-			include($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/data/recode_cjk.php');
 		}
 		return big5($string);
 	}
@@ -418,11 +418,11 @@ function utf8_recode($string, $encoding)
 	{
 		if (!function_exists('gb2312'))
 		{
-			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx))
+			if (!file_exists($phpbb_root_path . 'includes/utf/data/recode_cjk.php'))
 			{
 				trigger_error('CJK reencoder file is missing', E_USER_ERROR);
 			}
-			include($phpbb_root_path . 'includes/utf/data/recode_cjk.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/data/recode_cjk.php');
 		}
 		return gb2312($string);
 	}
@@ -577,19 +577,19 @@ function utf8_case_fold($text, $option = 'full')
 	// common is always set
 	if (!isset($uniarray['c']))
 	{
-		$uniarray['c'] = include($phpbb_root_path . 'includes/utf/data/case_fold_c.' . $phpEx);
+		$uniarray['c'] = include($phpbb_root_path . 'includes/utf/data/case_fold_c.php');
 	}
 
 	// only set full if we need to
 	if ($option === 'full' && !isset($uniarray['f']))
 	{
-		$uniarray['f'] = include($phpbb_root_path . 'includes/utf/data/case_fold_f.' . $phpEx);
+		$uniarray['f'] = include($phpbb_root_path . 'includes/utf/data/case_fold_f.php');
 	}
 
 	// only set simple if we need to
 	if ($option !== 'full' && !isset($uniarray['s']))
 	{
-		$uniarray['s'] = include($phpbb_root_path . 'includes/utf/data/case_fold_s.' . $phpEx);
+		$uniarray['s'] = include($phpbb_root_path . 'includes/utf/data/case_fold_s.php');
 	}
 
 	// common is always replaced
@@ -1358,7 +1358,7 @@ function utf8_clean_string($text)
 	static $homographs = array();
 	if (empty($homographs))
 	{
-		$homographs = include($phpbb_root_path . 'includes/utf/data/confusables.' . $phpEx);
+		$homographs = include($phpbb_root_path . 'includes/utf/data/confusables.php');
 	}
 
 	$text = utf8_case_fold_nfkc($text);

@@ -664,7 +664,7 @@ function user_delete($mode, $user_ids, $retain_username = true)
 	{
 		if (!function_exists('delete_posts'))
 		{
-			include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 
 		// Delete posts, attachments, etc.
@@ -761,7 +761,7 @@ function user_delete($mode, $user_ids, $retain_username = true)
 	// Clean the private messages tables from the user
 	if (!function_exists('phpbb_delete_users_pms'))
 	{
-		include($phpbb_root_path . 'includes/functions_privmsgs.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_privmsgs.php');
 	}
 	phpbb_delete_users_pms($user_ids);
 
@@ -2696,7 +2696,7 @@ function group_delete($group_id, $group_name = false)
 	// Re-cache moderators
 	if (!function_exists('phpbb_cache_moderators'))
 	{
-		include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_admin.php');
 	}
 
 	phpbb_cache_moderators($db, $cache, $auth);
@@ -3628,7 +3628,7 @@ function group_update_listings($group_id)
 		if (!function_exists('phpbb_cache_moderators'))
 		{
 			global $phpbb_root_path, $phpEx;
-			include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 		phpbb_cache_moderators($db, $cache, $auth);
 	}
@@ -3638,7 +3638,7 @@ function group_update_listings($group_id)
 		if (!function_exists('phpbb_update_foes'))
 		{
 			global $phpbb_root_path, $phpEx;
-			include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 		phpbb_update_foes($db, $auth, array($group_id));
 	}

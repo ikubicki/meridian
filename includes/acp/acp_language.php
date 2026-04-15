@@ -36,7 +36,7 @@ class acp_language
 
 		if (!function_exists('validate_language_iso_name'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		// Check and set some common vars
@@ -51,7 +51,7 @@ class acp_language
 
 		$lang_id = $request->variable('id', 0);
 
-		$selected_lang_file = $request->variable('language_file', '|common.' . $phpEx);
+		$selected_lang_file = $request->variable('language_file', '|common.php');
 
 		list($this->language_directory, $this->language_file) = explode('|', $selected_lang_file);
 

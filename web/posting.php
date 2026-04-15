@@ -17,10 +17,10 @@
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
-include($phpbb_root_path . 'common.' . $phpEx);
-include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
-include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
-include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+include($phpbb_root_path . 'common.php');
+include($phpbb_root_path . 'includes/functions_posting.php');
+include($phpbb_root_path . 'includes/functions_display.php');
+include($phpbb_root_path . 'includes/message_parser.php');
 
 
 // Start session management
@@ -1191,7 +1191,7 @@ if ($submit || $preview || $refresh)
 	{
 		if (!function_exists('validate_username'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		$user->add_lang('ucp');

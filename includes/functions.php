@@ -1841,7 +1841,7 @@ function phpbb_get_install_redirect(string $phpbb_root_path, string $phpEx): str
 	$script_name = substr($script_name, -1) === '/' ? $script_name . '.' : $script_name;
 
 	// $phpbb_root_path accounts for redirects from e.g. /adm
-	$script_path = trim(dirname($script_name)) . '/' . $phpbb_root_path . 'install/app.' . $phpEx;
+	$script_path = trim(dirname($script_name)) . '/' . $phpbb_root_path . 'install/app.php';
 	// Replace any number of consecutive backslashes and/or slashes with a single slash
 	// (could happen on some proxy setups and/or Windows servers)
 	return preg_replace('#[\\\\/]{2,}#', '/', $script_path);
@@ -4017,7 +4017,7 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'SITENAME'						=> $config['sitename'],
 		'SITE_DESCRIPTION'				=> $config['site_desc'],
 		'PAGE_TITLE'					=> $page_title,
-		'SCRIPT_NAME'					=> str_replace('.' . $phpEx, '', $user->page['page_name']),
+		'SCRIPT_NAME'					=> str_replace('.php', '', $user->page['page_name']),
 		'LAST_VISIT_DATE'				=> sprintf($user->lang['YOU_LAST_VISIT'], $s_last_visit),
 		'LAST_VISIT_YOU'				=> $s_last_visit,
 		'CURRENT_TIME'					=> sprintf($user->lang['CURRENT_TIME'], $user->format_date(time(), false, true)),
@@ -4442,7 +4442,7 @@ function phpbb_get_board_contact(\phpbb\config\config $config, $phpEx)
 {
 	if ($config['contact_admin_form_enable'])
 	{
-		return generate_board_url() . '/memberlist.' . $phpEx . '?mode=contactadmin';
+		return generate_board_url() . '/memberlist.php?mode=contactadmin';
 	}
 	else
 	{

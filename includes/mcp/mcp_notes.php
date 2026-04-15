@@ -187,7 +187,7 @@ class mcp_notes
 
 		if (!function_exists('phpbb_get_user_rank'))
 		{
-			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_display.php');
 		}
 
 		// Generate the appropriate user information for the user we are looking at

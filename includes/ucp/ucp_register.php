@@ -458,7 +458,7 @@ class ucp_register
 
 				if ($config['email_enable'])
 				{
-					include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+					include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 					$messenger = new messenger(false);
 

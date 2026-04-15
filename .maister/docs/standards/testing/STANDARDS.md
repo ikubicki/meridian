@@ -113,3 +113,23 @@ public static function provide_invalid_usernames(): array
     ];
 }
 ```
+
+## Test Toolchain
+
+### Version Requirements
+- **PHPUnit**: `^7.0` (configured in `composer.json` require-dev)
+- **phpunit/dbunit**: `~4.0` — for database integration tests extending `phpbb_database_test_case`
+- **fabpot/goutte**: `~3.2` — functional/integration HTTP tests
+- **php-webdriver/webdriver**: `~1.8` — E2E browser tests via Selenium WebDriver
+- **Code style**: `squizlabs/php_codesniffer: ~3.4`
+
+Run all tests: `vendor/bin/phpunit -c phpunit.xml`
+
+### Test Layers
+| Layer | Tool | Use for |
+|---|---|---|
+| Unit | PHPUnit 7 | Single class/method, fully mocked dependencies |
+| DB Integration | PHPUnit + DbUnit 4 | Tests requiring real database operations |
+| Functional (HTTP) | Goutte | Full HTTP request/response testing without a real browser |
+| E2E | Selenium WebDriver | Full browser automation for UI-critical flows |
+```

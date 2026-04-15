@@ -401,7 +401,7 @@ class ucp_groups
 
 				if (!function_exists('phpbb_get_user_rank'))
 				{
-					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_display.php');
 				}
 
 				add_form_key('ucp_groups');

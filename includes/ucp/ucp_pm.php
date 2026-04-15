@@ -84,7 +84,7 @@ class ucp_pm
 
 		if (!function_exists('get_folder'))
 		{
-			include($phpbb_root_path . 'includes/functions_privmsgs.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_privmsgs.php');
 		}
 
 		switch ($mode)
@@ -109,7 +109,7 @@ class ucp_pm
 
 				if (!function_exists('compose_pm'))
 				{
-					include($phpbb_root_path . 'includes/ucp/ucp_pm_compose.' . $phpEx);
+					include($phpbb_root_path . 'includes/ucp/ucp_pm_compose.php');
 				}
 				compose_pm($id, $mode, $action, $user_folders);
 
@@ -122,7 +122,7 @@ class ucp_pm
 
 				if (!function_exists('message_options'))
 				{
-					include($phpbb_root_path . 'includes/ucp/ucp_pm_options.' . $phpEx);
+					include($phpbb_root_path . 'includes/ucp/ucp_pm_options.php');
 				}
 				message_options($id, $mode, $global_privmsgs_rules, $global_rule_conditions);
 
@@ -136,7 +136,7 @@ class ucp_pm
 
 				if (!class_exists('ucp_main'))
 				{
-					include($phpbb_root_path . 'includes/ucp/ucp_main.' . $phpEx);
+					include($phpbb_root_path . 'includes/ucp/ucp_main.php');
 				}
 
 				$module = new ucp_main($this);
@@ -395,7 +395,7 @@ class ucp_pm
 				{
 					if (!function_exists('view_folder'))
 					{
-						include($phpbb_root_path . 'includes/ucp/ucp_pm_viewfolder.' . $phpEx);
+						include($phpbb_root_path . 'includes/ucp/ucp_pm_viewfolder.php');
 					}
 					view_folder($id, $mode, $folder_id, $folder);
 
@@ -416,7 +416,7 @@ class ucp_pm
 
 					if (!function_exists('view_message'))
 					{
-						include($phpbb_root_path . 'includes/ucp/ucp_pm_viewmessage.' . $phpEx);
+						include($phpbb_root_path . 'includes/ucp/ucp_pm_viewmessage.php');
 					}
 					view_message($id, $mode, $folder_id, $msg_id, $folder, $message_row);
 

@@ -34,7 +34,7 @@ if (!class_exists('bbcode'))
 		global $phpEx;
 	}
 
-	include($phpbb_root_path . 'includes/bbcode.' . $phpEx);
+	include($phpbb_root_path . 'includes/bbcode.php');
 }
 
 /**
@@ -1073,7 +1073,7 @@ class bbcode_firstpass extends bbcode
 			if ($pos_domain !== false && $pos_path >= $pos_domain && $pos_ext >= $pos_path)
 			{
 				// Ok, actually we allow linking to some files (this may be able to be extended in some way later...)
-				if (strpos($url, '/' . $check_path . '/download/file.' . $phpEx) !== 0)
+				if (strpos($url, '/' . $check_path . '/download/file.php') !== 0)
 				{
 					return false;
 				}
@@ -1657,7 +1657,7 @@ class parse_message extends bbcode_firstpass
 			// Perform actions on temporary attachments
 			if ($delete_file)
 			{
-				include_once($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/functions_admin.php');
 
 				$index = array_keys($request->variable('delete_file', array(0 => 0)));
 				$index = (!empty($index)) ? $index[0] : false;

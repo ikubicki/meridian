@@ -227,7 +227,7 @@ function view_folder($id, $mode, $folder_id, $folder)
 			{
 				$row = &$folder_info['rowset'][$message_id];
 
-				include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/functions_posting.php');
 
 				$sql = 'SELECT p.message_text, p.bbcode_uid
 					FROM ' . PRIVMSGS_TO_TABLE . ' t, ' . PRIVMSGS_TABLE . ' p, ' . USERS_TABLE . ' u

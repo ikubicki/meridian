@@ -338,7 +338,7 @@ class mcp_warn
 		// Generate the appropriate user information for the user we are looking at
 		if (!function_exists('phpbb_get_user_rank'))
 		{
-			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_display.php');
 		}
 
 		$user_rank_data = phpbb_get_user_rank($user_row, $user_row['user_posts']);
@@ -488,7 +488,7 @@ class mcp_warn
 		// Generate the appropriate user information for the user we are looking at
 		if (!function_exists('phpbb_get_user_rank'))
 		{
-			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_display.php');
 		}
 		$user_rank_data = phpbb_get_user_rank($user_row, $user_row['user_posts']);
 		$avatar_img = phpbb_get_user_avatar($user_row);
@@ -527,8 +527,8 @@ function add_warning($user_row, $warning, $send_pm = true, $post_id = 0)
 
 	if ($send_pm)
 	{
-		include_once($phpbb_root_path . 'includes/functions_privmsgs.' . $phpEx);
-		include_once($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_privmsgs.php');
+		include_once($phpbb_root_path . 'includes/message_parser.php');
 
 		// Attempt to translate warning to language of user being warned if user's language differs from issuer's language
 		if ($user_row['user_lang'] != $user->lang_name)

@@ -39,7 +39,7 @@ class mcp_queue
 		global $config, $phpbb_root_path, $phpEx, $action, $phpbb_container;
 		global $phpbb_dispatcher;
 
-		include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_posting.php');
 
 		$forum_id = $request->variable('f', 0);
 		$start = $request->variable('start', 0);
@@ -50,7 +50,7 @@ class mcp_queue
 		{
 			case 'approve':
 			case 'restore':
-				include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 				$post_id_list = $request->variable('post_id_list', array(0));
 				$topic_id_list = $request->variable('topic_id_list', array(0));
@@ -79,7 +79,7 @@ class mcp_queue
 					if (!function_exists('mcp_delete_post'))
 					{
 						global $phpbb_root_path, $phpEx;
-						include($phpbb_root_path . 'includes/mcp/mcp_main.' . $phpEx);
+						include($phpbb_root_path . 'includes/mcp/mcp_main.php');
 					}
 					mcp_delete_post($post_id_list, false, $delete_reason, $action);
 				}
@@ -88,7 +88,7 @@ class mcp_queue
 					if (!function_exists('mcp_delete_topic'))
 					{
 						global $phpbb_root_path, $phpEx;
-						include($phpbb_root_path . 'includes/mcp/mcp_main.' . $phpEx);
+						include($phpbb_root_path . 'includes/mcp/mcp_main.php');
 					}
 					mcp_delete_topic($topic_id_list, false, $delete_reason, $action);
 				}
@@ -107,7 +107,7 @@ class mcp_queue
 					if (!function_exists('mcp_delete_topic'))
 					{
 						global $phpbb_root_path, $phpEx;
-						include($phpbb_root_path . 'includes/mcp/mcp_main.' . $phpEx);
+						include($phpbb_root_path . 'includes/mcp/mcp_main.php');
 					}
 					mcp_delete_topic($topic_id_list, false, '', 'disapprove');
 					return;
@@ -115,7 +115,7 @@ class mcp_queue
 
 				if (!class_exists('messenger'))
 				{
-					include($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_messenger.php');
 				}
 
 				if (!empty($topic_id_list))
@@ -1295,7 +1295,7 @@ class mcp_queue
 			{
 				if (!function_exists('delete_posts'))
 				{
-					include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_admin.php');
 				}
 
 				// We do not check for permissions here, because the moderator allowed approval/disapproval should be allowed to delete the disapproved posts
@@ -1366,11 +1366,11 @@ class mcp_queue
 							$lang_reasons[$post_data['user_lang']] = $user->lang['report_reasons']['DESCRIPTION'][$disapprove_reason_lang];
 
 							// Only load up the language pack if the language is different to the current one
-							if ($post_data['user_lang'] != $user->lang_name && file_exists($phpbb_root_path . '/language/' . $post_data['user_lang'] . '/mcp.' . $phpEx))
+							if ($post_data['user_lang'] != $user->lang_name && file_exists($phpbb_root_path . '/language/' . $post_data['user_lang'] . '/mcp.php'))
 							{
 								// Load up the language pack
 								$lang = array();
-								@include($phpbb_root_path . '/language/' . basename($post_data['user_lang']) . '/mcp.' . $phpEx);
+								@include($phpbb_root_path . '/language/' . basename($post_data['user_lang']) . '/mcp.php');
 
 								// If we find the reason in this language pack use it
 								if (isset($lang['report_reasons']['DESCRIPTION'][$disapprove_reason_lang]))
@@ -1420,7 +1420,7 @@ class mcp_queue
 			}
 
 			// If we came from viewtopic, we try to go back to it.
-			if (strpos($redirect, $phpbb_root_path . 'viewtopic.' . $phpEx) === 0)
+			if (strpos($redirect, $phpbb_root_path . 'viewtopic.php') === 0)
 			{
 				if ($num_disapproved_topics == 0)
 				{
@@ -1431,7 +1431,7 @@ class mcp_queue
 				{
 					// However this is only possible if the topic still exists,
 					// Otherwise we go back to the viewforum page
-					$redirect = append_sid($phpbb_root_path . 'viewforum.' . $phpEx, 'f=' . $post_data['forum_id']);
+					$redirect = append_sid($phpbb_root_path . 'viewforum.php', 'f=' . $post_data['forum_id']);
 				}
 			}
 

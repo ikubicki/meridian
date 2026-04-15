@@ -29,7 +29,7 @@ class acp_help_phpbb
 
 		if (!class_exists('phpbb_questionnaire_data_collector'))
 		{
-			include($phpbb_root_path . 'includes/questionnaire/questionnaire.' . $phpEx);
+			include($phpbb_root_path . 'includes/questionnaire/questionnaire.php');
 		}
 
 		$collect_url = "https://www.phpbb.com/statistics/send";

@@ -110,7 +110,7 @@ function phpbb_clean_path($path)
 		// The container is not yet loaded, use a new instance
 		if (!class_exists('\phpbb\path_helper'))
 		{
-			require($phpbb_root_path . 'phpbb/path_helper.' . $phpEx);
+			require($phpbb_root_path . 'phpbb/path_helper.php');
 		}
 
 		$request = new phpbb\request\request();
@@ -191,7 +191,7 @@ function get_user_rank($user_rank, $user_posts, &$rank_title, &$rank_img, &$rank
 	global $phpbb_root_path, $phpEx;
 	if (!function_exists('phpbb_get_user_rank'))
 	{
-		include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_display.php');
 	}
 
 	$rank_data = phpbb_get_user_rank(array('user_rank' => $user_rank), $user_posts);

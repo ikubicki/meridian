@@ -24,8 +24,8 @@ define('IN_PHPBB', true);
 
 $phpbb_root_path = __DIR__ . '/../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
-require($phpbb_root_path . 'includes/startup.' . $phpEx);
-require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
+require($phpbb_root_path . 'includes/startup.php');
+require($phpbb_root_path . 'phpbb/class_loader.php');
 
 $phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
 $phpbb_class_loader->register();
@@ -38,11 +38,11 @@ if (!defined('PHPBB_ENVIRONMENT'))
 	@define('PHPBB_ENVIRONMENT', 'production');
 }
 
-require($phpbb_root_path . 'includes/constants.' . $phpEx);
-require($phpbb_root_path . 'includes/functions.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
-require($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_compatibility.' . $phpEx);
+require($phpbb_root_path . 'includes/constants.php');
+require($phpbb_root_path . 'includes/functions.php');
+require($phpbb_root_path . 'includes/functions_admin.php');
+require($phpbb_root_path . 'includes/utf/utf_tools.php');
+require($phpbb_root_path . 'includes/functions_compatibility.php');
 
 $phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpEx);
 $phpbb_container = $phpbb_container_builder->with_config($phpbb_config_php_file);
@@ -67,7 +67,7 @@ else
 
 $phpbb_container = $phpbb_container_builder->get_container();
 $phpbb_container->get('request')->enable_super_globals();
-require($phpbb_root_path . 'includes/compatibility_globals.' . $phpEx);
+require($phpbb_root_path . 'includes/compatibility_globals.php');
 
 register_compatibility_globals();
 

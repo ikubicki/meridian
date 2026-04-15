@@ -61,7 +61,7 @@ function mcp_topic_view($id, $mode, $action)
 	{
 		if (!function_exists('mcp_resync_topics'))
 		{
-			include($phpbb_root_path . 'includes/mcp/mcp_forum.' . $phpEx);
+			include($phpbb_root_path . 'includes/mcp/mcp_forum.php');
 		}
 		mcp_resync_topics(array($topic_id));
 	}
@@ -96,11 +96,11 @@ function mcp_topic_view($id, $mode, $action)
 	{
 		if (!class_exists('mcp_queue'))
 		{
-			include($phpbb_root_path . 'includes/mcp/mcp_queue.' . $phpEx);
+			include($phpbb_root_path . 'includes/mcp/mcp_queue.php');
 		}
 
-		include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
-		include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_posting.php');
+		include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 		if (!count($post_id_list))
 		{
@@ -359,7 +359,7 @@ function mcp_topic_view($id, $mode, $action)
 
 	if ($auth->acl_gets('m_split', 'm_merge', (int) $topic_info['forum_id']))
 	{
-		include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_posting.php');
 		$s_topic_icons = posting_gen_topic_icons('', $icon_id);
 
 		// Has the user selected a topic for merge?
@@ -883,7 +883,7 @@ function merge_posts($topic_id, $to_topic_id)
 		{
 			if (!function_exists('phpbb_update_rows_avoiding_duplicates_notify_status'))
 			{
-				include($phpbb_root_path . 'includes/functions_database_helper.' . $phpEx);
+				include($phpbb_root_path . 'includes/functions_database_helper.php');
 			}
 
 			// If the topic no longer exist, we will update the topic watch table.

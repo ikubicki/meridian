@@ -17,7 +17,7 @@
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
-include($phpbb_root_path . 'common.' . $phpEx);
+include($phpbb_root_path . 'common.php');
 
 // Start session management
 $user->session_begin();
@@ -66,7 +66,7 @@ if ($mode == 'whois' && $auth->acl_get('a_') && $session_id)
 {
 	if (!function_exists('user_get_id_name'))
 	{
-		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_user.php');
 	}
 
 	$sql = 'SELECT u.user_id, u.username, u.user_type, s.session_ip
@@ -385,8 +385,8 @@ foreach ($session_data_rowset as $row)
 			$location = $user->lang['INDEX'];
 			$location_url = append_sid("{$phpbb_root_path}index.$phpEx");
 
-			if ($row['session_page'] === 'app.' . $phpEx . '/help/faq' ||
-				$row['session_page'] === 'app.' . $phpEx . '/help/bbcode')
+if ($row['session_page'] === 'app.php/help/faq' ||
+							$row['session_page'] === 'app.php/help/bbcode')
 			{
 				$location = $user->lang['VIEWING_FAQ'];
 				$location_url = $controller_helper->route('phpbb_help_faq_controller');

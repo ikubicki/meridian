@@ -192,7 +192,7 @@ class mcp_main
 			case 'front':
 				if (!function_exists('mcp_front_view'))
 				{
-					include($phpbb_root_path . 'includes/mcp/mcp_front.' . $phpEx);
+					include($phpbb_root_path . 'includes/mcp/mcp_front.php');
 				}
 
 				$user->add_lang('acp/common');
@@ -206,7 +206,7 @@ class mcp_main
 			case 'forum_view':
 				if (!function_exists('mcp_forum_view'))
 				{
-					include($phpbb_root_path . 'includes/mcp/mcp_forum.' . $phpEx);
+					include($phpbb_root_path . 'includes/mcp/mcp_forum.php');
 				}
 
 				$user->add_lang('viewforum');
@@ -232,7 +232,7 @@ class mcp_main
 			case 'topic_view':
 				if (!function_exists('mcp_topic_view'))
 				{
-					include($phpbb_root_path . 'includes/mcp/mcp_topic.' . $phpEx);
+					include($phpbb_root_path . 'includes/mcp/mcp_topic.php');
 				}
 
 				mcp_topic_view($id, $mode, $action);
@@ -244,7 +244,7 @@ class mcp_main
 			case 'post_details':
 				if (!function_exists('mcp_post_details'))
 				{
-					include($phpbb_root_path . 'includes/mcp/mcp_post.' . $phpEx);
+					include($phpbb_root_path . 'includes/mcp/mcp_post.php');
 				}
 
 				mcp_post_details($id, $mode, $action);
@@ -1180,7 +1180,7 @@ function mcp_delete_post($post_ids, $is_soft = false, $soft_delete_reason = '', 
 	{
 		if (!function_exists('delete_posts'))
 		{
-			include($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_admin.php');
 		}
 
 		// Count the number of topics that are affected

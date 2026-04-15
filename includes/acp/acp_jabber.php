@@ -36,7 +36,7 @@ class acp_jabber
 
 		if (!class_exists('jabber'))
 		{
-			include($phpbb_root_path . 'includes/functions_jabber.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_jabber.php');
 		}
 
 		$submit = (isset($_POST['submit'])) ? true : false;

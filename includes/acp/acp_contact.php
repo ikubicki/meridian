@@ -41,11 +41,11 @@ class acp_contact
 
 		if (!function_exists('display_custom_bbcodes'))
 		{
-			include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_display.php');
 		}
 		if (!class_exists('parse_message'))
 		{
-			include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+			include($phpbb_root_path . 'includes/message_parser.php');
 		}
 
 		/* @var $config_text \phpbb\config\db_text */

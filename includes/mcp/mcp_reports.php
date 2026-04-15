@@ -38,7 +38,7 @@ class mcp_reports
 		global $auth, $db, $user, $template, $request;
 		global $config, $phpbb_root_path, $phpEx, $action, $phpbb_container, $phpbb_dispatcher;
 
-		include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_posting.php');
 
 		$forum_id = $request->variable('f', 0);
 		$start = $request->variable('start', 0);
@@ -49,7 +49,7 @@ class mcp_reports
 		{
 			case 'close':
 			case 'delete':
-				include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 				$report_id_list = $request->variable('report_id_list', array(0));
 

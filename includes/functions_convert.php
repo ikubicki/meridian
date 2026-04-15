@@ -1894,7 +1894,7 @@ function add_bots()
 
 	if (!function_exists('user_add'))
 	{
-		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_user.php');
 	}
 
 	foreach ($bots as $bot_name => $bot_ary)
@@ -2180,7 +2180,7 @@ function remove_invalid_users()
 	{
 		if (!function_exists('user_delete'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		user_delete('remove', $row['user_id']);

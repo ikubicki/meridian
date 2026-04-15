@@ -30,7 +30,7 @@ class acp_ban
 
 		if (!function_exists('user_ban'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		$bansubmit	= $request->is_set_post('bansubmit');

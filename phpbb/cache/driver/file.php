@@ -83,7 +83,7 @@ class file extends \phpbb\cache\driver\base
 				exit;
 			}
 
-			die('Fatal: Not able to open ' . $this->cache_dir . 'data_global.' . $phpEx);
+			die('Fatal: Not able to open ' . $this->cache_dir . 'data_global.php');
 			exit;
 		}
 
@@ -133,7 +133,7 @@ class file extends \phpbb\cache\driver\base
 		}
 		closedir($dir);
 
-		if (file_exists($this->cache_dir . 'data_global.' . $phpEx))
+		if (file_exists($this->cache_dir . 'data_global.php'))
 		{
 			if (!count($this->vars))
 			{

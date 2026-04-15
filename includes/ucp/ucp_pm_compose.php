@@ -35,17 +35,17 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 
 	if (!function_exists('generate_smilies'))
 	{
-		include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_posting.php');
 	}
 
 	if (!function_exists('display_custom_bbcodes'))
 	{
-		include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_display.php');
 	}
 
 	if (!class_exists('parse_message'))
 	{
-		include($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+		include($phpbb_root_path . 'includes/message_parser.php');
 	}
 
 	if (!$action)

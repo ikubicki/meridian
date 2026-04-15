@@ -57,7 +57,7 @@ class acp_update
 			$template->assign_block_vars('updates_available', $updates_available);
 		}
 
-		$update_link = $phpbb_root_path . 'install/app.' . $phpEx;
+		$update_link = $phpbb_root_path . 'install/app.php';
 
 		$template_ary = [
 			'S_UP_TO_DATE'				=> empty($updates_available),

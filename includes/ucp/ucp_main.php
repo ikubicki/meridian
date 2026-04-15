@@ -235,7 +235,7 @@ class ucp_main
 				{
 					if (!function_exists('display_user_activity'))
 					{
-						include_once($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+						include_once($phpbb_root_path . 'includes/functions_display.php');
 					}
 					display_user_activity($user->data);
 				}
@@ -265,7 +265,7 @@ class ucp_main
 
 				if (!function_exists('topic_status'))
 				{
-					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_display.php');
 				}
 
 				$user->add_lang('viewforum');
@@ -506,7 +506,7 @@ class ucp_main
 
 				if (!function_exists('topic_status'))
 				{
-					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_display.php');
 				}
 
 				$user->add_lang('viewforum');
@@ -566,7 +566,7 @@ class ucp_main
 				$draft_subject = $draft_message = '';
 				add_form_key('ucp_draft');
 
-				include_once($phpbb_root_path . 'includes/message_parser.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/message_parser.php');
 				$message_parser = new parse_message();
 
 				if ($delete)

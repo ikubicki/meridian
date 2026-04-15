@@ -55,7 +55,7 @@ function mcp_post_details($id, $mode, $action)
 				$ip = $request->variable('ip', '');
 				if (!function_exists('user_ipwhois'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_user.php');
 				}
 
 				$template->assign_vars(array(

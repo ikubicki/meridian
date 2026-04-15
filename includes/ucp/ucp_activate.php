@@ -99,7 +99,7 @@ class ucp_activate
 
 		if (!$update_password)
 		{
-			include_once($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include_once($phpbb_root_path . 'includes/functions_user.php');
 
 			user_active_flip('activate', $user_row['user_id']);
 
@@ -131,7 +131,7 @@ class ucp_activate
 			$phpbb_notifications = $phpbb_container->get('notification_manager');
 			$phpbb_notifications->delete_notifications('notification.type.admin_activate_user', $user_row['user_id']);
 
-			include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+			include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 			$messenger = new messenger(false);
 

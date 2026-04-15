@@ -94,7 +94,7 @@ class ucp_resend
 
 			$coppa = ($row['group_name'] == 'REGISTERED_COPPA' && $row['group_type'] == GROUP_SPECIAL) ? true : false;
 
-			include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+			include_once($phpbb_root_path . 'includes/functions_messenger.php');
 			$messenger = new messenger(false);
 
 			if ($config['require_activation'] == USER_ACTIVATION_SELF || $coppa)
@@ -162,7 +162,7 @@ class ucp_resend
 		$template->assign_vars(array(
 			'USERNAME'			=> $username,
 			'EMAIL'				=> $email,
-			'S_PROFILE_ACTION'	=> append_sid($phpbb_root_path . 'ucp.' . $phpEx, 'mode=resend_act'))
+			'S_PROFILE_ACTION'	=> append_sid($phpbb_root_path . 'ucp.php', 'mode=resend_act'))
 		);
 
 		$this->tpl_name = 'ucp_resend';

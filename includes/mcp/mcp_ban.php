@@ -30,13 +30,13 @@ class mcp_ban
 
 		if (!function_exists('user_ban'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		// Include the admin banning interface...
 		if (!class_exists('acp_ban'))
 		{
-			include($phpbb_root_path . 'includes/acp/acp_ban.' . $phpEx);
+			include($phpbb_root_path . 'includes/acp/acp_ban.php');
 		}
 
 		$bansubmit		= $request->is_set_post('bansubmit');

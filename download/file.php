@@ -33,9 +33,9 @@ else if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'
 
 if (isset($_GET['avatar']))
 {
-	require($phpbb_root_path . 'includes/startup.' . $phpEx);
+	require($phpbb_root_path . 'includes/startup.php');
 
-	require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
+	require($phpbb_root_path . 'phpbb/class_loader.php');
 	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}phpbb/", $phpEx);
 	$phpbb_class_loader->register();
 
@@ -52,10 +52,10 @@ if (isset($_GET['avatar']))
 		exit;
 	}
 
-	require($phpbb_root_path . 'includes/constants.' . $phpEx);
-	require($phpbb_root_path . 'includes/functions.' . $phpEx);
-	require($phpbb_root_path . 'includes/functions_download' . '.' . $phpEx);
-	require($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
+	require($phpbb_root_path . 'includes/constants.php');
+	require($phpbb_root_path . 'includes/functions.php');
+	require($phpbb_root_path . 'includes/functions_download' . '.php');
+	require($phpbb_root_path . 'includes/utf/utf_tools.php');
 
 	// Setup class loader first
 	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/", $phpEx);
@@ -147,8 +147,8 @@ if (isset($_GET['avatar']))
 }
 
 // implicit else: we are not in avatar mode
-include($phpbb_root_path . 'common.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_download' . '.' . $phpEx);
+include($phpbb_root_path . 'common.php');
+require($phpbb_root_path . 'includes/functions_download' . '.php');
 
 $attach_id = $request->variable('id', 0);
 $mode = $request->variable('mode', '');
@@ -294,7 +294,7 @@ else
 
 	if ($display_cat == ATTACHMENT_CATEGORY_IMAGE && $mode === 'view' && (strpos($attachment['mimetype'], 'image') === 0) && (strpos(strtolower($user->browser), 'msie') !== false) && !phpbb_is_greater_ie_version($user->browser, 7))
 	{
-		wrap_img_in_html(append_sid($phpbb_root_path . 'download/file.' . $phpEx, 'id=' . $attachment['attach_id']), $attachment['real_filename']);
+		wrap_img_in_html(append_sid($phpbb_root_path . 'download/file.php', 'id=' . $attachment['attach_id']), $attachment['real_filename']);
 		file_gc();
 	}
 	else

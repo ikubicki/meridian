@@ -32,12 +32,12 @@ class acp_permission_roles
 
 		if (!function_exists('user_get_id_name'))
 		{
-			include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+			include($phpbb_root_path . 'includes/functions_user.php');
 		}
 
 		if (!class_exists('auth_admin'))
 		{
-			include($phpbb_root_path . 'includes/acp/auth.' . $phpEx);
+			include($phpbb_root_path . 'includes/acp/auth.php');
 		}
 
 		$this->auth_admin = new auth_admin();

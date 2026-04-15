@@ -38,8 +38,8 @@ class mcp_pm_reports
 		global $auth, $db, $user, $template, $request;
 		global $config, $phpbb_root_path, $phpEx, $action, $phpbb_container;
 
-		include_once($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
-		include_once($phpbb_root_path . 'includes/functions_privmsgs.' . $phpEx);
+		include_once($phpbb_root_path . 'includes/functions_posting.php');
+		include_once($phpbb_root_path . 'includes/functions_privmsgs.php');
 
 		/* @var $pagination \phpbb\pagination */
 		$pagination = $phpbb_container->get('pagination');
@@ -51,7 +51,7 @@ class mcp_pm_reports
 		{
 			case 'close':
 			case 'delete':
-				include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+				include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 				$report_id_list = $request->variable('report_id_list', array(0));
 
@@ -62,7 +62,7 @@ class mcp_pm_reports
 
 				if (!function_exists('close_report'))
 				{
-					include($phpbb_root_path . 'includes/mcp/mcp_reports.' . $phpEx);
+					include($phpbb_root_path . 'includes/mcp/mcp_reports.php');
 				}
 
 				close_report($report_id_list, $mode, $action, true);

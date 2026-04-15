@@ -18,13 +18,13 @@
 Coding standards and conventions for the project.
 
 ### [Global](standards/global/STANDARDS.md)
-General conventions: naming (camelCase / snake_case / PascalCase), PHPDoc, file headers, constants.
+Evidence-based conventions (phpBB 3.3.15): naming (all `snake_case` — variables, classes, methods), Allman-style braces, PHPDoc `@var` on properties, file headers, constants, i18n.
 
 ### [Backend](standards/backend/STANDARDS.md)
-PHP-specific: PSR-4 namespacing, Dependency Injection, error handling, SQL safety, security practices.
+PHP-specific: PSR-4 namespacing, `snake_case` class names (differs from PSR-1), constructor-only DI, `protected` properties, single-quote strings, DBAL SQL safety (escape/cast/helper methods), cross-DB compatibility (`<>` not `!=`), CSRF, ACL, legacy `includes/` patterns.
 
 ### [Testing](standards/testing/STANDARDS.md)
-PHPUnit 7+ conventions, test naming, DB unit testing patterns, mock usage, test isolation.
+PHPUnit 7 conventions, test naming, DB unit testing patterns (DbUnit 4), mock usage, test isolation, toolchain versions (Goutte, WebDriver).
 
 ### Frontend _(skipped)_
 > Frontend standards were not selected during initialization and are not included in this project.

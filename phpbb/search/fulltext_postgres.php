@@ -114,7 +114,7 @@ class fulltext_postgres extends \phpbb\search\base
 		 */
 		if (!function_exists('utf8_strlen'))
 		{
-			include($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
+			include($phpbb_root_path . 'includes/utf/utf_tools.php');
 		}
 
 		$error = false;

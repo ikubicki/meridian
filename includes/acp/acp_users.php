@@ -59,7 +59,7 @@ class acp_users
 		{
 			if (!function_exists('user_get_id_name'))
 			{
-				include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+				include($phpbb_root_path . 'includes/functions_user.php');
 			}
 
 			$this->page_title = 'WHOIS';
@@ -175,7 +175,7 @@ class acp_users
 
 				if (!function_exists('user_get_id_name'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_user.php');
 				}
 
 				$user->add_lang('acp/ban');
@@ -360,7 +360,7 @@ class acp_users
 							{
 								if (!class_exists('messenger'))
 								{
-									include($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+									include($phpbb_root_path . 'includes/functions_messenger.php');
 								}
 
 								$server_url = generate_board_url();
@@ -458,7 +458,7 @@ class acp_users
 
 									if (!class_exists('messenger'))
 									{
-										include($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+										include($phpbb_root_path . 'includes/functions_messenger.php');
 									}
 
 									$messenger = new messenger(false);
@@ -600,7 +600,7 @@ class acp_users
 								{
 									if (!function_exists('delete_pm'))
 									{
-										include($phpbb_root_path . 'includes/functions_privmsgs.' . $phpEx);
+										include($phpbb_root_path . 'includes/functions_privmsgs.php');
 									}
 
 									do
@@ -1419,7 +1419,7 @@ class acp_users
 
 				if (!function_exists('user_get_id_name'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_user.php');
 				}
 
 				/* @var $cp \phpbb\profilefields\manager */
@@ -1583,7 +1583,7 @@ class acp_users
 
 				if (!function_exists('user_get_id_name'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_user.php');
 				}
 
 				$data = array(
@@ -2033,7 +2033,7 @@ class acp_users
 
 				if (!function_exists('display_custom_bbcodes'))
 				{
-					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_display.php');
 				}
 
 				$enable_bbcode	= ($config['allow_sig_bbcode']) ? $this->optionget($user_row, 'sig_bbcode') : false;
@@ -2320,7 +2320,7 @@ class acp_users
 
 				if (!function_exists('group_user_attributes'))
 				{
-					include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_user.php');
 				}
 
 				$user->add_lang(array('groups', 'acp/groups'));
@@ -2544,7 +2544,7 @@ class acp_users
 
 				if (!class_exists('auth_admin'))
 				{
-					include($phpbb_root_path . 'includes/acp/auth.' . $phpEx);
+					include($phpbb_root_path . 'includes/acp/auth.php');
 				}
 
 				$auth_admin = new auth_admin();

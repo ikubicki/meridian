@@ -170,7 +170,7 @@ class ucp_profile
 						{
 							$message = ($config['require_activation'] == USER_ACTIVATION_SELF) ? 'ACCOUNT_EMAIL_CHANGED' : 'ACCOUNT_EMAIL_CHANGED_ADMIN';
 
-							include_once($phpbb_root_path . 'includes/functions_messenger.' . $phpEx);
+							include_once($phpbb_root_path . 'includes/functions_messenger.php');
 
 							$server_url = generate_board_url();
 
@@ -238,8 +238,8 @@ class ucp_profile
 						// Now, we can remove the user completely (kill the session) - NOT BEFORE!!!
 						if (!empty($sql_ary['user_actkey']))
 						{
-							meta_refresh(5, append_sid($phpbb_root_path . 'index.' . $phpEx));
-							$message = $user->lang[$message] . '<br /><br />' . sprintf($user->lang['RETURN_INDEX'], '<a href="' . append_sid($phpbb_root_path . 'index.' . $phpEx) . '">', '</a>');
+							meta_refresh(5, append_sid($phpbb_root_path . 'index.php'));
+							$message = $user->lang[$message] . '<br /><br />' . sprintf($user->lang['RETURN_INDEX'], '<a href="' . append_sid($phpbb_root_path . 'index.php') . '">', '</a>');
 
 							// Because the user gets deactivated we log him out too, killing his session
 							$user->session_kill();
@@ -472,12 +472,12 @@ class ucp_profile
 
 				if (!function_exists('generate_smilies'))
 				{
-					include($phpbb_root_path . 'includes/functions_posting.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_posting.php');
 				}
 
 				if (!function_exists('display_custom_bbcodes'))
 				{
-					include($phpbb_root_path . 'includes/functions_display.' . $phpEx);
+					include($phpbb_root_path . 'includes/functions_display.php');
 				}
 
 				$preview	= $request->is_set_post('preview');

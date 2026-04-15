@@ -1637,7 +1637,7 @@ function phpbb_show_profile($data, $user_notes_enabled = false, $warn_user_enabl
 
 	if (!function_exists('phpbb_get_banned_user_ids'))
 	{
-		include($phpbb_root_path . 'includes/functions_user.' . $phpEx);
+		include($phpbb_root_path . 'includes/functions_user.php');
 	}
 
 	// Can this user receive a Private Message?

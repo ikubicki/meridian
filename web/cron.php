@@ -21,7 +21,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 define('IN_PHPBB', true);
 $phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
 $phpEx = substr(strrchr(__FILE__, '.'), 1);
-include($phpbb_root_path . 'common.' . $phpEx);
+include($phpbb_root_path . 'common.php');
 
 // Do not update users last page entry
 $user->session_begin(false);
