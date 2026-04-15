@@ -265,7 +265,7 @@ class convertor
 		require_once ($this->phpbb_root_path . 'src/phpbb/common/functions_convert.' . $this->php_ext);
 
 		// Include convertor if available
-		$convertor_file_path = $this->phpbb_root_path . 'install/convertors/convert_' . $converter . '.' . $this->php_ext;
+			$convertor_file_path = $this->phpbb_root_path . 'src/phpbb/install/convertors/convert_' . $converter . '.' . $this->php_ext;
 		if (!file_exists($convertor_file_path))
 		{
 			if ($this->request->is_ajax())
@@ -438,7 +438,7 @@ class convertor
 		require_once($this->phpbb_root_path . 'src/phpbb/common/functions_convert.' . $this->php_ext);
 
 		// Include convertor if available
-		$convertor_file_path = $this->phpbb_root_path . 'install/convertors/convert_' . $convertor . '.' . $this->php_ext;
+			$convertor_file_path = $this->phpbb_root_path . 'src/phpbb/install/convertors/convert_' . $convertor . '.' . $this->php_ext;
 		include ($convertor_file_path);
 
 		// We expect to have an AJAX request here
@@ -711,7 +711,7 @@ class convertor
 		$convertors = $sort = array();
 		$get_info = true; // Global flag
 
-		$handle = @opendir($this->phpbb_root_path . 'install/convertors/');
+$handle = @opendir($this->phpbb_root_path . 'src/phpbb/install/convertors/');
 
 		if (!$handle)
 		{
@@ -724,7 +724,7 @@ class convertor
 			{
 				$phpbb_root_path = $this->phpbb_root_path; // These globals are required
 				$phpEx = $this->php_ext; // See above
-				include_once($this->phpbb_root_path . 'install/convertors/' . $entry);
+						include_once($this->phpbb_root_path . 'src/phpbb/install/convertors/' . $entry);
 				if (isset($convertor_data))
 				{
 					$sort[strtolower($convertor_data['forum_name'])] = count($convertors);

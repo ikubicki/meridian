@@ -17,7 +17,7 @@
 define('IN_PHPBB', true);
 define('IN_INSTALL', true);
 
-$phpbb_root_path = '../';
+$phpbb_root_path = '../../../';
 
 if (version_compare(PHP_VERSION, '7.2.0', '<'))
 {
@@ -25,7 +25,7 @@ if (version_compare(PHP_VERSION, '7.2.0', '<'))
 }
 
 $startup_new_path = $phpbb_root_path . 'install/update/update/new/install/startup.php';
-$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'install/startup.php';
+$startup_path = (file_exists($startup_new_path)) ? $startup_new_path : $phpbb_root_path . 'src/phpbb/install/startup.php';
 require($startup_path);
 
 /** @var \phpbb\filesystem\filesystem $phpbb_filesystem */

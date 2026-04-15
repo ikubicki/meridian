@@ -88,9 +88,9 @@ class create_schema_file extends \phpbb\install\task_base
 	public function run()
 	{
 		// Generate database schema
-		if ($this->filesystem->exists($this->phpbb_root_path . 'install/schemas/schema.json'))
+		if ($this->filesystem->exists($this->phpbb_root_path . 'src/phpbb/install/schemas/schema.json'))
 		{
-			$db_table_schema = @file_get_contents($this->phpbb_root_path . 'install/schemas/schema.json');
+			$db_table_schema = @file_get_contents($this->phpbb_root_path . 'src/phpbb/install/schemas/schema.json');
 			$this->config->set('change_table_prefix', true);
 		}
 		else

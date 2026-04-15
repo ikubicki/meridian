@@ -57,7 +57,7 @@ class acp_update
 			$template->assign_block_vars('updates_available', $updates_available);
 		}
 
-		$update_link = $phpbb_root_path . 'install/app.php';
+		$update_link = $phpbb_root_path . 'src/phpbb/install/app.php';
 
 		$template_ary = [
 			'S_UP_TO_DATE'				=> empty($updates_available),
@@ -76,7 +76,7 @@ class acp_update
 		// Incomplete update?
 		if (phpbb_version_compare($config['version'], PHPBB_VERSION, '<'))
 		{
-			$database_update_link = $phpbb_root_path . 'install/app.php/update';
+			$database_update_link = $phpbb_root_path . 'src/phpbb/install/app.php/update';
 
 			$template->assign_vars(array(
 				'S_UPDATE_INCOMPLETE'		=> true,

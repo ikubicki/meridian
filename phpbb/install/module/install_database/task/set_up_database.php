@@ -105,7 +105,7 @@ class set_up_database extends \phpbb\install\task_base
 			$schema_name .= '_41';
 		}
 
-		$this->schema_file_path = $this->phpbb_root_path . 'install/schemas/' . $schema_name . '_schema.sql';
+		$this->schema_file_path = $this->phpbb_root_path . 'src/phpbb/install/schemas/' . $schema_name . '_schema.sql';
 
 		return $this->filesystem->exists($this->schema_file_path);
 	}
