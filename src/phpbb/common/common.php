@@ -27,10 +27,7 @@ if (!defined('PHPBB_ENVIRONMENT'))
 	@define('PHPBB_ENVIRONMENT', 'production');
 }
 
-if (!defined('PHPBB_INSTALLED'))
-{
-	\phpbb\install\redirectToInstaller($phpbb_root_path);
-}
+\phpbb\install\checkInstallation($phpbb_root_path);
 
 // In case $phpbb_adm_relative_path is not set (in case of an update), use the default.
 $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relative_path : 'web/adm/';

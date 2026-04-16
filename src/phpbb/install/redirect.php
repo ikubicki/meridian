@@ -14,6 +14,19 @@
 namespace phpbb\install;
 
 /**
+* Checks if phpBB is installed and redirects to the installer if not.
+*
+* @param string $phpbb_root_path Path to the phpBB root
+*/
+function checkInstallation(string $phpbb_root_path): void
+{
+	if (!defined('PHPBB_INSTALLED'))
+	{
+		redirectToInstaller($phpbb_root_path);
+	}
+}
+
+/**
 * Redirects the user to the phpBB installer and exits.
 *
 * @param string $phpbb_root_path Path to the phpBB root
