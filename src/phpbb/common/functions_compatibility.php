@@ -54,7 +54,8 @@ function get_user_avatar($avatar, $avatar_type, $avatar_width, $avatar_height, $
 */
 function phpbb_hash($password)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/* @var $passwords_manager \phpbb\passwords\manager */
 	$passwords_manager = $phpbb_container->get('passwords.manager');
@@ -73,7 +74,8 @@ function phpbb_hash($password)
 */
 function phpbb_check_hash($password, $hash)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/* @var $passwords_manager \phpbb\passwords\manager */
 	$passwords_manager = $phpbb_container->get('passwords.manager');
@@ -92,7 +94,9 @@ function phpbb_check_hash($password, $hash)
 */
 function phpbb_clean_path($path)
 {
-	global $phpbb_path_helper, $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if (!$phpbb_path_helper && $phpbb_container)
 	{
@@ -136,7 +140,9 @@ function phpbb_clean_path($path)
 */
 function tz_select($default = '', $truncate = false)
 {
-	global $template, $user;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
 
 	return phpbb_timezone_select($template, $user, $default, $truncate);
 }
@@ -151,7 +157,10 @@ function tz_select($default = '', $truncate = false)
 */
 function cache_moderators()
 {
-	global $db, $cache, $auth;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$cache = $phpbb_app_container->getCache();
+	$auth = $phpbb_app_container->getAuth();
 	return phpbb_cache_moderators($db, $cache, $auth);
 }
 
@@ -165,7 +174,9 @@ function cache_moderators()
 */
 function update_foes($group_id = false, $user_id = false)
 {
-	global $db, $auth;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
 	return phpbb_update_foes($db, $auth, $group_id, $user_id);
 }
 
@@ -203,7 +214,8 @@ function get_user_rank($user_rank, $user_posts, &$rank_title, &$rank_img, &$rank
  */
 function get_remote_file($host, $directory, $filename, &$errstr, &$errno, $port = 80, $timeout = 6)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	// Get file downloader and assign $errstr and $errno
 	/* @var $file_downloader \phpbb\file_downloader */
@@ -232,7 +244,9 @@ function get_remote_file($host, $directory, $filename, &$errstr, &$errno, $port 
  */
 function add_log()
 {
-	global $phpbb_log, $user;
+	global $phpbb_app_container;
+	$phpbb_log = $phpbb_app_container->getLog();
+	$user = $phpbb_app_container->getUser();
 
 	$args = func_get_args();
 	$mode = array_shift($args);
@@ -422,7 +436,8 @@ function get_tables($db)
  */
 function phpbb_chmod($filename, $perms = CHMOD_READ)
 {
-	global $phpbb_filesystem;
+	global $phpbb_app_container;
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	try
 	{
@@ -449,7 +464,8 @@ function phpbb_chmod($filename, $perms = CHMOD_READ)
  */
 function phpbb_is_writable($file)
 {
-	global $phpbb_filesystem;
+	global $phpbb_app_container;
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	return $phpbb_filesystem->is_writable($file);
 }
@@ -464,7 +480,8 @@ function phpbb_is_writable($file)
  */
 function phpbb_is_absolute($path)
 {
-	global $phpbb_filesystem;
+	global $phpbb_app_container;
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	return $phpbb_filesystem->is_absolute_path($path);
 }
@@ -476,7 +493,8 @@ function phpbb_is_absolute($path)
  */
 function phpbb_realpath($path)
 {
-	global $phpbb_filesystem;
+	global $phpbb_app_container;
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	return $phpbb_filesystem->realpath($path);
 }
@@ -493,7 +511,8 @@ function phpbb_realpath($path)
  */
 function phpbb_get_plural_form($rule, $number)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\language\language $language */
 	$language = $phpbb_container->get('language');
@@ -532,7 +551,8 @@ function set_var(&$result, $var, $type, $multibyte = false)
  */
 function delete_attachments($mode, $ids, $resync = true)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\attachment\manager $attachment_manager */
 	$attachment_manager = $phpbb_container->get('attachment.manager');
@@ -550,7 +570,8 @@ function delete_attachments($mode, $ids, $resync = true)
  */
 function phpbb_unlink($filename, $mode = 'file', $entry_removed = false)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\attachment\manager $attachment_manager */
 	$attachment_manager = $phpbb_container->get('attachment.manager');
@@ -567,7 +588,8 @@ function phpbb_unlink($filename, $mode = 'file', $entry_removed = false)
  */
 function display_reasons($reason_id = 0)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$phpbb_container->get('phpbb.report.report_reason_list_provider')->display_reasons($reason_id);
 }
@@ -589,7 +611,8 @@ function display_reasons($reason_id = 0)
  */
 function upload_attachment($form_name, $forum_id, $local = false, $local_storage = '', $is_message = false, $local_filedata = false)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\attachment\manager $attachment_manager */
 	$attachment_manager = $phpbb_container->get('attachment.manager');
@@ -713,8 +736,12 @@ function phpbb_load_extensions_autoloaders($phpbb_root_path)
 */
 function phpbb_http_login($param)
 {
-	global $auth, $user, $request;
-	global $config;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$param_defaults = array(
 		'auth_message'	=> '',

@@ -88,7 +88,8 @@ class install_extensions extends \phpbb\install\task_base
 		$cache = $container->get('cache.driver');
 		$cache->destroy('config');
 
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 		$config = new db(
 			$this->db,
 			$cache,

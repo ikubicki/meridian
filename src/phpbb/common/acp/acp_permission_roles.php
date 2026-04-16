@@ -22,9 +22,15 @@ class acp_permission_roles
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 		global $phpbb_root_path;
-		global $request, $phpbb_log;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		if (!function_exists('user_get_id_name'))
 		{
@@ -478,7 +484,9 @@ class acp_permission_roles
 	*/
 	function display_auth_options($auth_options)
 	{
-		global $template, $phpbb_container;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/* @var $phpbb_permissions \phpbb\permissions */
 		$phpbb_permissions = $phpbb_container->get('acl.permissions');
@@ -524,7 +532,8 @@ class acp_permission_roles
 	*/
 	function remove_role($role_id, $permission_type)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		// Get complete auth array
 		$sql = 'SELECT auth_option, auth_option_id

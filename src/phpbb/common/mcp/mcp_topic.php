@@ -20,8 +20,17 @@
 */
 function mcp_topic_view($id, $mode, $action)
 {
-	global $phpbb_root_path, $config, $request;
-	global $template, $db, $user, $auth, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$url = append_sid("{$phpbb_root_path}mcp.php?" . phpbb_extra_url());
 
@@ -481,7 +490,16 @@ function mcp_topic_view($id, $mode, $action)
 */
 function split_topic($action, $topic_id, $to_forum_id, $subject)
 {
-	global $db, $template, $user, $phpbb_root_path, $auth, $config, $phpbb_log, $request, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$post_id_list	= $request->variable('post_id_list', array(0));
 	$forum_id		= $request->variable('forum_id', 0);
@@ -794,7 +812,14 @@ function split_topic($action, $topic_id, $to_forum_id, $subject)
 */
 function merge_posts($topic_id, $to_topic_id)
 {
-	global $db, $template, $user, $phpbb_root_path, $phpbb_log, $request, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!$to_topic_id)
 	{

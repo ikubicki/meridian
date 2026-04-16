@@ -182,7 +182,9 @@ class module implements \phpbb\db\migration\tool\tool_interface
 	*/
 	public function add($class, $parent = 0, $data = array())
 	{
-		global $user, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		// allow sending the name as a string in $data to create a category
 		if (!is_array($data))

@@ -21,7 +21,14 @@ class ucp_zebra
 
 	function main($id, $mode)
 	{
-		global $db, $user, $auth, $template, $phpbb_root_path, $request, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$submit	= (isset($_POST['submit']) || isset($_GET['add']) || isset($_GET['remove'])) ? true : false;
 		$s_hidden_fields = '';

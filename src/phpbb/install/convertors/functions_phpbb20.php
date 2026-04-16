@@ -50,7 +50,10 @@ function phpbb_forum_flags()
 */
 function phpbb_insert_forums()
 {
-	global $db, $src_db, $same_db, $convert, $user;
+	global $src_db, $same_db, $convert;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	$db->sql_query($convert->truncate_statement . FORUMS_TABLE);
 
@@ -470,7 +473,8 @@ function phpbb_get_birthday($birthday = '')
 */
 function phpbb_user_id($user_id)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	// Increment user id if the old forum is having a user with the id 1
 	if (!isset($config['increment_user_id']))
@@ -555,7 +559,10 @@ function phpbb_copy_table_fields()
 */
 function phpbb_convert_authentication($mode)
 {
-	global $db, $src_db, $same_db, $convert, $config;
+	global $src_db, $same_db, $convert;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	if ($mode == 'start')
 	{
@@ -1049,7 +1056,8 @@ function phpbb_convert_authentication($mode)
 		}
 		$db->sql_freeresult($result);
 
-		global $auth;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
 
 		// Let us see which groups have access to these forums...
 		foreach ($parent_forums as $row)
@@ -1212,7 +1220,9 @@ function phpbb_replace_size($matches)
 */
 function phpbb_prepare_message($message)
 {
-	global $convert, $user, $convert_row, $message_parser;
+	global $convert, $convert_row, $message_parser;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (!$message)
 	{
@@ -1314,7 +1324,9 @@ function phpbb_get_files_dir()
 		return;
 	}
 
-	global $src_db, $same_db, $convert, $user;
+	global $src_db, $same_db, $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if ($convert->mysql_convert && $same_db)
 	{
@@ -1353,7 +1365,9 @@ function phpbb_get_files_dir()
 */
 function phpbb_copy_thumbnails()
 {
-	global $convert, $config, $phpbb_root_path;
+	global $convert, $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$src_path = $convert->options['forum_path'] . '/' . phpbb_get_files_dir() . '/thumbs/';
 
@@ -1406,7 +1420,9 @@ function phpbb_attachment_category($cat_id)
 */
 function phpbb_attachment_extension_group_name()
 {
-	global $db, $phpbb_root_path;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	// Update file extension group names to use language strings.
 	$sql = 'SELECT lang_dir
@@ -1619,7 +1635,8 @@ function phpbb_new_pm($pm_type)
 */
 function phpbb_get_savebox_id($user_id)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$user_id = phpbb_user_id($user_id);
 
@@ -1641,7 +1658,9 @@ function phpbb_get_savebox_id($user_id)
 */
 function phpbb_import_attach_config()
 {
-	global $src_db, $same_db, $convert, $config;
+	global $src_db, $same_db, $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	if ($convert->mysql_convert && $same_db)
 	{
@@ -1746,7 +1765,8 @@ function phpbb_disallowed_username($username)
 */
 function phpbb_create_userconv_table()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	switch ($db->get_sql_layer())
 	{
@@ -1812,7 +1832,10 @@ function phpbb_create_userconv_table()
 
 function phpbb_check_username_collisions()
 {
-	global $db, $src_db, $convert, $user, $lang;
+	global $src_db, $convert, $lang;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	// now find the clean version of the usernames that collide
 	$sql = 'SELECT username_clean
@@ -1881,7 +1904,10 @@ function phpbb_check_username_collisions()
 
 function phpbb_convert_timezone($timezone)
 {
-	global $config, $db, $phpbb_root_path, $table_prefix;
+	global $phpbb_root_path, $table_prefix;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
 
 	$factory = new \phpbb\db\tools\factory();
 	$timezone_migration = new \phpbb\db\migration\data\v310\timezone($config, $db, $factory->get($db), $phpbb_root_path, $table_prefix);
@@ -1890,7 +1916,9 @@ function phpbb_convert_timezone($timezone)
 
 function phpbb_add_notification_options($user_notify_pm)
 {
-	global $convert_row, $db;
+	global $convert_row;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$user_id = phpbb_user_id($convert_row['user_id']);
 	if ($user_id == ANONYMOUS)
@@ -1930,7 +1958,8 @@ function phpbb_add_notification_options($user_notify_pm)
 
 function phpbb_convert_password_hash($hash)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/* @var $manager \phpbb\passwords\manager */
 	$manager = $phpbb_container->get('passwords.manager');

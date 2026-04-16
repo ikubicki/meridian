@@ -142,7 +142,8 @@ class phpbb_questionnaire_system_data_provider
 	*/
 	function get_data()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		// Start discovering the IPV4 server address, if available
 		// Try apache, IIS, fall back to 0.0.0.0
@@ -466,7 +467,9 @@ class phpbb_questionnaire_phpbb_data_provider
 			}
 		}
 
-		global $db, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
 
 		$result['dbms'] = $dbms;
 		$result['acm_type'] = $acm_type;

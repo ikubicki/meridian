@@ -97,7 +97,8 @@ class notify_user extends \phpbb\install\task_base
 			$container->get_parameter('tables.config')
 		);
 
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 		$config = $this->config;
 
 		parent::__construct(true);

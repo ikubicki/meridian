@@ -325,7 +325,8 @@ abstract class driver implements driver_interface
 	*/
 	function sql_rowseek($rownum, &$query_id)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -367,7 +368,8 @@ abstract class driver implements driver_interface
 	*/
 	function sql_fetchfield($field, $rownum = false, $query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -974,7 +976,10 @@ abstract class driver implements driver_interface
 	*/
 	function sql_error($sql = '')
 	{
-		global $auth, $user, $config;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		// Set var to retrieve errored status
 		$this->sql_error_triggered = true;
@@ -1044,7 +1049,10 @@ abstract class driver implements driver_interface
 	*/
 	function sql_report($mode, $query = '')
 	{
-		global $cache, $starttime, $phpbb_root_path, $phpbb_path_helper;
+		global $starttime, $phpbb_root_path;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
+		$phpbb_path_helper = $phpbb_app_container->getPathHelper();
 
 		if (!$query && $this->query_hold != '')
 		{

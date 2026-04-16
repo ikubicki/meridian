@@ -119,8 +119,17 @@ class user extends \phpbb\session
 	*/
 	function setup($lang_set = false, $style_id = false)
 	{
-		global $db, $request, $template, $config, $auth, $phpbb_root_path, $cache;
-		global $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		$config = $phpbb_app_container->getConfig();
+		$auth = $phpbb_app_container->getAuth();
+		$cache = $phpbb_app_container->getCache();
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->language->set_default_language($config['default_lang']);
 
@@ -609,7 +618,8 @@ class user extends \phpbb\session
 	*/
 	function format_date($gmepoch, $format = false, $forcedate = false)
 	{
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 		static $utc;
 
 		if (!isset($utc))
@@ -659,7 +669,8 @@ class user extends \phpbb\session
 		{
 			if (!$user_timezone)
 			{
-				global $config;
+				global $phpbb_app_container;
+				$config = $phpbb_app_container->getConfig();
 				$user_timezone = ($this->data['user_id'] != ANONYMOUS) ? $this->data['user_timezone'] : $config['board_timezone'];
 			}
 
@@ -711,7 +722,9 @@ class user extends \phpbb\session
 	*/
 	function get_iso_lang_id()
 	{
-		global $config, $db;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
 
 		if (!empty($this->lang_id))
 		{
@@ -738,7 +751,8 @@ class user extends \phpbb\session
 	*/
 	function get_profile_fields($user_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if (isset($this->profile_fields))
 		{
@@ -853,7 +867,8 @@ class user extends \phpbb\session
 	*/
 	function get_passworded_forums()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT f.forum_id, fa.user_id
 			FROM ' . FORUMS_TABLE . ' f

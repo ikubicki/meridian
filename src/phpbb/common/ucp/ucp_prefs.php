@@ -25,7 +25,14 @@ class ucp_prefs
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $phpbb_dispatcher, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$request = $phpbb_app_container->getRequest();
 
 		$submit = (isset($_POST['submit'])) ? true : false;
 		$error = $data = array();

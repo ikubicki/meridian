@@ -31,9 +31,15 @@ class mcp_main
 
 	function main($id, $mode)
 	{
-		global $auth, $user, $action;
-		global $phpbb_root_path, $request;
-		global $phpbb_dispatcher;
+		global $action;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$user = $phpbb_app_container->getUser();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$quickmod = ($mode == 'quickmod') ? true : false;
 
@@ -286,7 +292,12 @@ class mcp_main
 */
 function lock_unlock($action, $ids)
 {
-	global $user, $db, $request, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if ($action == 'lock' || $action == 'unlock')
 	{
@@ -390,7 +401,12 @@ function lock_unlock($action, $ids)
 */
 function change_topic_type($action, $topic_ids)
 {
-	global $user, $db, $request, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	switch ($action)
 	{
@@ -526,7 +542,14 @@ function change_topic_type($action, $topic_ids)
 */
 function mcp_move_topic($topic_ids)
 {
-	global $auth, $user, $db, $template, $phpbb_log, $request, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 	global $phpbb_root_path;
 
 	// Here we limit the operation to one forum only
@@ -798,7 +821,12 @@ function mcp_move_topic($topic_ids)
 */
 function mcp_restore_topic($topic_ids)
 {
-	global $user, $phpbb_root_path, $request, $phpbb_container, $phpbb_log;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	if (!phpbb_check_ids($topic_ids, TOPICS_TABLE, 'topic_id', array('m_approve')))
 	{
@@ -877,7 +905,15 @@ function mcp_restore_topic($topic_ids)
 */
 function mcp_delete_topic($topic_ids, $is_soft = false, $soft_delete_reason = '', $action = 'delete_topic')
 {
-	global $auth, $user, $db, $phpbb_root_path, $request, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$forum_id = $request->variable('f', 0);
 	$check_permission = ($is_soft) ? ['m_softdelete'] : ['m_delete'];
@@ -973,7 +1009,8 @@ function mcp_delete_topic($topic_ids, $is_soft = false, $soft_delete_reason = ''
 	}
 	else
 	{
-		global $template;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
 
 		$user->add_lang('posting');
 
@@ -1079,7 +1116,14 @@ function mcp_delete_topic($topic_ids, $is_soft = false, $soft_delete_reason = ''
 */
 function mcp_delete_post($post_ids, $is_soft = false, $soft_delete_reason = '', $action = 'delete_post')
 {
-	global $auth, $user, $db, $phpbb_root_path, $request, $phpbb_container, $phpbb_log;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	$check_permission = ($is_soft) ? 'm_softdelete' : 'm_delete';
 	if (!phpbb_check_ids($post_ids, POSTS_TABLE, 'post_id', array($check_permission)))
@@ -1264,7 +1308,8 @@ function mcp_delete_post($post_ids, $is_soft = false, $soft_delete_reason = '', 
 	}
 	else
 	{
-		global $template;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
 
 		$user->add_lang('posting');
 
@@ -1326,8 +1371,17 @@ function mcp_delete_post($post_ids, $is_soft = false, $soft_delete_reason = '', 
 */
 function mcp_fork_topic($topic_ids)
 {
-	global $auth, $user, $db, $template, $config;
-	global $phpbb_root_path, $phpbb_log, $request, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!phpbb_check_ids($topic_ids, TOPICS_TABLE, 'topic_id', array('m_')))
 	{

@@ -24,7 +24,14 @@ class acp_words
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $cache, $phpbb_log, $request, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user->add_lang('acp/posting');
 

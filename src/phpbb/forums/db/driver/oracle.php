@@ -85,7 +85,8 @@ class oracle extends \phpbb\db\driver\driver
 		* without a query.
 		*/
 /*
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if (empty($cache) || ($this->sql_server_version = $cache->get('oracle_version')) === false)
 		{
@@ -244,7 +245,8 @@ class oracle extends \phpbb\db\driver\driver
 	{
 		if ($query != '')
 		{
-			global $cache;
+			global $phpbb_app_container;
+			$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 			if ($this->debug_sql_explain)
 			{
@@ -491,7 +493,8 @@ class oracle extends \phpbb\db\driver\driver
 	*/
 	function sql_fetchrow($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -540,7 +543,8 @@ class oracle extends \phpbb\db\driver\driver
 	*/
 	function sql_rowseek($rownum, &$query_id)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -616,7 +620,8 @@ class oracle extends \phpbb\db\driver\driver
 	*/
 	function sql_freeresult($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{

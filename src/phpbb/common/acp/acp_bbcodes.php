@@ -21,8 +21,16 @@ class acp_bbcodes
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $cache, $request, $phpbb_dispatcher, $phpbb_container;
-		global $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		global $phpbb_app_container;
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$user->add_lang('acp/posting');
 
@@ -467,7 +475,8 @@ class acp_bbcodes
 
 		if (!preg_match('/^[a-zA-Z0-9_-]+$/', $bbcode_tag))
 		{
-			global $user;
+			global $phpbb_app_container;
+			$user = $phpbb_app_container->getUser();
 			trigger_error($user->lang['BBCODE_INVALID'] . adm_back_link($this->u_action), E_USER_WARNING);
 		}
 

@@ -21,9 +21,15 @@ class acp_logs
 
 	function main($id, $mode)
 	{
-		global $user, $auth, $template, $phpbb_container;
-		global $config;
-		global $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$user->add_lang('mcp');
 

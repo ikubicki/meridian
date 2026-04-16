@@ -24,9 +24,17 @@ class acp_icons
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $cache;
-		global $config, $phpbb_root_path;
-		global $request, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user->add_lang('acp/posting');
 
@@ -996,7 +1004,8 @@ class acp_icons
 	 */
 	/* private */ function item_count($table)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = "SELECT COUNT(*) AS item_count
 			FROM $table";

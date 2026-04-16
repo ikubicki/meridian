@@ -21,7 +21,11 @@ class acp_ban
 
 	function main($id, $mode)
 	{
-		global $user, $template, $request, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 		global $phpbb_root_path;
 
 		if (!function_exists('user_ban'))

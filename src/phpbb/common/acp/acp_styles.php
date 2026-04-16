@@ -62,7 +62,17 @@ class acp_styles
 
 	public function main($id, $mode)
 	{
-		global $db, $user, $phpbb_admin_path, $phpbb_root_path, $template, $request, $cache, $auth, $config, $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_admin_path, $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$cache = $phpbb_app_container->getCache();
+		$auth = $phpbb_app_container->getAuth();
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->db = $db;
 		$this->user = $user;
@@ -294,7 +304,9 @@ class acp_styles
 	*/
 	protected function action_uninstall_confirmed($ids, $delete_files)
 	{
-		global $user, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$default = $this->default_style;
 		$uninstalled = array();
@@ -427,7 +439,9 @@ class acp_styles
 	*/
 	protected function action_details()
 	{
-		global $user, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$id = $this->request->variable('id', 0);
 		if (!$id)
@@ -1176,7 +1190,9 @@ class acp_styles
 	*/
 	protected function install_style($style)
 	{
-		global $user, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		// Generate row
 		$sql_ary = array();

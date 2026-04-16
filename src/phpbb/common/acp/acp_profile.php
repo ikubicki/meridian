@@ -29,9 +29,17 @@ class acp_profile
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $template;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
 		global $phpbb_root_path;
-		global $request, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!function_exists('generate_smilies'))
 		{
@@ -843,7 +851,11 @@ class acp_profile
 	*/
 	function build_language_options($cp, $field_type, $action = 'create')
 	{
-		global $user, $config, $db, $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
 
 		$default_lang_id = (!empty($this->edit_lang_id)) ? $this->edit_lang_id : $this->lang_defs['iso'][$config['default_lang']];
 
@@ -940,7 +952,14 @@ class acp_profile
 	*/
 	function save_profile_field($cp, $field_type, $action = 'create')
 	{
-		global $db, $config, $user, $phpbb_container, $phpbb_log, $request, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$field_id = $request->variable('field_id', 0);
 
@@ -1243,7 +1262,8 @@ class acp_profile
 	*/
 	function update_insert($table, $sql_ary, $where_fields)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$where_sql = array();
 		$check_key = '';

@@ -32,9 +32,7 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function __construct($cache_dir = null)
 	{
-		global $phpbb_container;
-
-		$this->cache_dir = !is_null($cache_dir) ? $cache_dir : $phpbb_container->getParameter('core.cache_dir');
+		$this->cache_dir = $cache_dir ?? (PHPBB_FILESYSTEM_ROOT . 'cache/production/');
 		$this->filesystem = new \phpbb\filesystem\filesystem();
 
 		if ($this->filesystem->is_writable(dirname($this->cache_dir)) && !is_dir($this->cache_dir))
@@ -94,7 +92,8 @@ class file extends \phpbb\cache\driver\base
 	*/
 	function tidy()
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		$dir = @opendir($this->cache_dir);
 

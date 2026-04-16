@@ -26,9 +26,19 @@ class acp_board
 
 	function main($id, $mode)
 	{
-		global $user, $template, $request, $language;
-		global $config, $phpbb_root_path;
-		global $cache, $phpbb_container, $phpbb_dispatcher, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$language = $phpbb_app_container->getLanguage();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		/** @var \phpbb\language\language $language Language object */
 		$language = $phpbb_container->get('language');
@@ -837,7 +847,8 @@ class acp_board
 	*/
 	function select_auth_method($selected_method, $key = '')
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/* @var $auth_providers \phpbb\auth\provider_collection */
 		$auth_providers = $phpbb_container->get('auth.provider_collection');
@@ -869,7 +880,8 @@ class acp_board
 	*/
 	function mail_auth_select($selected_method, $key = '')
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$auth_methods = array('PLAIN', 'LOGIN', 'CRAM-MD5', 'DIGEST-MD5', 'POP-BEFORE-SMTP');
 		$s_smtp_auth_options = '';
@@ -887,7 +899,8 @@ class acp_board
 	*/
 	function full_folder_select($value, $key = '')
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return '<option value="1"' . (($value == 1) ? ' selected="selected"' : '') . '>' . $user->lang['DELETE_OLDEST_MESSAGES'] . '</option><option value="2"' . (($value == 2) ? ' selected="selected"' : '') . '>' . $user->lang['HOLD_NEW_MESSAGES_SHORT'] . '</option>';
 	}
@@ -917,7 +930,10 @@ class acp_board
 	*/
 	function select_acc_activation($selected_value, $value)
 	{
-		global $user, $config, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$act_ary = array(
 			'ACC_DISABLE'	=> array(true, USER_ACTIVATION_DISABLE),
@@ -955,7 +971,8 @@ class acp_board
 	*/
 	function username_length($value, $key = '')
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return '<input id="' . $key . '" type="number" min="1" max="999" name="config[min_name_chars]" value="' . $value . '" /> ' . $user->lang['MIN_CHARS'] . '&nbsp;&nbsp;<input type="number" min="8" max="180" name="config[max_name_chars]" value="' . $this->new_config['max_name_chars'] . '" /> ' . $user->lang['MAX_CHARS'];
 	}
@@ -965,7 +982,8 @@ class acp_board
 	*/
 	function select_username_chars($selected_value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$user_char_ary = array('USERNAME_CHARS_ANY', 'USERNAME_ALPHA_ONLY', 'USERNAME_ALPHA_SPACERS', 'USERNAME_LETTER_NUM', 'USERNAME_LETTER_NUM_SPACERS', 'USERNAME_ASCII');
 		$user_char_options = '';
@@ -983,7 +1001,8 @@ class acp_board
 	*/
 	function password_length($value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return '<input id="' . $key . '" type="number" min="1" max="999" name="config[min_pass_chars]" value="' . $value . '" /> ' . $user->lang['MIN_CHARS'];
 	}
@@ -993,7 +1012,8 @@ class acp_board
 	*/
 	function select_password_chars($selected_value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$pass_type_ary = array('PASS_TYPE_ANY', 'PASS_TYPE_CASE', 'PASS_TYPE_ALPHA', 'PASS_TYPE_SYMBOL');
 		$pass_char_options = '';
@@ -1011,7 +1031,8 @@ class acp_board
 	*/
 	function bump_interval($value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$s_bump_type = '';
 		$types = array('m' => 'MINUTES', 'h' => 'HOURS', 'd' => 'DAYS');
@@ -1039,7 +1060,8 @@ class acp_board
 	*/
 	function quick_reply($value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$radio_ary = array(1 => 'YES', 0 => 'NO');
 
@@ -1052,7 +1074,9 @@ class acp_board
 	*/
 	function timezone_select($value, $key)
 	{
-		global $template, $user;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		$timezone_select = phpbb_timezone_select($template, $user, $value, true);
 
@@ -1064,7 +1088,8 @@ class acp_board
 	*/
 	public function guest_style_get()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT user_style
 			FROM ' . USERS_TABLE . '
@@ -1084,7 +1109,8 @@ class acp_board
 	*/
 	public function guest_style_set($style_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'UPDATE ' . USERS_TABLE . '
 			SET user_style = ' . (int) $style_id . '
@@ -1097,7 +1123,9 @@ class acp_board
 	*/
 	function dateformat_select($value, $key)
 	{
-		global $user, $config;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		// Let the format_date function operate with the acp values
 		$old_tz = $user->timezone;
@@ -1172,7 +1200,10 @@ class acp_board
 
 	function store_feed_forums($option, $key)
 	{
-		global $db, $cache, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$request = $phpbb_app_container->getRequest();
 
 		// Get key
 		$values = $request->variable($key, array(0 => 0));
@@ -1210,7 +1241,8 @@ class acp_board
 	*/
 	function enable_mod_rewrite($value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		// Determine whether mod_rewrite is enabled on the server
 		// NOTE: This only works on Apache servers on which PHP is NOT
@@ -1247,7 +1279,8 @@ class acp_board
 
 	function send_test_email($value, $key)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return '<input class="button2" type="submit" id="' . $key . '" name="' . $key . '" value="' . $user->lang('SEND_TEST_EMAIL') . '" />
 				<textarea id="' . $key . '_text" name="' . $key . '_text" placeholder="' . $user->lang('MESSAGE') . '"></textarea>';

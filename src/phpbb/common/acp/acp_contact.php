@@ -24,8 +24,14 @@ class acp_contact
 
 	public function main($id, $mode)
 	{
-		global $user, $request, $template;
-		global $config, $phpbb_root_path, $phpbb_container;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user->add_lang(array('acp/board', 'posting'));
 

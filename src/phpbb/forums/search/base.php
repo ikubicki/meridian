@@ -50,7 +50,8 @@ class base
 	*/
 	function obtain_ids($search_key, &$result_count, &$id_ary, &$start, $per_page, $sort_dir)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
 
 		if (!($stored_ids = $cache->get('_search_results_' . $search_key)))
 		{
@@ -119,7 +120,11 @@ class base
 	*/
 	function save_ids($search_key, $keywords, $author_ary, $result_count, &$id_ary, $start, $sort_dir)
 	{
-		global $cache, $config, $db, $user;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$length = min(count($id_ary), $config['search_block_size']);
 
@@ -228,7 +233,10 @@ class base
 	*/
 	function destroy_cache($words, $authors = false)
 	{
-		global $db, $cache, $config;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$config = $phpbb_app_container->getConfig();
 
 		// clear all searches that searched for the specified words
 		if (count($words))

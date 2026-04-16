@@ -141,7 +141,8 @@ class fulltext_sphinx
 		$this->auth = $auth;
 
 		// Initialize \phpbb\db\tools\tools object
-		global $phpbb_container; // TODO inject into object
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container'); // TODO inject into object
 		$this->db_tools = $phpbb_container->get('dbal.tools');
 
 		if (!$this->config['fulltext_sphinx_id'])
@@ -539,7 +540,9 @@ include($this->phpbb_root_path . 'src/phpbb/common/config/config.php');
 	*/
 	public function keyword_search($type, $fields, $terms, $sort_by_sql, $sort_key, $sort_dir, $sort_days, $ex_fid_ary, $post_visibility, $topic_id, $author_ary, $author_name, &$id_ary, &$start, $per_page)
 	{
-		global $user, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		// No keywords? No posts.
 		if (!strlen($this->search_query) && !count($author_ary))

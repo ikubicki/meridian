@@ -115,7 +115,10 @@ $global_rule_conditions = array(
 */
 function get_folder($user_id, $folder_id = false)
 {
-	global $db, $user, $template;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
 	global $phpbb_root_path;
 
 	$folder = array();
@@ -222,7 +225,9 @@ function get_folder($user_id, $folder_id = false)
 */
 function clean_sentbox($num_sentbox_messages)
 {
-	global $db, $user;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	// Check Message Limit
 	if ($user->data['message_limit'] && $num_sentbox_messages > $user->data['message_limit'])
@@ -329,7 +334,8 @@ function check_rule(&$rules, &$rule_row, &$message_row, $user_id)
 		break;
 
 		case ACTION_DELETE_MESSAGE:
-			global $db;
+			global $phpbb_app_container;
+			$db = $phpbb_app_container->getDb();
 
 			// Check for admins/mods - users are not allowed to remove those messages...
 			// We do the check here to make sure the data we use is consistent
@@ -363,7 +369,9 @@ function check_rule(&$rules, &$rule_row, &$message_row, $user_id)
 */
 function update_pm_counts()
 {
-	global $user, $db;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
 
 	// Update unread count
 	$sql = 'SELECT COUNT(msg_id) as num_messages
@@ -407,7 +415,10 @@ function update_pm_counts()
 */
 function place_pm_into_folder(&$global_privmsgs_rules, $release = false)
 {
-	global $db, $user, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
 
 	if (!$user->data['user_new_privmsg'])
 	{
@@ -771,7 +782,9 @@ function place_pm_into_folder(&$global_privmsgs_rules, $release = false)
 */
 function move_pm($user_id, $message_limit, $move_msg_ids, $dest_folder, $cur_folder_id)
 {
-	global $db, $user;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 	global $phpbb_root_path;
 
 	$num_moved = 0;
@@ -874,7 +887,10 @@ function update_unread_status($unread, $msg_id, $user_id, $folder_id)
 		return;
 	}
 
-	global $db, $user, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/* @var $phpbb_notifications \phpbb\notification\manager */
 	$phpbb_notifications = $phpbb_container->get('notification_manager');
@@ -919,7 +935,8 @@ function update_unread_status($unread, $msg_id, $user_id, $folder_id)
 
 function mark_folder_read($user_id, $folder_id)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT msg_id
 		FROM ' . PRIVMSGS_TO_TABLE . '
@@ -940,7 +957,11 @@ function mark_folder_read($user_id, $folder_id)
 */
 function handle_mark_actions($user_id, $mark_action)
 {
-	global $db, $user, $phpbb_root_path, $request;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
 
 	$msg_ids		= $request->variable('marked_msg_id', array(0));
 	$cur_folder_id	= $request->variable('cur_folder_id', PRIVMSGS_NO_BOX);
@@ -970,7 +991,8 @@ function handle_mark_actions($user_id, $mark_action)
 
 		case 'delete_marked':
 
-			global $auth;
+			global $phpbb_app_container;
+			$auth = $phpbb_app_container->getAuth();
 
 			if (!$auth->acl_get('u_pm_delete'))
 			{
@@ -1014,7 +1036,11 @@ function handle_mark_actions($user_id, $mark_action)
 */
 function delete_pm($user_id, $msg_ids, $folder_id)
 {
-	global $db, $user, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user_id	= (int) $user_id;
 	$folder_id	= (int) $folder_id;
@@ -1184,7 +1210,9 @@ function delete_pm($user_id, $msg_ids, $folder_id)
 */
 function phpbb_delete_users_pms($user_ids)
 {
-	global $db, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$user_id_sql = $db->sql_in_set('user_id', $user_ids);
 	$author_id_sql = $db->sql_in_set('author_id', $user_ids);
@@ -1416,7 +1444,12 @@ function rebuild_header($check_ary)
 */
 function write_pm_addresses($check_ary, $author_id, $plaintext = false)
 {
-	global $db, $user, $template, $phpbb_root_path, $phpbb_container;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\group\helper $group_helper */
 	$group_helper = $phpbb_container->get('group_helper');
@@ -1561,7 +1594,8 @@ function write_pm_addresses($check_ary, $author_id, $plaintext = false)
 */
 function get_folder_status($folder_id, $folder)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (isset($folder[$folder_id]))
 	{
@@ -1594,7 +1628,15 @@ function get_folder_status($folder_id, $folder)
 */
 function submit_pm($mode, $subject, &$data_ary, $put_in_outbox = true)
 {
-	global $db, $auth, $config, $user, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher, $request;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$request = $phpbb_app_container->getRequest();
 
 	// We do not handle erasing pms here
 	if ($mode == 'delete')
@@ -1948,7 +1990,13 @@ function submit_pm($mode, $subject, &$data_ary, $put_in_outbox = true)
 */
 function message_history($msg_id, $user_id, $message_row, $folder, $in_post_mode = false)
 {
-	global $db, $user, $template, $phpbb_root_path, $auth, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Select all receipts and the author from the pm we currently view, to only display their pm-history
 	$sql = 'SELECT author_id, user_id
@@ -2181,7 +2229,10 @@ function message_history($msg_id, $user_id, $message_row, $folder, $in_post_mode
 */
 function set_user_message_limit()
 {
-	global $user, $db, $config;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	// Get maximum about from user memberships
 	$message_limit = phpbb_get_max_setting_from_group($db, $user->data['user_id'], 'message_limit');
@@ -2231,7 +2282,11 @@ function phpbb_get_max_setting_from_group(\phpbb\db\driver\driver_interface $db,
 */
 function get_recipient_strings($pm_by_id)
 {
-	global $db, $phpbb_root_path, $user, $phpbb_container;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\group\helper $group_helper */
 	$group_helper = $phpbb_container->get('group_helper');

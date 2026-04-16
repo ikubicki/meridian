@@ -23,7 +23,8 @@ class gd
 	*/
 	function execute($code, $seed)
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		mt_srand($seed);
 
@@ -288,7 +289,8 @@ class gd
 	*/
 	function captcha_bitmaps()
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		$chars = array(
 			'A'	=>	array(

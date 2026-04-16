@@ -21,7 +21,8 @@ class acp_php_info
 
 	function main($id, $mode)
 	{
-		global $template;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
 
 		if ($mode != 'info')
 		{

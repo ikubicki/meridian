@@ -2,6 +2,8 @@ services:
 # ----- Auth management -----
     auth:
         class: phpbb\auth\auth
+        arguments:
+            - '@phpbb_app_container'
 
 # ----- Auth providers -----
     auth.provider_collection:

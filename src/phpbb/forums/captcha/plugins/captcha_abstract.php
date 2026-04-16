@@ -34,7 +34,9 @@ abstract class captcha_abstract
 
 	function init($type)
 	{
-		global $config, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
 
 		// read input
 		$this->confirm_id = $request->variable('confirm_id', '');
@@ -86,7 +88,11 @@ abstract class captcha_abstract
 
 	function get_template()
 	{
-		global $config, $user, $template, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
 
 		if ($this->is_solved())
 		{
@@ -115,7 +121,11 @@ abstract class captcha_abstract
 
 	function get_demo_template($id)
 	{
-		global $config, $template, $request, $phpbb_admin_path;
+		global $phpbb_admin_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
 
 		$variables = '';
 
@@ -151,7 +161,8 @@ abstract class captcha_abstract
 
 	function garbage_collect($type)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT DISTINCT c.session_id
 			FROM ' . CONFIRM_TABLE . ' c
@@ -191,7 +202,8 @@ abstract class captcha_abstract
 
 	function validate()
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		if (!$user->is_setup())
 		{
@@ -232,7 +244,9 @@ abstract class captcha_abstract
 	*/
 	function generate_code()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$this->code = gen_rand_string_friendly(mt_rand(CAPTCHA_MIN_CHARS, CAPTCHA_MAX_CHARS));
 		$this->confirm_id = md5(unique_id($user->ip));
@@ -256,7 +270,9 @@ abstract class captcha_abstract
 	*/
 	function regenerate_code()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$this->code = gen_rand_string_friendly(mt_rand(CAPTCHA_MIN_CHARS, CAPTCHA_MAX_CHARS));
 		$this->seed = hexdec(substr(unique_id(), 4, 10));
@@ -278,7 +294,9 @@ abstract class captcha_abstract
 	*/
 	function new_attempt()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$this->code = gen_rand_string_friendly(mt_rand(CAPTCHA_MIN_CHARS, CAPTCHA_MAX_CHARS));
 		$this->seed = hexdec(substr(unique_id(), 4, 10));
@@ -301,7 +319,9 @@ abstract class captcha_abstract
 	*/
 	function load_code()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql = 'SELECT code, seed, attempts
 			FROM ' . CONFIRM_TABLE . "
@@ -335,7 +355,9 @@ abstract class captcha_abstract
 
 	function reset()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql = 'DELETE FROM ' . CONFIRM_TABLE . "
 			WHERE session_id = '" . $db->sql_escape($user->session_id) . "'
@@ -348,7 +370,8 @@ abstract class captcha_abstract
 
 	function is_solved()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		if ($request->variable('confirm_code', false) && $this->solved === 0)
 		{

@@ -38,7 +38,10 @@ class session
 	 */
 	static function extract_current_page($root_path)
 	{
-		global $request, $symfony_request, $phpbb_filesystem;
+		global $symfony_request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 		$page_array = array();
 
@@ -163,7 +166,9 @@ class session
 	*/
 	function extract_current_hostname()
 	{
-		global $config, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
 
 		// Get hostname
 		$host = html_entity_decode($request->header('Host', $request->server('SERVER_NAME')), ENT_COMPAT);
@@ -227,8 +232,16 @@ class session
 	*/
 	function session_begin($update_session_page = true)
 	{
-		global $SID, $_SID, $_EXTRA_URL, $db, $config, $phpbb_root_path;
-		global $request, $phpbb_container, $user, $phpbb_log, $phpbb_dispatcher;
+		global $SID, $_SID, $_EXTRA_URL, $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// Give us some basic information
 		$this->time_now				= time();
@@ -489,7 +502,13 @@ class session
 	*/
 	function session_create($user_id = false, $set_admin = false, $persist_login = false, $viewonline = true)
 	{
-		global $SID, $_SID, $db, $config, $cache, $phpbb_container, $phpbb_dispatcher;
+		global $SID, $_SID;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$this->data = array();
 
@@ -864,7 +883,11 @@ class session
 	*/
 	function session_kill($new_session = true)
 	{
-		global $SID, $_SID, $db, $phpbb_container, $phpbb_dispatcher;
+		global $SID, $_SID;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$sql = 'DELETE FROM ' . SESSIONS_TABLE . "
 			WHERE session_id = '" . $db->sql_escape($this->session_id) . "'
@@ -956,7 +979,11 @@ class session
 	*/
 	function session_gc()
 	{
-		global $db, $config, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!$this->time_now)
 		{
@@ -1072,7 +1099,9 @@ class session
 	*/
 	function set_cookie($name, $cookiedata, $cookietime, $httponly = true)
 	{
-		global $config, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// If headers are already set, we just return
 		if (headers_sent())
@@ -1127,7 +1156,10 @@ class session
 	*/
 	function check_ban($user_id = false, $user_ips = false, $user_email = false, $return = false)
 	{
-		global $config, $db, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (defined('IN_CHECK_BAN') || defined('SKIP_CHECK_BAN'))
 		{
@@ -1363,7 +1395,9 @@ class session
 	*/
 	function check_dnsbl_spamhaus($dnsbl, $ip = false)
 	{
-		global $config, $phpbb_log;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		if ($ip === false)
 		{
@@ -1561,7 +1595,9 @@ class session
 	*/
 	function set_login_key($user_id = false, $key = false, $user_ip = false)
 	{
-		global $db, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$user_id = ($user_id === false) ? $this->data['user_id'] : $user_id;
 		$user_ip = ($user_ip === false) ? $this->ip : $user_ip;
@@ -1631,7 +1667,8 @@ class session
 	*/
 	function reset_login_keys($user_id = false)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$user_id = ($user_id === false) ? (int) $this->data['user_id'] : (int) $user_id;
 
@@ -1680,7 +1717,9 @@ class session
 	*/
 	function validate_referer($check_script_path = false)
 	{
-		global $config, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
 
 		// no referer - nothing to validate, user's fault for turning it off (we only check on POST; so meta can't be the reason)
 		if (empty($this->referer) || empty($this->host))
@@ -1717,7 +1756,8 @@ class session
 
 	function unset_admin()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 		$sql = 'UPDATE ' . SESSIONS_TABLE . '
 			SET session_admin = 0
 			WHERE session_id = \'' . $db->sql_escape($this->session_id) . '\'';
@@ -1732,7 +1772,9 @@ class session
 	*/
 	public function update_session($session_data, $session_id = null)
 	{
-		global $db, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$session_id = ($session_id) ? $session_id : $this->session_id;
 
@@ -1755,7 +1797,10 @@ class session
 
 	public function update_session_infos()
 	{
-		global $config, $db, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
 
 		// No need to update if it's a new session. Informations are already inserted by session_create()
 		if (isset($this->data['session_created']) && $this->data['session_created'])
@@ -1807,7 +1852,8 @@ class session
 	 */
 	public function update_user_lastvisit()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if (isset($this->data['session_time'], $this->data['user_id']))
 		{
@@ -1826,7 +1872,8 @@ class session
 	 */
 	public function update_last_active_time()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if (isset($this->time_now, $this->data['user_id']))
 		{

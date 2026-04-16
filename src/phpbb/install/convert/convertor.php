@@ -47,7 +47,9 @@ class convertor
 	 */
 	public function __construct(template $template, helper $controller_helper)
 	{
-		global $convert, $phpbb_filesystem;
+		global $convert;
+		global $phpbb_app_container;
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 		$this->template = $template;
 		$this->filesystem = $phpbb_filesystem;
@@ -61,9 +63,20 @@ class convertor
 	 */
 	function convert_data($converter)
 	{
-		global $user, $phpbb_root_path, $db, $lang, $config, $cache, $auth;
-		global $convert, $convert_row, $message_parser, $skip_rows, $language;
-		global $request, $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_root_path, $lang;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
+		$auth = $phpbb_app_container->getAuth();
+		global $convert, $convert_row, $message_parser, $skip_rows;
+		global $phpbb_app_container;
+		$language = $phpbb_app_container->getLanguage();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 		extract($phpbb_config_php_file->get_all());
@@ -906,9 +919,15 @@ class convertor
 	 */
 	function sync_forums($converter, $sync_batch)
 	{
-		global $user, $db, $phpbb_root_path, $config, $cache;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
 		global $convert;
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 
@@ -988,7 +1007,10 @@ class convertor
 	 */
 	function save_convert_progress($convertor_tag, $step)
 	{
-		global $config, $convert, $language;
+		global $convert;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
 
 		// Save convertor Status
 		$config->set('convert_progress', serialize(array(
@@ -1017,8 +1039,17 @@ class convertor
 	 */
 	function finish_conversion()
 	{
-		global $db, $phpbb_root_path, $convert, $config, $language, $user;
-		global $cache, $auth, $phpbb_container, $phpbb_log;
+		global $phpbb_root_path, $convert;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
+		$user = $phpbb_app_container->getUser();
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
+		$auth = $phpbb_app_container->getAuth();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 
@@ -1051,7 +1082,12 @@ class convertor
 	 */
 	function final_jump($final_jump)
 	{
-		global $user, $src_db, $same_db, $db, $phpbb_root_path, $config, $cache;
+		global $src_db, $same_db, $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
 		global $convert;
 
 		$this->template->assign_block_vars('checks', array(
@@ -1092,7 +1128,12 @@ class convertor
 	{
 		/** @var \phpbb\db\driver\driver_interface $src_db */
 		/** @var \phpbb\cache\driver\driver_interface $cache */
-		global $user, $src_db, $same_db, $db, $phpbb_root_path, $config, $cache;
+		global $src_db, $same_db, $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
 		global $convert;
 
 		include_once ($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
@@ -1243,7 +1284,9 @@ class convertor
 
 	function build_insert_query(&$schema, &$sql_data, $current_table)
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 		global $convert;
 
 		$insert_query = 'INSERT INTO ' . $schema['target'] . ' (';
@@ -1396,7 +1439,12 @@ class convertor
 	 */
 	function process_row(&$schema, &$sql_data, &$insert_values)
 	{
-		global $user, $phpbb_root_path, $db, $lang, $config, $cache;
+		global $phpbb_root_path, $lang;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
 		global $convert, $convert_row;
 
 		$sql_flag = false;

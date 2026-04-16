@@ -22,8 +22,17 @@ class acp_forums
 
 	function main($id, $mode)
 	{
-		global $db, $user, $auth, $template, $cache, $request, $phpbb_dispatcher;
-		global $phpbb_admin_path, $phpbb_root_path, $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		global $phpbb_admin_path, $phpbb_root_path;
+		global $phpbb_app_container;
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$user->add_lang('acp/forums');
 		$this->tpl_name = 'acp_forums';
@@ -939,7 +948,8 @@ class acp_forums
 	*/
 	function get_forum_info($forum_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT *
 			FROM ' . FORUMS_TABLE . "
@@ -961,7 +971,15 @@ class acp_forums
 	*/
 	function update_forum_data(&$forum_data_ary)
 	{
-		global $db, $user, $cache, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher, $phpbb_log, $request;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
 
 		$errors = array();
 
@@ -1411,7 +1429,10 @@ class acp_forums
 	*/
 	function move_forum($from_id, $to_id)
 	{
-		global $db, $user, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$errors = array();
 
@@ -1530,7 +1551,9 @@ class acp_forums
 	*/
 	function move_forum_content($from_id, $to_id, $sync = true)
 	{
-		global $db, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$errors = array();
 
@@ -1613,7 +1636,11 @@ class acp_forums
 	*/
 	function delete_forum($forum_id, $action_posts = 'delete', $action_subforums = 'delete', $posts_to_id = 0, $subforums_to_id = 0)
 	{
-		global $db, $user, $cache, $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$forum_data = $this->get_forum_info($forum_id);
 
@@ -1854,7 +1881,12 @@ class acp_forums
 	*/
 	function delete_forum_content($forum_id)
 	{
-		global $db, $config, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		include_once($phpbb_root_path . 'src/phpbb/common/functions_posting.php');
 
@@ -2083,7 +2115,8 @@ class acp_forums
 	*/
 	function move_forum_by($forum_row, $action = 'move_up', $steps = 1)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		/**
 		* Fetch all the siblings between the module's current spot
@@ -2164,7 +2197,9 @@ class acp_forums
 	*/
 	function display_progress_bar($start, $total)
 	{
-		global $template, $user;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		adm_page_header($user->lang['SYNC_IN_PROGRESS']);
 
@@ -2186,7 +2221,10 @@ class acp_forums
 	*/
 	function copy_permission_page($forum_data)
 	{
-		global $phpbb_admin_path, $template, $user;
+		global $phpbb_admin_path;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		$acl_url = '&amp;mode=setting_forum_local&amp;forum_id[]=' . $forum_data['forum_id'];
 		$action = append_sid($this->u_action . "&amp;parent_id={$this->parent_id}&amp;f={$forum_data['forum_id']}&amp;action=copy_perm");

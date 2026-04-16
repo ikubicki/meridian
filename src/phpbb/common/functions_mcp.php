@@ -114,7 +114,11 @@ function phpbb_extra_url($additional_parameters = [])
 */
 function phpbb_get_topic_data($topic_ids, $acl_list = false, $read_tracking = false)
 {
-	global $auth, $db, $config, $user;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 	static $rowset = array();
 
 	$topics = array();
@@ -203,7 +207,13 @@ function phpbb_get_topic_data($topic_ids, $acl_list = false, $read_tracking = fa
 */
 function phpbb_get_post_data($post_ids, $acl_list = false, $read_tracking = false)
 {
-	global $db, $auth, $config, $user, $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$rowset = array();
 
@@ -298,7 +308,12 @@ function phpbb_get_post_data($post_ids, $acl_list = false, $read_tracking = fals
 */
 function phpbb_get_forum_data($forum_id, $acl_list = 'f_list', $read_tracking = false)
 {
-	global $auth, $db, $user, $config, $phpbb_container;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$rowset = array();
 
@@ -352,7 +367,8 @@ function phpbb_get_forum_data($forum_id, $acl_list = 'f_list', $read_tracking = 
 */
 function phpbb_get_pm_data($pm_ids)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$rowset = array();
 
@@ -396,7 +412,13 @@ function phpbb_get_pm_data($pm_ids)
 */
 function phpbb_mcp_sorting($mode, &$sort_days_val, &$sort_key_val, &$sort_dir_val, &$sort_by_sql_ary, &$sort_order_sql, &$total_val, $forum_id = 0, $topic_id = 0, $where_sql = 'WHERE')
 {
-	global $db, $user, $auth, $template, $request, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$template = $phpbb_app_container->getTemplate();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$sort_days_val = $request->variable('st', 0);
 	$min_time = ($sort_days_val) ? time() - ($sort_days_val * 86400) : 0;
@@ -698,7 +720,9 @@ function phpbb_mcp_sorting($mode, &$sort_days_val, &$sort_key_val, &$sort_dir_va
 */
 function phpbb_check_ids(&$ids, $table, $sql_id, $acl_list = false, $single_forum = false)
 {
-	global $db, $auth;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
 
 	if (!is_array($ids) || empty($ids))
 	{

@@ -52,10 +52,12 @@ class dummy extends \phpbb\cache\driver\base
 	*/
 	function tidy()
 	{
-		global $config;
-
-		// This cache always has a tidy room.
-		$config->set('cache_last_gc', time(), false);
+		global $phpbb_app_container;
+		if ($phpbb_app_container !== null)
+		{
+			$config = $phpbb_app_container->getConfig();
+			$config->set('cache_last_gc', time(), false);
+		}
 	}
 
 	/**

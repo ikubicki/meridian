@@ -21,8 +21,14 @@ class acp_update
 
 	function main($id, $mode)
 	{
-		global $config, $user, $template, $request;
-		global $phpbb_root_path, $phpbb_container;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user->add_lang('install');
 

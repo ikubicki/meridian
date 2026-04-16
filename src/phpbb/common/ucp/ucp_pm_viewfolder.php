@@ -21,8 +21,16 @@
 */
 function view_folder($id, $mode, $folder_id, $folder)
 {
-	global $user, $template, $auth, $db, $cache, $request;
-	global $phpbb_root_path, $config;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$cache = $phpbb_app_container->getCache();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$submit_export = (isset($_POST['submit_export'])) ? true : false;
 
@@ -397,7 +405,16 @@ function view_folder($id, $mode, $folder_id, $folder)
 */
 function get_pm_from($folder_id, $folder, $user_id)
 {
-	global $user, $db, $template, $config, $auth, $phpbb_container, $phpbb_root_path, $request, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$config = $phpbb_app_container->getConfig();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$start = $request->variable('start', 0);
 

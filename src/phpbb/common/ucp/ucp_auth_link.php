@@ -30,7 +30,11 @@ class ucp_auth_link
 	*/
 	public function main($id, $mode)
 	{
-		global $request, $template, $phpbb_container, $user;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$user = $phpbb_app_container->getUser();
 
 		$error = array();
 

@@ -35,7 +35,12 @@ class ucp_login_link
 	*/
 	function main($id, $mode)
 	{
-		global $phpbb_container, $request, $template, $user, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 		global $phpbb_root_path;
 
 		// Initialize necessary variables
@@ -168,7 +173,8 @@ class ucp_login_link
 	*/
 	protected function get_login_link_data_array()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$var_names = $request->variable_names(\phpbb\request\request_interface::GET);
 		$login_link_data = array();
@@ -195,7 +201,11 @@ class ucp_login_link
 	*/
 	protected function process_login_result($result)
 	{
-		global $config, $template, $user, $phpbb_container;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$login_error = null;
 

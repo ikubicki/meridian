@@ -31,9 +31,18 @@ class mcp_queue
 
 	public function main($id, $mode)
 	{
-		global $auth, $db, $user, $template, $request;
-		global $config, $phpbb_root_path, $action, $phpbb_container;
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path, $action;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		include_once($phpbb_root_path . 'src/phpbb/common/functions_posting.php');
 
@@ -688,8 +697,15 @@ class mcp_queue
 	*/
 	static public function approve_posts($action, $post_id_list, $id, $mode)
 	{
-		global $template, $user, $request, $phpbb_container, $phpbb_dispatcher;
-		global $phpbb_root_path, $phpbb_log;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		if (!phpbb_check_ids($post_id_list, POSTS_TABLE, 'post_id', array('m_approve')))
 		{
@@ -944,8 +960,16 @@ class mcp_queue
 	*/
 	static public function approve_topics($action, $topic_id_list, $id, $mode)
 	{
-		global $db, $template, $user, $phpbb_log;
-		global $phpbb_root_path, $request, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!phpbb_check_ids($topic_id_list, TOPICS_TABLE, 'topic_id', array('m_approve')))
 		{
@@ -1142,8 +1166,16 @@ class mcp_queue
 	*/
 	static public function disapprove_posts($post_id_list, $id, $mode)
 	{
-		global $db, $template, $user, $phpbb_container, $phpbb_dispatcher;
-		global $phpbb_root_path, $request, $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		if (!phpbb_check_ids($post_id_list, POSTS_TABLE, 'post_id', array('m_approve')))
 		{

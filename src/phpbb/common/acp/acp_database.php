@@ -23,8 +23,17 @@ class acp_database
 
 	function main($id, $mode)
 	{
-		global $cache, $db, $user, $template, $table_prefix, $request;
-		global $phpbb_root_path, $phpbb_container, $phpbb_log;
+		global $table_prefix;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$this->db_tools = $phpbb_container->get('dbal.tools');
 

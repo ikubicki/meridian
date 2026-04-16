@@ -145,7 +145,12 @@ class bbcode
 	*/
 	function bbcode_cache_init()
 	{
-		global $user, $phpbb_dispatcher, $phpbb_extension_manager, $phpbb_container, $phpbb_filesystem;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 		if (empty($this->template_filename))
 		{
@@ -198,7 +203,8 @@ class bbcode
 
 		if (count($sql))
 		{
-			global $db;
+			global $phpbb_app_container;
+			$db = $phpbb_app_container->getDb();
 
 			$sql = 'SELECT *
 				FROM ' . BBCODES_TABLE . '
@@ -466,7 +472,8 @@ class bbcode
 		static $bbcode_hardtpl = array();
 		if (empty($bbcode_hardtpl))
 		{
-			global $user;
+			global $phpbb_app_container;
+			$user = $phpbb_app_container->getUser();
 
 			$bbcode_hardtpl = array(
 				'b_open'	=> '<span style="font-weight: bold">',
@@ -528,7 +535,8 @@ class bbcode
 	*/
 	function bbcode_tpl_replace($tpl_name, $tpl)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		static $replacements = array(
 			'quote_username_open'	=> array('{USERNAME}'	=> '$1'),
@@ -680,7 +688,8 @@ class bbcode
 	*/
 	function bbcode_second_pass_by_extension()
 	{
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$return = false;
 		$params_array = func_get_args();

@@ -127,7 +127,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 	*/
 	function sql_server_info($raw = false, $use_cache = true)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if (!$use_cache || empty($cache) || ($this->sql_server_version = $cache->get('mysqli_version')) === false)
 		{
@@ -186,7 +187,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 	{
 		if ($query != '')
 		{
-			global $cache;
+			global $phpbb_app_container;
+			$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 			if ($this->debug_sql_explain)
 			{
@@ -261,7 +263,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 	*/
 	function sql_fetchrow($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -288,7 +291,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 	*/
 	function sql_rowseek($rownum, &$query_id)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -317,7 +321,8 @@ class mysqli extends \phpbb\db\driver\mysql_base
 	*/
 	function sql_freeresult($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{

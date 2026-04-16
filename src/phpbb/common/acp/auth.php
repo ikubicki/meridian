@@ -25,7 +25,9 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function __construct()
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		if (($this->acl_options = $cache->get('_acl_options')) === false)
 		{
@@ -71,7 +73,9 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function get_mask($mode, $user_id = false, $group_id = false, $forum_id = false, $auth_option = false, $scope = false, $acl_fill = ACL_NEVER)
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$hold_ary = array();
 		$view_user_mask = ($mode == 'view' && $group_id === false) ? true : false;
@@ -134,7 +138,8 @@ class auth_admin extends \phpbb\auth\auth
 				}
 				else
 				{
-					global $auth;
+					global $phpbb_app_container;
+					$auth = $phpbb_app_container->getAuth();
 					$auth2 = &$auth;
 				}
 
@@ -224,7 +229,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function get_role_mask($role_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$hold_ary = array();
 
@@ -262,7 +268,11 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function display_mask($mode, $permission_type, &$hold_ary, $user_mode = 'user', $local = false, $group_display = true)
 	{
-		global $template, $user, $db, $phpbb_container;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/* @var $phpbb_permissions \phpbb\permissions */
 		$phpbb_permissions = $phpbb_container->get('acl.permissions');
@@ -626,8 +636,13 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function display_role_mask(&$hold_ary)
 	{
-		global $db, $template, $user, $phpbb_root_path;
-		global $phpbb_container;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		if (!count($hold_ary))
 		{
@@ -711,7 +726,9 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function acl_add_option($options)
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		if (!is_array($options))
 		{
@@ -821,7 +838,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function acl_set($ug_type, $forum_id, $ug_id, $auth, $role_id = 0, $clear_prefetch = true)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		// One or more forums
 		if (!is_array($forum_id))
@@ -954,7 +972,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function acl_set_role($role_id, $auth)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		// Get any-flag as required
 		reset($auth);
@@ -1017,7 +1036,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function acl_delete($mode, $ug_id = false, $forum_id = false, $permission_type = false)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if ($ug_id === false && $forum_id === false)
 		{
@@ -1125,7 +1145,10 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function assign_cat_array(&$category_array, $tpl_cat, $tpl_mask, $ug_id, $forum_id, $s_view, $show_trace = false)
 	{
-		global $template, $phpbb_admin_path, $phpbb_container;
+		global $phpbb_admin_path;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/** @var \phpbb\permissions $phpbb_permissions */
 		$phpbb_permissions = $phpbb_container->get('acl.permissions');
@@ -1200,7 +1223,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function build_permission_array(&$permission_row, &$content_array, &$categories, $key_sort_array)
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/** @var \phpbb\permissions $phpbb_permissions */
 		$phpbb_permissions = $phpbb_container->get('acl.permissions');
@@ -1264,7 +1288,8 @@ class auth_admin extends \phpbb\auth\auth
 	*/
 	function ghost_permissions($from_user_id, $to_user_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if ($to_user_id == ANONYMOUS)
 		{

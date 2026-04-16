@@ -27,7 +27,15 @@ class acp_inactive
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $phpbb_container, $phpbb_log, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
 		global $phpbb_root_path, $phpbb_admin_path;
 
 		if (!function_exists('user_active_flip'))

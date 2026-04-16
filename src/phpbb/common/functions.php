@@ -128,7 +128,8 @@ function phpbb_gmgetdate($time = false)
 */
 function get_formatted_filesize($value, $string_only = true, $allowed_units = false)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$available_units = array(
 		'tb' => array(
@@ -276,7 +277,8 @@ function phpbb_version_compare($version1, $version2, $operator = null)
  */
 function language_select($default = '', array $langdata = [])
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (empty($langdata))
 	{
@@ -309,7 +311,8 @@ function language_select($default = '', array $langdata = [])
  */
 function style_select($default = '', $all = false, array $styledata = [])
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (empty($styledata))
 	{
@@ -549,8 +552,14 @@ function phpbb_timezone_select($template, $user, $default = '', $truncate = fals
 */
 function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $user_id = 0)
 {
-	global $db, $user, $config;
-	global $request, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$post_time = ($post_time === 0 || $post_time > time()) ? time() : (int) $post_time;
 
@@ -943,7 +952,8 @@ function markread($mode, $forum_id = false, $topic_id = false, $post_time = 0, $
 */
 function get_topic_tracking($forum_id, $topic_ids, &$rowset, $forum_mark_time, $global_announce_list = false)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$last_read = array();
 
@@ -987,7 +997,10 @@ function get_topic_tracking($forum_id, $topic_ids, &$rowset, $forum_mark_time, $
 */
 function get_complete_topic_tracking($forum_id, $topic_ids, $global_announce_list = false)
 {
-	global $config, $user, $request;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
 
 	$last_read = array();
 
@@ -998,7 +1011,8 @@ function get_complete_topic_tracking($forum_id, $topic_ids, $global_announce_lis
 
 	if ($config['load_db_lastread'] && $user->data['is_registered'])
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT topic_id, mark_time
 			FROM ' . TOPICS_TRACK_TABLE . "
@@ -1102,8 +1116,13 @@ function get_complete_topic_tracking($forum_id, $topic_ids, $global_announce_lis
 */
 function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $sql_limit = 1001, $sql_limit_offset = 0)
 {
-	global $config, $db, $user, $request;
-	global $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user_id = ($user_id === false) ? (int) $user->data['user_id'] : (int) $user_id;
 
@@ -1248,7 +1267,13 @@ function get_unread_topics($user_id = false, $sql_extra = '', $sql_sort = '', $s
 */
 function update_forum_tracking_info($forum_id, $forum_last_post_time, $f_mark_time = false, $mark_time_forum = false)
 {
-	global $db, $tracking_topics, $user, $config, $request, $phpbb_container;
+	global $tracking_topics;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	// Determine the users last forum mark time if not given.
 	if ($mark_time_forum === false)
@@ -1496,8 +1521,11 @@ function tracking_unserialize($string, $max_depth = 3)
 */
 function append_sid($url, $params = false, $is_amp = true, $session_id = false, $is_route = false)
 {
-	global $_SID, $_EXTRA_URL, $phpbb_hook, $phpbb_path_helper;
-	global $phpbb_dispatcher;
+	global $_SID, $_EXTRA_URL, $phpbb_hook;
+	global $phpbb_app_container;
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if ($params === '' || (is_array($params) && empty($params)))
 	{
@@ -1646,7 +1674,11 @@ function append_sid($url, $params = false, $is_amp = true, $session_id = false, 
 */
 function generate_board_url($without_script_path = false)
 {
-	global $config, $user, $request, $symfony_request;
+	global $symfony_request;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
 
 	$server_name = $user->host;
 
@@ -1711,7 +1743,10 @@ function generate_board_url($without_script_path = false)
 */
 function redirect($url, $return = false, $disable_cd_check = false)
 {
-	global $user, $phpbb_path_helper, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!$user->is_setup())
 	{
@@ -1876,7 +1911,10 @@ function reapply_sid($url, $is_route = false)
 */
 function build_url($strip_vars = false)
 {
-	global $config, $user, $phpbb_path_helper;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
 
 	$page = $phpbb_path_helper->get_valid_page($user->page['page'], $config['enable_mod_rewrite']);
 
@@ -1905,7 +1943,10 @@ function build_url($strip_vars = false)
 */
 function meta_refresh($time, $url, $disable_cd_check = false)
 {
-	global $template, $refresh_data, $request;
+	global $refresh_data;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$request = $phpbb_app_container->getRequest();
 
 	$url = redirect($url, true, $disable_cd_check);
 	if ($request->is_ajax())
@@ -1972,7 +2013,8 @@ function send_status_line($code, $message)
 */
 function phpbb_request_http_version()
 {
-	global $request;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
 
 	$version = '';
 	if ($request && $request->server('SERVER_PROTOCOL'))
@@ -2003,7 +2045,8 @@ function phpbb_request_http_version()
 */
 function generate_link_hash($link_name)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (!isset($user->data["hash_$link_name"]))
 	{
@@ -2032,7 +2075,11 @@ function check_link_hash($token, $link_name)
 */
 function add_form_key($form_name, $template_variable_suffix = '')
 {
-	global $config, $template, $user, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$now = time();
 	$token_sid = ($user->data['user_id'] == ANONYMOUS && !empty($config['form_token_sid_guests'])) ? $user->session_id : '';
@@ -2081,7 +2128,10 @@ function add_form_key($form_name, $template_variable_suffix = '')
  */
 function check_form_key($form_name, $timespan = false)
 {
-	global $config, $request, $user;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$request = $phpbb_app_container->getRequest();
+	$user = $phpbb_app_container->getUser();
 
 	if ($timespan === false)
 	{
@@ -2131,8 +2181,16 @@ function check_form_key($form_name, $timespan = false)
 */
 function confirm_box($check, $title = '', $hidden = '', $html_body = 'confirm_body.html', $u_action = '')
 {
-	global $user, $template, $db, $request;
-	global $config, $language, $phpbb_path_helper, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$language = $phpbb_app_container->getLanguage();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (isset($_POST['cancel']))
 	{
@@ -2278,8 +2336,17 @@ function confirm_box($check, $title = '', $hidden = '', $html_body = 'confirm_bo
 */
 function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = false, $s_display = true)
 {
-	global $user, $template, $auth, $phpbb_root_path, $config;
-	global $request, $phpbb_container, $phpbb_dispatcher, $phpbb_log;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	$err = '';
 	$form_name = 'login';
@@ -2584,7 +2651,14 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 */
 function login_forum_box($forum_data)
 {
-	global $db, $phpbb_container, $request, $template, $user, $phpbb_dispatcher, $phpbb_root_path;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$request = $phpbb_app_container->getRequest();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$password = $request->variable('password', '', true);
 
@@ -3028,9 +3102,29 @@ function phpbb_ip_normalise(string $address)
 */
 function msg_handler($errno, $msg_text, $errfile, $errline)
 {
-	global $cache, $db, $auth, $template, $config, $user, $request;
-	global $phpbb_root_path, $msg_title, $msg_long_text, $phpbb_log;
-	global $phpbb_container;
+	global $phpbb_app_container;
+	global $phpbb_root_path, $msg_title, $msg_long_text;
+
+	// Container may not be available during bootstrap (e.g. during container compilation)
+	if ($phpbb_app_container === null)
+	{
+		if (($errno & error_reporting()) != 0)
+		{
+			$error_name = ($errno === E_WARNING) ? 'PHP Warning' : 'PHP Notice';
+			echo '<b>[phpBB bootstrap] ' . $error_name . '</b>: in file <b>' . htmlspecialchars($errfile) . '</b> on line <b>' . $errline . '</b>: <b>' . htmlspecialchars($msg_text) . '</b><br />' . "\n";
+		}
+		return;
+	}
+
+	$cache = $phpbb_app_container->getCache();
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$template = $phpbb_app_container->getTemplate();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	// https://www.php.net/manual/en/language.operators.errorcontrol.php
 	// error_reporting() return a different error code inside the error handler after php 8.0
@@ -3295,7 +3389,8 @@ function msg_handler($errno, $msg_text, $errfile, $errline)
 */
 function phpbb_filter_root_path($errfile)
 {
-	global $phpbb_filesystem;
+	global $phpbb_app_container;
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	static $root_path;
 
@@ -3323,7 +3418,9 @@ function phpbb_filter_root_path($errfile)
 */
 function obtain_guest_count($item_id = 0, $item = 'forum')
 {
-	global $db, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	if ($item_id)
 	{
@@ -3371,7 +3468,9 @@ function obtain_guest_count($item_id = 0, $item = 'forum')
 */
 function obtain_users_online($item_id = 0, $item = 'forum')
 {
-	global $db, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	$reading_sql = '';
 	if ($item_id !== 0)
@@ -3435,7 +3534,12 @@ function obtain_users_online($item_id = 0, $item = 'forum')
 */
 function obtain_users_online_string($online_users, $item_id = 0, $item = 'forum')
 {
-	global $config, $db, $user, $auth, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user_online_link = $rowset = array();
 	// Need caps version of $item for language-strings
@@ -3707,8 +3811,12 @@ function phpbb_get_group_avatar($group_row, $alt = 'GROUP_AVATAR', $ignore_confi
 */
 function phpbb_get_avatar($row, $alt, $ignore_config = false, $lazy = false)
 {
-	global $user, $config;
-	global $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!$config['allow_avatar'] && !$ignore_config)
 	{
@@ -3783,8 +3891,18 @@ function phpbb_get_avatar($row, $alt, $ignore_config = false, $lazy = false)
 */
 function page_header($page_title = '', $display_online_list = false, $item_id = 0, $item = 'forum', $send_headers = true)
 {
-	global $db, $config, $template, $SID, $_SID, $_EXTRA_URL, $user, $auth, $phpbb_root_path;
-	global $phpbb_dispatcher, $request, $phpbb_container, $phpbb_admin_path;
+	global $SID, $_SID, $_EXTRA_URL, $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	global $phpbb_admin_path;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if (defined('HEADER_INC'))
 	{
@@ -4201,7 +4319,8 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 */
 function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $request, \phpbb\auth\auth $auth, \phpbb\db\driver\driver_interface $db)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\controller\helper $controller_helper */
 	$controller_helper = $phpbb_container->get('controller.helper');
@@ -4221,7 +4340,8 @@ function phpbb_check_and_display_sql_report(\phpbb\request\request_interface $re
 */
 function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \phpbb\config\config $config, \phpbb\auth\auth $auth, \phpbb\user $user, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$debug_info = array();
 
@@ -4286,7 +4406,10 @@ function phpbb_generate_debug_output(\phpbb\db\driver\driver_interface $db, \php
 */
 function page_footer($run_cron = true, $display_template = true, $exit_handler = true)
 {
-	global $phpbb_dispatcher, $phpbb_container, $template;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$template = $phpbb_app_container->getTemplate();
 
 	// A listener can set this variable to `true` when it overrides this function
 	$page_footer_override = false;
@@ -4344,8 +4467,11 @@ function page_footer($run_cron = true, $display_template = true, $exit_handler =
 */
 function garbage_collection()
 {
-	global $cache, $db;
-	global $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$cache = $phpbb_app_container->getCache();
+	$db = $phpbb_app_container->getDb();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!empty($phpbb_dispatcher))
 	{

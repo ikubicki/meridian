@@ -172,7 +172,9 @@ function minutes_to_hours($minutes)
 */
 function get_group_id($group_name)
 {
-	global $db, $group_mapping;
+	global $group_mapping;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (empty($group_mapping))
 	{
@@ -381,7 +383,8 @@ function mimetype($filename)
 */
 function remote_avatar_dims()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT user_id, user_avatar
 		FROM ' . USERS_TABLE . '
@@ -409,7 +412,10 @@ function remote_avatar_dims()
 
 function import_avatar_gallery($gallery_name = '', $subdirs_as_galleries = false)
 {
-	global $config, $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 
 	$relative_path = empty($convert->convertor['source_path_absolute']);
 
@@ -478,7 +484,11 @@ function import_avatar_gallery($gallery_name = '', $subdirs_as_galleries = false
 
 function import_attachment_files($category_name = '')
 {
-	global $config, $convert, $db, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	$sql = 'SELECT config_value AS upload_path
 		FROM ' . CONFIG_TABLE . "
@@ -534,7 +544,9 @@ function base64_unpack($string)
 
 function _import_check($config_var, $source, $use_target)
 {
-	global $convert, $config;
+	global $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$result = array(
 		'orig_source'	=> $source,
@@ -576,7 +588,10 @@ function import_attachment($source, $use_target = false)
 		return '';
 	}
 
-	global $convert, $config, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 
 	// check for trailing slash
 	if (rtrim($convert->convertor['upload_path'], '/') === '')
@@ -618,7 +633,9 @@ function import_rank($source, $use_target = false)
 		return '';
 	}
 
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (!isset($convert->convertor['ranks_path']))
 	{
@@ -636,7 +653,9 @@ function import_smiley($source, $use_target = false)
 		return '';
 	}
 
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	// check for trailing slash
 	if (rtrim($convert->convertor['smilies_path'], '/') === '')
@@ -657,7 +676,10 @@ function import_avatar($source, $use_target = false, $user_id = false)
 		return;
 	}
 
-	global $convert, $config, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 
 	// check for trailing slash
 	if (rtrim($convert->convertor['avatar_path'], '/') === '')
@@ -736,7 +758,9 @@ function get_smiley_dim($source, $axis)
 		return $smiley_cache[$source][$axis];
 	}
 
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$orig_source = $source;
 
@@ -849,7 +873,9 @@ function get_upload_avatar_dim($source, $axis)
 		$source = substr($source, 7);
 	}
 
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (!isset($convert->convertor['avatar_path']))
 	{
@@ -891,7 +917,9 @@ function get_gallery_avatar_dim($source, $axis)
 		return $avatar_cache[$source][$axis];
 	}
 
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$orig_source = $source;
 
@@ -1106,7 +1134,8 @@ function words_unique(&$words)
 */
 function add_user_group($group_id, $user_id, $group_leader = false)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'INSERT INTO ' . USER_GROUP_TABLE . ' ' . $db->sql_build_array('INSERT', array(
 		'group_id'		=> $group_id,
@@ -1127,7 +1156,10 @@ function add_user_group($group_id, $user_id, $group_leader = false)
 */
 function user_group_auth($group, $select_query, $use_src_db)
 {
-	global $convert, $user, $db, $src_db, $same_db;
+	global $convert, $src_db, $same_db;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
 
 	if (!in_array($group, array('guests', 'registered', 'registered_coppa', 'global_moderators', 'administrators', 'bots')))
 	{
@@ -1176,7 +1208,8 @@ function user_group_auth($group, $select_query, $use_src_db)
 function get_config()
 {
 	static $convert_config;
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (isset($convert_config))
 	{
@@ -1263,7 +1296,8 @@ function get_config()
 */
 function restore_config($schema)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$convert_config = get_config();
 
@@ -1308,7 +1342,8 @@ function restore_config($schema)
 */
 function update_folder_pm_count()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT user_id, folder_id, COUNT(msg_id) as num_messages
 		FROM ' . PRIVMSGS_TO_TABLE . '
@@ -1478,7 +1513,8 @@ function compare_table($tables, $tablename, &$prefixes)
 */
 function mass_auth($ug_type, $forum_id, $ug_id, $acl_list, $setting = ACL_NO)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 	static $acl_option_ids, $group_ids;
 
 	if (($ug_type == 'group' || $ug_type == 'group_role') && is_string($ug_id))
@@ -1676,7 +1712,8 @@ function mass_auth($ug_type, $forum_id, $ug_id, $acl_list, $setting = ACL_NO)
 */
 function update_unread_count()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT user_id, COUNT(msg_id) as num_messages
 		FROM ' . PRIVMSGS_TO_TABLE . '
@@ -1698,7 +1735,8 @@ function update_unread_count()
 */
 function add_default_groups()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$default_groups = array(
 		'GUESTS'			=> array('', 0, 0),
@@ -1745,7 +1783,8 @@ function add_default_groups()
 
 function add_groups_to_teampage()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$teampage_groups = array(
 		'ADMINISTRATORS'	=> 1,
@@ -1781,7 +1820,8 @@ function add_groups_to_teampage()
 */
 function sync_post_count($offset, $limit)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 	$sql = 'SELECT COUNT(post_id) AS num_posts, poster_id
 			FROM ' . POSTS_TABLE . '
 			WHERE post_postcount = 1
@@ -1805,7 +1845,11 @@ function sync_post_count($offset, $limit)
 */
 function add_bots()
 {
-	global $db, $convert, $user, $config, $phpbb_root_path;
+	global $convert, $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
 
 	$db->sql_query($convert->truncate_statement . BOTS_TABLE);
 
@@ -1931,7 +1975,9 @@ function add_bots()
 */
 function update_dynamic_config()
 {
-	global $db, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	// Get latest username
 	$sql = 'SELECT user_id, username, user_colour
@@ -2022,7 +2068,8 @@ function update_dynamic_config()
 */
 function update_topics_posted()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	switch ($db->get_sql_layer())
 	{
@@ -2100,7 +2147,8 @@ function update_topics_posted()
 */
 function fix_empty_primary_groups()
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	// Set group ids for users not already having it
 	$sql = 'UPDATE ' . USERS_TABLE . ' SET group_id = ' . get_group_id('registered') . '
@@ -2162,7 +2210,9 @@ function fix_empty_primary_groups()
 */
 function remove_invalid_users()
 {
-	global $db, $phpbb_root_path;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	// username_clean is UNIQUE
 	$sql = 'SELECT user_id
@@ -2298,7 +2348,10 @@ function convert_bbcode($message, $convert_size = true, $extended_bbcodes = fals
 
 function copy_file($src, $trg, $overwrite = false, $die_on_failure = true, $source_relative_path = true)
 {
-	global $convert, $phpbb_root_path, $user, $phpbb_filesystem;
+	global $convert, $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	/** @var \phpbb\filesystem\filesystem_interface $filesystem */
 	$filesystem = $phpbb_filesystem;
@@ -2355,7 +2408,11 @@ function copy_file($src, $trg, $overwrite = false, $die_on_failure = true, $sour
 
 function copy_dir($src, $trg, $copy_subdirs = true, $overwrite = false, $die_on_failure = true, $source_relative_path = true)
 {
-	global $convert, $phpbb_root_path, $config, $user, $phpbb_filesystem;
+	global $convert, $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 	/** @var \phpbb\filesystem\filesystem_interface $filesystem */
 	$filesystem = $phpbb_filesystem;
@@ -2467,7 +2524,9 @@ function copy_dir($src, $trg, $copy_subdirs = true, $overwrite = false, $die_on_
 
 function relative_base($path, $is_relative = true, $line = false, $file = false)
 {
-	global $convert, $user;
+	global $convert;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	if (!$is_relative)
 	{
@@ -2495,7 +2554,8 @@ function get_smiley_display()
 
 function fill_dateformat($user_dateformat)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	return ((empty($user_dateformat)) ? $config['default_dateformat'] : $user_dateformat);
 }

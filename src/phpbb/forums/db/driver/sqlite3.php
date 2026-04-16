@@ -65,7 +65,8 @@ class sqlite3 extends \phpbb\db\driver\driver
 	*/
 	public function sql_server_info($raw = false, $use_cache = true)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if (!$use_cache || empty($cache) || ($this->sql_server_version = $cache->get('sqlite_version')) === false)
 		{
@@ -116,7 +117,8 @@ class sqlite3 extends \phpbb\db\driver\driver
 	{
 		if ($query != '')
 		{
-			global $cache;
+			global $phpbb_app_container;
+			$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 			if ($this->debug_sql_explain)
 			{
@@ -234,7 +236,8 @@ class sqlite3 extends \phpbb\db\driver\driver
 	*/
 	public function sql_fetchrow($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -264,7 +267,8 @@ class sqlite3 extends \phpbb\db\driver\driver
 	*/
 	public function sql_freeresult($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{

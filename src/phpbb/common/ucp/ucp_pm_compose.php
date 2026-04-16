@@ -21,9 +21,20 @@
 */
 function compose_pm($id, $mode, $action, $user_folders = array())
 {
-	global $template, $db, $auth, $user, $cache;
-	global $phpbb_root_path, $config, $language;
-	global $request, $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$cache = $phpbb_app_container->getCache();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$language = $phpbb_app_container->getLanguage();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	// Damn php and globals - i know, this is horrible
 	// Needed for handle_message_list_actions()
@@ -1403,8 +1414,13 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 */
 function handle_message_list_actions(&$address_list, &$error, $remove_u, $remove_g, $add_to, $add_bcc)
 {
-	global $auth, $db, $user;
-	global $request, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Delete User [TO/BCC]
 	if ($remove_u && $request->variable('remove_u', array(0 => '')))

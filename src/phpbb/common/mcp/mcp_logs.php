@@ -31,8 +31,16 @@ class mcp_logs
 
 	function main($id, $mode)
 	{
-		global $auth, $db, $user, $template, $request;
-		global $config, $phpbb_container, $phpbb_log;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$user->add_lang('acp/common');
 		$this->p_master->add_mod_info('acp');

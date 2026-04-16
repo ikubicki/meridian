@@ -20,8 +20,17 @@
 */
 function view_message($id, $mode, $folder_id, $msg_id, $folder, $message_row)
 {
-	global $user, $template, $auth, $db, $phpbb_container;
-	global $phpbb_root_path, $request, $config, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user->add_lang(array('viewtopic', 'memberlist'));
 
@@ -407,8 +416,13 @@ function view_message($id, $mode, $folder_id, $msg_id, $folder, $message_row)
 */
 function get_user_information($user_id, $user_row)
 {
-	global $db, $auth, $user;
-	global $phpbb_root_path, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	if (!$user_id)
 	{

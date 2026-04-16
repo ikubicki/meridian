@@ -31,7 +31,10 @@ class mcp_notes
 
 	function main($id, $mode)
 	{
-		global $user, $template, $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
 		global $phpbb_root_path;
 
 		$action = $request->variable('action', array('' => ''));
@@ -70,8 +73,17 @@ class mcp_notes
 	*/
 	function mcp_notes_user_view($action)
 	{
-		global $config, $phpbb_log, $request, $phpbb_root_path;
-		global $template, $db, $user, $auth, $phpbb_container;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user_id = $request->variable('u', 0);
 		$username = $request->variable('username', '', true);

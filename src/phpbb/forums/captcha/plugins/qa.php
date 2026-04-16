@@ -58,7 +58,11 @@ class qa
 	*/
 	function init($type)
 	{
-		global $config, $db, $user, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
 
 		// load our language file
 		$user->add_lang('captcha_qa');
@@ -134,7 +138,8 @@ class qa
 	*/
 	public function is_installed()
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$db_tool = $phpbb_container->get('dbal.tools');
 
@@ -146,7 +151,10 @@ class qa
 	*/
 	public function is_available()
 	{
-		global $config, $db, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		// load language file for pretty display in the ACP dropdown
 		$user->add_lang('captcha_qa');
@@ -219,7 +227,10 @@ class qa
 	*/
 	function get_template()
 	{
-		global $phpbb_log, $template, $user;
+		global $phpbb_app_container;
+		$phpbb_log = $phpbb_app_container->getLog();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		if ($this->is_solved())
 		{
@@ -249,7 +260,10 @@ class qa
 	*/
 	function get_demo_template()
 	{
-		global $config, $db, $template;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
 
 		if ($this->is_available())
 		{
@@ -290,7 +304,8 @@ class qa
 	*/
 	function garbage_collect($type = 0)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT c.confirm_id
 			FROM ' . $this->table_qa_confirm . ' c
@@ -333,7 +348,8 @@ class qa
 	*/
 	function install()
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$db_tool = $phpbb_container->get('dbal.tools');
 		$schemas = array(
@@ -390,7 +406,9 @@ class qa
 	*/
 	function validate()
 	{
-		global $phpbb_log, $user;
+		global $phpbb_app_container;
+		$phpbb_log = $phpbb_app_container->getLog();
+		$user = $phpbb_app_container->getUser();
 
 		$error = '';
 
@@ -436,7 +454,9 @@ class qa
 	*/
 	function select_question()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		if (!count($this->question_ids))
 		{
@@ -462,7 +482,9 @@ class qa
 	*/
 	function reselect_question()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		if (!count($this->question_ids))
 		{
@@ -486,7 +508,9 @@ class qa
 	*/
 	function new_attempt()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		// yah, I would prefer a stronger rand, but this should work
 		$this->question = (int) array_rand($this->question_ids);
@@ -508,7 +532,9 @@ class qa
 	*/
 	function load_confirm_id()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql = 'SELECT confirm_id
 			FROM ' . $this->table_qa_confirm . "
@@ -533,7 +559,9 @@ class qa
 	*/
 	function load_answer()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		if (!strlen($this->confirm_id) || !count($this->question_ids))
 		{
@@ -570,7 +598,9 @@ class qa
 	*/
 	function check_answer()
 	{
-		global $db, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
 
 		$answer = ($this->question_strict) ? $request->variable('qa_answer', '', true) : utf8_clean_string($request->variable('qa_answer', '', true));
 
@@ -608,7 +638,9 @@ class qa
 	*/
 	function reset()
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql = 'DELETE FROM ' . $this->table_qa_confirm . "
 			WHERE session_id = '" . $db->sql_escape($user->session_id) . "'
@@ -624,7 +656,8 @@ class qa
 	*/
 	function is_solved()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		if ($request->variable('qa_answer', false) && $this->solved === 0)
 		{
@@ -639,7 +672,12 @@ class qa
 	*/
 	function acp_page($id, $module)
 	{
-		global $config, $request, $phpbb_log, $template, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		$user->add_lang('acp/board');
 		$user->add_lang('captcha_qa');
@@ -777,7 +815,9 @@ class qa
 	*/
 	function acp_question_list($module)
 	{
-		global $db, $template;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
 
 		$sql = 'SELECT *
 			FROM ' . $this->table_captcha_questions;
@@ -807,7 +847,8 @@ class qa
 	*/
 	function acp_get_question_data($question_id)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if ($question_id)
 		{
@@ -847,7 +888,8 @@ class qa
 	*/
 	function acp_get_question_input()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$answers = $request->variable('answers', '', true);
 
@@ -874,7 +916,9 @@ class qa
 	*/
 	function acp_update_question($data, $question_id)
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		// easier to delete all answers than to figure out which to update
 		$sql = 'DELETE FROM ' . $this->table_captcha_answers . " WHERE question_id = $question_id";
@@ -901,7 +945,9 @@ class qa
 	*/
 	function acp_add_question($data)
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		$langs = $this->get_languages();
 		$question_ary = $data;
@@ -925,7 +971,9 @@ class qa
 	*/
 	function acp_insert_answers($data, $question_id)
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		foreach ($data['answers'] as $answer)
 		{
@@ -946,7 +994,9 @@ class qa
 	*/
 	function acp_delete_question($question_id)
 	{
-		global $db, $cache;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
 
 		$tables = array($this->table_captcha_questions, $this->table_captcha_answers);
 
@@ -992,7 +1042,8 @@ class qa
 	*/
 	function get_languages()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT *
 			FROM ' . LANG_TABLE;
@@ -1018,7 +1069,9 @@ class qa
 	*/
 	function acp_is_last($question_id)
 	{
-		global $config, $db;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
 
 		if ($question_id)
 		{

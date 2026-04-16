@@ -21,9 +21,18 @@ class acp_groups
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $cache;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
 		global $phpbb_root_path, $phpbb_admin_path;
-		global $request, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		/** @var \phpbb\language\language $language Language object */
 		$language = $phpbb_container->get('language');
@@ -1012,7 +1021,13 @@ class acp_groups
 
 	public function manage_position()
 	{
-		global $config, $db, $template, $user, $request, $phpbb_container;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->tpl_name = 'acp_groups_position';
 		$this->page_title = 'ACP_GROUPS_POSITION';

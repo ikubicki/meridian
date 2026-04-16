@@ -27,8 +27,16 @@ class acp_permissions
 
 	function main($id, $mode)
 	{
-		global $db, $user, $auth, $template, $phpbb_container, $request;
-		global $config, $phpbb_root_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		if (!function_exists('user_get_id_name'))
 		{
@@ -561,7 +569,8 @@ class acp_permissions
 	*/
 	function build_subforum_options($forum_list)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$s_options = '';
 
@@ -605,7 +614,8 @@ class acp_permissions
 	*/
 	function build_permission_dropdown($options, $default_option, $permission_scope)
 	{
-		global $auth;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
 
 		$s_dropdown_options = '';
 		foreach ($options as $setting)
@@ -628,7 +638,9 @@ class acp_permissions
 	*/
 	function check_existence($mode, &$ids)
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		switch ($mode)
 		{
@@ -674,8 +686,13 @@ class acp_permissions
 	*/
 	function set_permissions($mode, $permission_type, $auth_admin, &$user_id, &$group_id)
 	{
-		global $db, $cache, $user, $auth;
-		global $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$psubmit = $request->variable('psubmit', array(0 => array(0 => 0)));
 
@@ -763,8 +780,13 @@ class acp_permissions
 	*/
 	function set_all_permissions($mode, $permission_type, $auth_admin, &$user_id, &$group_id)
 	{
-		global $db, $cache, $user, $auth;
-		global $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		// User or group to be set?
 		$ug_type = (count($user_id)) ? 'user' : 'group';
@@ -842,7 +864,8 @@ class acp_permissions
 	*/
 	function check_assigned_role($role_id, &$auth_settings)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT o.auth_option, r.auth_setting
 			FROM ' . ACL_OPTIONS_TABLE . ' o, ' . ACL_ROLES_DATA_TABLE . ' r
@@ -879,7 +902,11 @@ class acp_permissions
 	*/
 	function remove_permissions($mode, $permission_type, $auth_admin, &$user_id, &$group_id, &$forum_id)
 	{
-		global $user, $db, $cache, $auth;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$auth = $phpbb_app_container->getAuth();
 
 		// User or group to be set?
 		$ug_type = (count($user_id)) ? 'user' : 'group';
@@ -918,7 +945,11 @@ class acp_permissions
 	*/
 	function log_action($mode, $action, $permission_type, $ug_type, $ug_id, $forum_id)
 	{
-		global $db, $user, $phpbb_log, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		if (!is_array($ug_id))
 		{
@@ -976,7 +1007,13 @@ class acp_permissions
 	*/
 	function permission_trace($user_id, $forum_id, $permission)
 	{
-		global $db, $template, $user, $auth, $request, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		if ($user_id != $user->data['user_id'])
 		{
@@ -1198,7 +1235,13 @@ class acp_permissions
 	*/
 	function copy_forum_permissions()
 	{
-		global $db, $auth, $cache, $template, $user, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$auth = $phpbb_app_container->getAuth();
+		$cache = $phpbb_app_container->getCache();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
 
 		$user->add_lang('acp/forums');
 
@@ -1249,7 +1292,9 @@ class acp_permissions
 	*/
 	function retrieve_defined_user_groups($permission_scope, $forum_id, $permission_type)
 	{
-		global $db, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/** @var \phpbb\group\helper $group_helper */
 		$group_helper = $phpbb_container->get('group_helper');

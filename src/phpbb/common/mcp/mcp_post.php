@@ -20,9 +20,18 @@
 */
 function mcp_post_details($id, $mode, $action)
 {
-	global $phpbb_root_path, $config, $request;
-	global $template, $db, $user, $auth;
-	global $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user->add_lang('posting');
 
@@ -557,7 +566,14 @@ function phpbb_get_num_ips_for_poster(\phpbb\db\driver\driver_interface $db, $po
 */
 function change_poster(&$post_info, $userdata)
 {
-	global $auth, $db, $config, $phpbb_root_path, $user, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (empty($userdata) || $userdata['user_id'] == $post_info['user_id'])
 	{

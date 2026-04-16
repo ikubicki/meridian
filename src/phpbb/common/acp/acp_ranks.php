@@ -21,8 +21,17 @@ class acp_ranks
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $cache, $request, $phpbb_dispatcher;
-		global $config, $phpbb_root_path, $phpbb_admin_path, $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		global $phpbb_root_path, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$user->add_lang('acp/posting');
 

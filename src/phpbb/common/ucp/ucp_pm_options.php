@@ -20,7 +20,13 @@
 */
 function message_options($id, $mode, $global_privmsgs_rules, $global_rule_conditions)
 {
-	global $phpbb_root_path, $user, $template, $config, $db, $request;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
 
 	$redirect_url = append_sid("{$phpbb_root_path}ucp.php", "i=pm&amp;mode=options");
 
@@ -581,7 +587,8 @@ function message_options($id, $mode, $global_privmsgs_rules, $global_rule_condit
 */
 function define_check_option($hardcoded, $check_option, $check_lang)
 {
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 
 	$s_check_options = '';
 	if (!$hardcoded)
@@ -606,7 +613,8 @@ function define_check_option($hardcoded, $check_option, $check_lang)
 */
 function define_action_option($hardcoded, $action_option, $action_lang, $folder)
 {
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 
 	$l_action = $s_action_options = '';
 	if ($hardcoded)
@@ -653,7 +661,8 @@ function define_action_option($hardcoded, $action_option, $action_lang, $folder)
 */
 function define_rule_option($hardcoded, $rule_option, $rule_lang, $check_ary)
 {
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 	global $module;
 
 	$exclude = array();
@@ -695,7 +704,13 @@ function define_rule_option($hardcoded, $rule_option, $rule_lang, $check_ary)
 */
 function define_cond_option($hardcoded, $cond_option, $rule_option, $global_rule_conditions)
 {
-	global $db, $template, $auth, $user, $request, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\group\helper $group_helper */
 	$group_helper = $phpbb_container->get('group_helper');
@@ -845,7 +860,9 @@ function define_cond_option($hardcoded, $cond_option, $rule_option, $global_rule
 */
 function show_defined_rules($user_id, $check_lang, $rule_lang, $action_lang, $folder)
 {
-	global $db, $template;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
 
 	$sql = 'SELECT *
 		FROM ' . PRIVMSGS_RULES_TABLE . '

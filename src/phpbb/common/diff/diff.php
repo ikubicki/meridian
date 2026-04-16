@@ -544,7 +544,8 @@ class diff3 extends diff
 	*/
 	function get_conflicts_content($label1 = 'CURRENT_FILE', $label2 = 'NEW_FILE', $label_sep = 'DIFF_SEP_EXPLAIN')
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$label1 = (!empty($user->lang[$label1])) ? $user->lang[$label1] : $label1;
 		$label2 = (!empty($user->lang[$label2])) ? $user->lang[$label2] : $label2;

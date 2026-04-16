@@ -41,7 +41,14 @@ class ucp_pm
 
 	function main($id, $mode)
 	{
-		global $user, $template, $phpbb_root_path, $auth, $db, $config, $request;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$auth = $phpbb_app_container->getAuth();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
 
 		if (!$user->data['is_registered'])
 		{

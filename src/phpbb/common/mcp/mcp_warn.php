@@ -31,7 +31,8 @@ class mcp_warn
 
 	function main($id, $mode)
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$action = $request->variable('action', array('' => ''));
 
@@ -74,7 +75,10 @@ class mcp_warn
 	function mcp_warn_front_view()
 	{
 		global $phpbb_root_path;
-		global $template, $db, $user;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$template->assign_vars(array(
 			'U_FIND_USERNAME'	=> append_sid("{$phpbb_root_path}memberlist.php", 'mode=searchuser&amp;form=mcp&amp;field=username&amp;select_single=true'),
@@ -126,8 +130,15 @@ class mcp_warn
 	*/
 	function mcp_warn_list_view($action)
 	{
-		global $phpbb_root_path, $config, $phpbb_container;
-		global $template, $user, $auth, $request;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$request = $phpbb_app_container->getRequest();
 
 		/* @var $pagination \phpbb\pagination */
 		$pagination = $phpbb_container->get('pagination');
@@ -185,8 +196,15 @@ class mcp_warn
 	*/
 	function mcp_warn_post_view($action)
 	{
-		global $phpbb_root_path, $config, $request;
-		global $template, $db, $user, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$post_id = $request->variable('p', 0);
 		$forum_id = $request->variable('f', 0);
@@ -365,8 +383,15 @@ class mcp_warn
 	*/
 	function mcp_warn_user_view($action)
 	{
-		global $phpbb_root_path, $config, $request;
-		global $template, $db, $user, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$user_id = $request->variable('u', 0);
 		$username = $request->variable('username', '', true);
@@ -518,8 +543,13 @@ class mcp_warn
 */
 function add_warning($user_row, $warning, $send_pm = true, $post_id = 0)
 {
-	global $phpbb_root_path, $config, $phpbb_log;
-	global $db, $user;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_log = $phpbb_app_container->getLog();
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	if ($send_pm)
 	{

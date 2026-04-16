@@ -22,8 +22,20 @@ class acp_main
 
 	function main($id, $mode)
 	{
-		global $config, $db, $cache, $user, $auth, $template, $request, $phpbb_log;
-		global $phpbb_root_path, $phpbb_admin_path, $phpbb_container, $phpbb_dispatcher, $phpbb_filesystem;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$cache = $phpbb_app_container->getCache();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
+		global $phpbb_root_path, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
 
 		// Show restore permissions notice
 		if ($user->data['user_perm_from'] && $auth->acl_get('a_switchperm'))

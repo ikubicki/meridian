@@ -125,7 +125,8 @@ class recaptcha_v3 extends captcha_abstract
 		/**
 		 * @var \phpbb\language\language	$language	Language object
 		 */
-		global $language;
+		global $phpbb_app_container;
+		$language = $phpbb_app_container->getLanguage();
 
 		$language->add_lang('captcha_recaptcha');
 
@@ -143,7 +144,9 @@ class recaptcha_v3 extends captcha_abstract
 		 * @var \phpbb\config\config		$config		Config object
 		 * @var \phpbb\language\language	$language	Language object
 		 */
-		global $config, $language;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
 
 		$language->add_lang('captcha_recaptcha');
 
@@ -167,7 +170,13 @@ class recaptcha_v3 extends captcha_abstract
 		 * @var \phpbb\template\template	$template	Template object
 		 * @var \phpbb\user					$user		User object
 		 */
-		global $config, $language, $phpbb_log, $request, $template, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		$module->tpl_name		= 'captcha_recaptcha_v3_acp';
 		$module->page_title		= 'ACP_VC_SETTINGS';
@@ -262,7 +271,11 @@ class recaptcha_v3 extends captcha_abstract
 		 * @var string						$phpbb_root_path	phpBB root path
 		 * @var string						$phpEx				php File extensions
 		 */
-		global $config, $language, $template, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
+		$template = $phpbb_app_container->getTemplate();
 
 		if ($this->is_solved())
 		{
@@ -318,7 +331,11 @@ class recaptcha_v3 extends captcha_abstract
 		 * @var \phpbb\request\request		$request	Request object
 		 * @var \phpbb\user					$user		User object
 		 */
-		global $config, $language, $request, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$language = $phpbb_app_container->getLanguage();
+		$request = $phpbb_app_container->getRequest();
+		$user = $phpbb_app_container->getUser();
 
 		$token		= $request->variable('recaptcha_token', '', true);
 		$action		= $request->variable('recaptcha_action', '', true);
@@ -372,7 +389,8 @@ class recaptcha_v3 extends captcha_abstract
 	 */
 	public function get_login_error_attempts(): string
 	{
-		global $language;
+		global $phpbb_app_container;
+		$language = $phpbb_app_container->getLanguage();
 
 		$language->add_lang('captcha_recaptcha');
 

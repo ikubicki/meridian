@@ -49,7 +49,8 @@ class bbcode_firstpass extends bbcode
 			$this->bbcode_init();
 		}
 
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$this->bbcode_bitfield = '';
 		$bitfield = new bitfield();
@@ -118,7 +119,8 @@ class bbcode_firstpass extends bbcode
 	*/
 	function bbcode_init($allow_custom_bbcode = true)
 	{
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		static $rowset;
 
@@ -215,7 +217,8 @@ class bbcode_firstpass extends bbcode
 
 		if (!is_array($rowset))
 		{
-			global $db;
+			global $phpbb_app_container;
+			$db = $phpbb_app_container->getDb();
 			$rowset = array();
 
 			$sql = 'SELECT *
@@ -289,7 +292,9 @@ class bbcode_firstpass extends bbcode
 	*/
 	function bbcode_size($stx, $in)
 	{
-		global $user, $config;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		if (!$this->check_bbcode('size', $in))
 		{
@@ -369,7 +374,9 @@ class bbcode_firstpass extends bbcode
 	*/
 	function bbcode_img($in)
 	{
-		global $user, $config;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		if (!$this->check_bbcode('img', $in))
 		{
@@ -406,7 +413,9 @@ class bbcode_firstpass extends bbcode
 	*/
 	function bbcode_flash($width, $height, $in)
 	{
-		global $user, $config;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		if (!$this->check_bbcode('flash', $in))
 		{
@@ -1034,7 +1043,9 @@ class bbcode_firstpass extends bbcode
 	*/
 	function path_in_domain($url)
 	{
-		global $config, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 
 		if ($config['force_server_vars'])
 		{
@@ -1115,7 +1126,11 @@ class parse_message extends bbcode_firstpass
 	*/
 	function parse($allow_bbcode, $allow_magic_url, $allow_smilies, $allow_img_bbcode = true, $allow_flash_bbcode = true, $allow_quote_bbcode = true, $allow_url_bbcode = true, $update_this_message = true, $mode = 'post')
 	{
-		global $config, $user, $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->mode = $mode;
 
@@ -1294,7 +1309,9 @@ class parse_message extends bbcode_firstpass
 	*/
 	function format_display($allow_bbcode, $allow_magic_url, $allow_smilies, $update_this_message = true)
 	{
-		global $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// If false, then the parsed message get returned but internal message not processed.
 		if (!$update_this_message)
@@ -1420,7 +1437,9 @@ class parse_message extends bbcode_firstpass
 	*/
 	function smilies($max_smilies = 0)
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 		static $match;
 		static $replace;
 
@@ -1522,8 +1541,16 @@ class parse_message extends bbcode_firstpass
 	*/
 	function parse_attachments($form_name, $mode, $forum_id, $submit, $preview, $refresh, $is_message = false)
 	{
-		global $config, $auth, $user, $phpbb_root_path, $db, $request;
-		global $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$auth = $phpbb_app_container->getAuth();
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$error = array();
 
@@ -1806,8 +1833,11 @@ class parse_message extends bbcode_firstpass
 	*/
 	function get_submitted_attachment_data($check_user_id = false)
 	{
-		global $user, $db;
-		global $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$this->filename_data['filecomment'] = $request->variable('filecomment', '', true);
 		$attachment_data = $request->variable('attachment_data', array(0 => array('' => '')), true, \phpbb\request\request_interface::POST);
@@ -1894,7 +1924,9 @@ class parse_message extends bbcode_firstpass
 	*/
 	function parse_poll(&$poll)
 	{
-		global $user, $config;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
 
 		$poll_max_options = $poll['poll_max_options'];
 
@@ -1957,7 +1989,8 @@ class parse_message extends bbcode_firstpass
 	*/
 	public function remove_nested_quotes($max_depth)
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		if (preg_match('#^<[rt][ >]#', $this->message))
 		{
@@ -2029,7 +2062,8 @@ class parse_message extends bbcode_firstpass
 	*/
 	public function validate_bbcode_by_extension()
 	{
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$return = false;
 		$params_array = func_get_args();

@@ -25,8 +25,15 @@ class ucp_resend
 
 	function main($id, $mode)
 	{
-		global $config, $phpbb_root_path;
-		global $db, $user, $auth, $template, $request;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
 
 		$username	= $request->variable('username', '', true);
 		$email		= strtolower($request->variable('email', ''));
@@ -172,7 +179,9 @@ class ucp_resend
 	 */
 	protected function update_activation_expiration(): void
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql_ary = [
 			'user_actkey_expiration'	=> $user::get_token_expiration(),

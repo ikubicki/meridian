@@ -25,8 +25,17 @@ class ucp_activate
 
 	function main($id, $mode)
 	{
-		global $config, $phpbb_root_path, $request;
-		global $db, $user, $auth, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$user_id = $request->variable('u', 0);
 		$key = $request->variable('k', '');

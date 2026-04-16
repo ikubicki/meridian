@@ -35,7 +35,14 @@ class acp_modules
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $module, $request, $phpbb_log, $phpbb_container;
+		global $module;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/** @var \phpbb\module\module_manager $module_manager */
 		$module_manager = $phpbb_container->get('module.manager');
@@ -593,7 +600,9 @@ class acp_modules
 	*/
 	function make_module_select($select_id = false, $ignore_id = false, $ignore_acl = false, $ignore_nonpost = false, $ignore_emptycat = true, $ignore_noncat = false)
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$sql = 'SELECT module_id, module_enabled, module_basename, parent_id, module_langname, left_id, right_id, module_auth
 			FROM ' . MODULES_TABLE . "

@@ -31,8 +31,17 @@ class mcp_reports
 
 	function main($id, $mode)
 	{
-		global $auth, $db, $user, $template, $request;
-		global $config, $phpbb_root_path, $action, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path, $action;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		include_once($phpbb_root_path . 'src/phpbb/common/functions_posting.php');
 
@@ -597,8 +606,15 @@ class mcp_reports
 */
 function close_report($report_id_list, $mode, $action, $pm = false)
 {
-	global $db, $user, $auth, $phpbb_log, $request;
-	global $phpbb_root_path, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$pm_where = ($pm) ? ' AND r.post_id = 0 ' : ' AND r.pm_id = 0 ';
 	$id_column = ($pm) ? 'pm_id' : 'post_id';

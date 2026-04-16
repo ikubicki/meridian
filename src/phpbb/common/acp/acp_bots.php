@@ -21,7 +21,14 @@ class acp_bots
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $template, $cache, $request, $phpbb_log;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
 		global $phpbb_root_path;
 
 		$action = $request->variable('action', '');
@@ -403,7 +410,8 @@ class acp_bots
 	*/
 	function validate_botname($newname, $oldname = false)
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		if ($oldname && utf8_clean_string($newname) === $oldname)
 		{

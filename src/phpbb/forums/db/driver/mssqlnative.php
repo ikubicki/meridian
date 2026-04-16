@@ -62,7 +62,8 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	*/
 	function sql_server_info($raw = false, $use_cache = true)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if (!$use_cache || empty($cache) || ($this->sql_server_version = $cache->get('mssql_version')) === false)
 		{
@@ -121,7 +122,8 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	{
 		if ($query != '')
 		{
-			global $cache;
+			global $phpbb_app_container;
+			$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 			if ($this->debug_sql_explain)
 			{
@@ -247,7 +249,8 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	*/
 	function sql_fetchrow($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{
@@ -308,7 +311,8 @@ class mssqlnative extends \phpbb\db\driver\mssql_base
 	*/
 	function sql_freeresult($query_id = false)
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container !== null ? $phpbb_app_container->getCache() : null;
 
 		if ($query_id === false)
 		{

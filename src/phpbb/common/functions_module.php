@@ -78,8 +78,12 @@ class p_master
 	*/
 	function list_modules($p_class)
 	{
-		global $db, $user, $cache;
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$cache = $phpbb_app_container->getCache();
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// Sanitise for future path use, it's escaped as appropriate for queries
 		$this->p_class = str_replace(array('.', '/', '\\'), '', basename($p_class));
@@ -383,8 +387,13 @@ class p_master
 	*/
 	static function module_auth($module_auth, $forum_id)
 	{
-		global $auth, $config;
-		global $request, $phpbb_extension_manager, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$config = $phpbb_app_container->getConfig();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$module_auth = trim($module_auth);
 
@@ -476,7 +485,10 @@ class p_master
 	*/
 	function set_active($id = false, $mode = false)
 	{
-		global $auth, $request, $user;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$request = $phpbb_app_container->getRequest();
+		$user = $phpbb_app_container->getUser();
 
 		$icat = false;
 		$this->active_module = false;
@@ -559,7 +571,11 @@ class p_master
 	*/
 	function load_active($mode = false, $module_url = false, $execute_module = true)
 	{
-		global $phpbb_root_path, $phpbb_admin_path, $user, $template, $request;
+		global $phpbb_root_path, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
 
 		$module_path = $this->include_path . $this->p_class;
 		$icat = $request->variable('icat', '');
@@ -817,7 +833,8 @@ class p_master
 	*/
 	function assign_tpl_vars($module_url)
 	{
-		global $template;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
 
 		$current_id = $right_id = false;
 
@@ -973,7 +990,8 @@ class p_master
 	*/
 	function get_page_title()
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		if (!isset($this->module->page_title))
 		{
@@ -1015,7 +1033,9 @@ class p_master
 	*/
 	function display($page_title, $display_online_list = false)
 	{
-		global $template, $user;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
 
 		// Generate the page
 		if (defined('IN_ADMIN') && isset($user->data['session_admin']) && $user->data['session_admin'])
@@ -1060,7 +1080,10 @@ class p_master
 	*/
 	function add_mod_info($module_class)
 	{
-		global $config, $user, $phpbb_extension_manager;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
 
 		$finder = $phpbb_extension_manager->get_finder();
 

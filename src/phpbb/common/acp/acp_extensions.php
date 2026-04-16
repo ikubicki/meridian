@@ -38,7 +38,16 @@ class acp_extensions
 	function main($id, $mode)
 	{
 		// Start the page
-		global $config, $user, $template, $request, $phpbb_extension_manager, $phpbb_root_path, $phpbb_log, $phpbb_dispatcher, $phpbb_container;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->config = $config;
 		$this->template = $template;

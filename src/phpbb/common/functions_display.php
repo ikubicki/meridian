@@ -20,9 +20,18 @@
 */
 function display_forums($root_data = '', $display_moderators = true, $return_moderators = false)
 {
-	global $db, $auth, $user, $template;
-	global $phpbb_root_path, $config;
-	global $request, $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$forum_rows = $subforums = $forum_ids = $forum_ids_moderator = $forum_moderators = $active_forum_ary = array();
 	$parent_id = $visible_forums = 0;
@@ -740,7 +749,8 @@ function generate_forum_rules(&$forum_data)
 		return;
 	}
 
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 
 	$template->assign_vars(array(
 		'S_FORUM_RULES'	=> true,
@@ -755,8 +765,13 @@ function generate_forum_rules(&$forum_data)
 */
 function generate_forum_nav(&$forum_data_ary)
 {
-	global $template, $auth, $config;
-	global $phpbb_root_path, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!$auth->acl_get('f_list', $forum_data_ary['forum_id']))
 	{
@@ -848,7 +863,8 @@ function generate_forum_nav(&$forum_data_ary)
 */
 function get_forum_parents(&$forum_data)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$forum_parents = array();
 
@@ -890,8 +906,13 @@ function get_forum_parents(&$forum_data)
 */
 function get_moderators(&$forum_moderators, $forum_id = false)
 {
-	global $db, $phpbb_root_path, $user, $auth;
-	global $phpbb_container;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$forum_id_ary = array();
 
@@ -975,7 +996,11 @@ function get_moderators(&$forum_moderators, $forum_id = false)
 */
 function gen_forum_auth_level($mode, $forum_id, $forum_status)
 {
-	global $template, $auth, $user, $config;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
 
 	$locked = ($forum_status == ITEM_LOCKED && !$auth->acl_get('m_edit', $forum_id)) ? true : false;
 
@@ -1004,7 +1029,9 @@ function gen_forum_auth_level($mode, $forum_id, $forum_status)
 */
 function topic_status(&$topic_row, $replies, $unread_topic, &$folder_img, &$folder_alt, &$topic_type)
 {
-	global $user, $config;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
 
 	if ($topic_row['topic_status'] == ITEM_MOVED)
 	{
@@ -1077,7 +1104,11 @@ function topic_status(&$topic_row, $replies, $unread_topic, &$folder_img, &$fold
 */
 function display_custom_bbcodes()
 {
-	global $db, $template, $user, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Start counting from 22 for the bbcode ids (every bbcode takes two ids - opening/closing)
 	$num_predefined_bbcodes = NUM_PREDEFINED_BBCODES;
@@ -1161,9 +1192,16 @@ function display_custom_bbcodes()
 */
 function display_user_activity(&$userdata_ary)
 {
-	global $auth, $template, $db, $user, $config;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
 	global $phpbb_root_path;
-	global $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Do not display user activity for users having too many posts...
 	$limit = $config['load_user_activity_limit'];
@@ -1295,8 +1333,12 @@ function display_user_activity(&$userdata_ary)
 */
 function watch_topic_forum($mode, &$s_watching, $user_id, $forum_id, $topic_id, $notify_status = 'unset', $start = 0, $item_title = '')
 {
-	global $db, $user, $start, $phpbb_root_path;
-	global $request;
+	global $start, $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
 
 	$table_sql = ($mode == 'forum') ? FORUMS_WATCH_TABLE : TOPICS_WATCH_TABLE;
 	$where_sql = ($mode == 'forum') ? 'forum_id' : 'topic_id';
@@ -1494,7 +1536,11 @@ function watch_topic_forum($mode, &$s_watching, $user_id, $forum_id, $topic_id, 
 */
 function phpbb_get_user_rank($user_data, $user_posts)
 {
-	global $ranks, $config, $phpbb_root_path, $phpbb_path_helper, $phpbb_dispatcher;
+	global $ranks, $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$user_rank_data = array(
 		'title'		=> null,
@@ -1516,7 +1562,8 @@ function phpbb_get_user_rank($user_data, $user_posts)
 
 	if (empty($ranks))
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
 		$ranks = $cache->obtain_ranks();
 	}
 
@@ -1571,7 +1618,12 @@ function phpbb_get_user_rank($user_data, $user_posts)
 */
 function phpbb_show_profile($data, $user_notes_enabled = false, $warn_user_enabled = false, $check_can_receive_pm = true)
 {
-	global $config, $auth, $user, $phpbb_root_path, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$username = $data['username'];
 	$user_id = $data['user_id'];

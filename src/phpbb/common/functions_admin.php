@@ -26,7 +26,8 @@
 */
 function recalc_nested_sets(&$new_id, $pkey, $table, $parent_id = 0, $where = array())
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT *
 		FROM ' . $table . '
@@ -61,7 +62,10 @@ function recalc_nested_sets(&$new_id, $pkey, $table, $parent_id = 0, $where = ar
 */
 function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl = false, $ignore_nonpost = false, $ignore_emptycat = true, $only_acl_post = false, $return_array = false)
 {
-	global $db, $auth, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// This query is identical to the jumpbox one
 	$sql = 'SELECT forum_id, forum_name, parent_id, forum_type, forum_flags, forum_options, left_id, right_id
@@ -156,7 +160,8 @@ function make_forum_select($select_id = false, $ignore_id = false, $ignore_acl =
 */
 function size_select_options($size_compare)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$size_types_text = array($user->lang['BYTES'], $user->lang['KIB'], $user->lang['MIB']);
 	$size_types = array('b', 'kb', 'mb');
@@ -183,7 +188,10 @@ function size_select_options($size_compare)
 */
 function group_select_options($group_id, $exclude_ids = false, $manage_founder = false)
 {
-	global $db, $config, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	/** @var \phpbb\group\helper $group_helper */
 	$group_helper = $phpbb_container->get('group_helper');
@@ -216,7 +224,10 @@ function group_select_options($group_id, $exclude_ids = false, $manage_founder =
 */
 function get_forum_list($acl_list = 'f_list', $id_only = true, $postable_only = false, $no_cache = false)
 {
-	global $db, $auth, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 	static $forum_rows;
 
 	if (!isset($forum_rows))
@@ -289,7 +300,8 @@ function get_forum_list($acl_list = 'f_list', $id_only = true, $postable_only = 
 */
 function get_forum_branch($forum_id, $type = 'all', $order = 'descending', $include_forum = true)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	switch ($type)
 	{
@@ -341,7 +353,10 @@ function get_forum_branch($forum_id, $type = 'all', $order = 'descending', $incl
 */
 function copy_forum_permissions($src_forum_id, $dest_forum_ids, $clear_dest_perms = true, $add_log = true)
 {
-	global $db, $user, $phpbb_log;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	// Only one forum id specified
 	if (!is_array($dest_forum_ids))
@@ -525,7 +540,9 @@ function filelist($rootdir, $dir = '', $type = 'gif|jpg|jpeg|png|svg|webp')
 */
 function move_topics($topic_ids, $forum_id, $auto_sync = true)
 {
-	global $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (empty($topic_ids))
 	{
@@ -631,7 +648,9 @@ function move_topics($topic_ids, $forum_id, $auto_sync = true)
 */
 function move_posts($post_ids, $topic_id, $auto_sync = true)
 {
-	global $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!is_array($post_ids))
 	{
@@ -760,7 +779,11 @@ function move_posts($post_ids, $topic_id, $auto_sync = true)
 */
 function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_sync = true, $call_delete_posts = true)
 {
-	global $db, $config, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$approved_topics = 0;
 	$forum_ids = $topic_ids = array();
@@ -900,7 +923,14 @@ function delete_topics($where_type, $where_ids, $auto_sync = true, $post_count_s
 */
 function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync = true, $post_count_sync = true, $call_delete_topics = true)
 {
-	global $db, $config, $phpbb_root_path, $auth, $user, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Notifications types to delete
 	$delete_notifications_types = array(
@@ -1197,7 +1227,8 @@ function delete_posts($where_type, $where_ids, $auto_sync = true, $posted_sync =
 */
 function delete_topic_shadows($forum_id, $sql_more = '', $auto_sync = true)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (!$forum_id)
 	{
@@ -1251,7 +1282,9 @@ function delete_topic_shadows($forum_id, $sql_more = '', $auto_sync = true)
 */
 function update_posted_info(&$topic_ids)
 {
-	global $db, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	if (empty($topic_ids) || !$config['load_db_track'])
 	{
@@ -1320,7 +1353,9 @@ function update_posted_info(&$topic_ids)
 */
 function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false, $sync_extra = false)
 {
-	global $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (is_array($where_ids))
 	{
@@ -2328,7 +2363,9 @@ function sync($mode, $where_type = '', $where_ids = '', $resync_parents = false,
 */
 function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync = true, $prune_limit = 0)
 {
-	global $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!is_array($forum_id))
 	{
@@ -2444,7 +2481,10 @@ function prune($forum_id, $prune_mode, $prune_date, $prune_flags = 0, $auto_sync
 */
 function auto_prune($forum_id, $prune_mode, $prune_flags, $prune_days, $prune_freq, $log_prune = true)
 {
-	global $db, $user, $phpbb_log;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	$sql = 'SELECT forum_name
 		FROM ' . FORUMS_TABLE . "
@@ -2680,7 +2720,8 @@ function phpbb_cache_moderators($db, $cache, $auth)
 */
 function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $limit_days = 0, $sort_by = 'l.log_time DESC', $keywords = '')
 {
-	global $phpbb_log;
+	global $phpbb_app_container;
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	$count_logs = ($log_count !== false);
 
@@ -2813,7 +2854,9 @@ function phpbb_update_foes($db, $auth, $group_id = false, $user_id = false)
 */
 function view_inactive_users(&$users, &$user_count, $limit = 0, $offset = 0, $limit_days = 0, $sort_by = 'user_inactive_time DESC')
 {
-	global $db, $user;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	$sql = 'SELECT COUNT(user_id) AS user_count
 		FROM ' . USERS_TABLE . '
@@ -2875,7 +2918,8 @@ function view_inactive_users(&$users, &$user_count, $limit = 0, $offset = 0, $li
 */
 function view_warned_users(&$users, &$user_count, $limit = 0, $offset = 0, $limit_days = 0, $sort_by = 'user_warnings DESC')
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT user_id, username, user_colour, user_warnings, user_last_warning
 		FROM ' . USERS_TABLE . '
@@ -2902,7 +2946,9 @@ function view_warned_users(&$users, &$user_count, $limit = 0, $offset = 0, $limi
 */
 function get_database_size()
 {
-	global $db, $user;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	$database_size = false;
 
@@ -3004,7 +3050,9 @@ function get_database_size()
 */
 function tidy_warnings()
 {
-	global $db, $config;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
 
 	$expire_date = time() - ($config['warnings_expire_days'] * 86400);
 	$warning_list = $user_list = array();
@@ -3046,7 +3094,9 @@ function tidy_warnings()
 */
 function tidy_database()
 {
-	global $config, $db;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
 
 	// Here we check permission consistency
 
@@ -3083,7 +3133,9 @@ function tidy_database()
 */
 function add_permission_language()
 {
-	global $user, $phpbb_extension_manager;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
 
 	// add permission language files from extensions
 	$finder = $phpbb_extension_manager->get_finder();
@@ -3120,7 +3172,8 @@ function add_permission_language()
  */
 function enable_bitfield_column_flag($table_name, $column_name, $flag, $sql_more = '')
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'UPDATE ' . $table_name . '
 		SET ' . $column_name . ' = ' . $db->sql_bit_or($column_name, $flag) . '
@@ -3130,7 +3183,9 @@ function enable_bitfield_column_flag($table_name, $column_name, $flag, $sql_more
 
 function display_ban_end_options()
 {
-	global $user, $template;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
 
 	// Ban length options
 	$ban_end_text = array(0 => $user->lang['PERMANENT'], 30 => $user->lang['30_MINS'], 60 => $user->lang['1_HOUR'], 360 => $user->lang['6_HOURS'], 1440 => $user->lang['1_DAY'], 10080 => $user->lang['7_DAYS'], 20160 => $user->lang['2_WEEKS'], 40320 => $user->lang['1_MONTH'], -1 => $user->lang['UNTIL'] . ' -&gt; ');
@@ -3151,7 +3206,10 @@ function display_ban_end_options()
 */
 function display_ban_options($mode)
 {
-	global $user, $db, $template;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
 
 	switch ($mode)
 	{

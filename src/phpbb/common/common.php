@@ -93,9 +93,14 @@ $phpbb_class_loader_ext->set_cache($phpbb_container->get('cache.driver'));
 
 $phpbb_container->get('dbal.conn')->set_debug_sql_explain($phpbb_container->getParameter('debug.sql_explain'));
 $phpbb_container->get('dbal.conn')->set_debug_load_time($phpbb_container->getParameter('debug.load_time'));
+
 require(__DIR__ . '/compatibility_globals.php');
 
 register_compatibility_globals();
+
+// Set the app container AFTER all services are built to prevent circular
+// reference exceptions during DI compilation (msg_handler uses $phpbb_app_container).
+$phpbb_app_container = new \phpbb\Container($phpbb_container);
 
 // Add own hook handler
 require(__DIR__ . '/hooks/index.php');

@@ -27,7 +27,8 @@
 */
 function user_get_id_name(&$user_id_ary, &$username_ary, $user_type = false, $update_references = false)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	// Are both arrays already filled? Yep, return else
 	// are neither array filled?
@@ -93,7 +94,9 @@ function user_get_id_name(&$user_id_ary, &$username_ary, $user_type = false, $up
 */
 function update_last_username()
 {
-	global $config, $db;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
 
 	// Get latest username
 	$sql = 'SELECT user_id, username, user_colour
@@ -120,7 +123,11 @@ function update_last_username()
 */
 function user_update_name($old_name, $new_name)
 {
-	global $config, $db, $cache, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$cache = $phpbb_app_container->getCache();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$update_ary = array(
 		FORUMS_TABLE			=> array(
@@ -180,8 +187,12 @@ function user_update_name($old_name, $new_name)
 */
 function user_add($user_row, $cp_data = false, $notifications_data = null)
 {
-	global $db, $config;
-	global $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if (empty($user_row['username']) || !isset($user_row['group_id']) || !isset($user_row['user_email']) || !isset($user_row['user_type']))
 	{
@@ -327,7 +338,8 @@ function user_add($user_row, $cp_data = false, $notifications_data = null)
 
 		if ($add_group_id)
 		{
-			global $phpbb_log;
+			global $phpbb_app_container;
+			$phpbb_log = $phpbb_app_container->getLog();
 
 			// Because these actions only fill the log unnecessarily, we disable it
 			$phpbb_log->disable('admin');
@@ -428,7 +440,13 @@ function user_add($user_row, $cp_data = false, $notifications_data = null)
  */
 function user_delete($mode, $user_ids, $retain_username = true)
 {
-	global $cache, $config, $db, $user, $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$cache = $phpbb_app_container->getCache();
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 	global $phpbb_root_path;
 
 	$db->sql_transaction('begin');
@@ -798,7 +816,12 @@ function user_delete($mode, $user_ids, $retain_username = true)
 */
 function user_active_flip($mode, $user_id_ary, $reason = INACTIVE_MANUAL)
 {
-	global $config, $db, $user, $auth, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$deactivated = $activated = 0;
 	$sql_statements = array();
@@ -922,7 +945,11 @@ function user_active_flip($mode, $user_id_ary, $reason = INACTIVE_MANUAL)
 */
 function user_ban($mode, $ban, $ban_len, $ban_len_other, $ban_exclude, $ban_reason, $ban_give_reason = '')
 {
-	global $db, $user, $cache, $phpbb_log;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$cache = $phpbb_app_container->getCache();
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	// Delete stale bans
 	$sql = 'DELETE FROM ' . BANLIST_TABLE . '
@@ -1347,7 +1374,12 @@ function user_ban($mode, $ban, $ban_len, $ban_len_other, $ban_exclude, $ban_reas
 */
 function user_unban($mode, $ban)
 {
-	global $db, $user, $cache, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$cache = $phpbb_app_container->getCache();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Delete stale bans
 	$sql = 'DELETE FROM ' . BANLIST_TABLE . '
@@ -1522,7 +1554,8 @@ function user_ipwhois($ip)
 */
 function validate_data($data, $val_ary)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$error = array();
 
@@ -1685,7 +1718,8 @@ function validate_match($string, $optional = false, $match = '')
 */
 function validate_language_iso_name($lang_iso)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT lang_id
 		FROM ' . LANG_TABLE . "
@@ -1729,7 +1763,11 @@ function phpbb_validate_timezone($timezone)
  */
 function validate_username($username, $allowed_username = false, $allow_all_names = false)
 {
-	global $config, $db, $user, $cache;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$cache = $phpbb_app_container->getCache();
 
 	$clean_username = utf8_clean_string($username);
 	$allowed_username = ($allowed_username === false) ? $user->data['username_clean'] : utf8_clean_string($allowed_username);
@@ -1834,7 +1872,8 @@ function validate_username($username, $allowed_username = false, $allow_all_name
 */
 function validate_password($password)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	if ($password === '' || $config['pass_complex'] === 'PASS_TYPE_ANY')
 	{
@@ -1891,7 +1930,8 @@ function phpbb_validate_email($email, $config = null)
 {
 	if ($config === null)
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 	}
 
 	$email = strtolower($email);
@@ -1926,7 +1966,10 @@ function phpbb_validate_email($email, $config = null)
 */
 function validate_user_email($email, $allowed_email = false)
 {
-	global $config, $db, $user;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
 
 	$email = strtolower($email);
 	$allowed_email = ($allowed_email === false) ? strtolower($user->data['user_email']) : strtolower($allowed_email);
@@ -2200,7 +2243,8 @@ function phpbb_validate_hex_colour($colour, $optional = false)
 */
 function phpbb_style_is_active($style_id)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'SELECT style_active
 		FROM ' . STYLES_TABLE . '
@@ -2218,7 +2262,9 @@ function phpbb_style_is_active($style_id)
 */
 function avatar_delete($mode, $row, $clean_db = false)
 {
-	global $phpbb_root_path, $config;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	// Check if the users avatar is actually *not* a group avatar
 	if ($mode == 'user')
@@ -2249,7 +2295,8 @@ function avatar_delete($mode, $row, $clean_db = false)
 */
 function get_avatar_filename($avatar_entry)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	if ($avatar_entry[0] === 'g')
 	{
@@ -2272,7 +2319,9 @@ function get_avatar_filename($avatar_entry)
 */
 function phpbb_avatar_explanation_string()
 {
-	global $config, $user;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 
 	return $user->lang(($config['avatar_filesize'] == 0) ? 'AVATAR_EXPLAIN_NO_FILESIZE' : 'AVATAR_EXPLAIN',
 		$user->lang('PIXELS', (int) $config['avatar_max_width']),
@@ -2290,7 +2339,11 @@ function phpbb_avatar_explanation_string()
 */
 function group_create(&$group_id, $type, $name, $desc, $group_attributes, $allow_desc_bbcode = false, $allow_desc_urls = false, $allow_desc_smilies = false)
 {
-	global $db, $user, $phpbb_container, $phpbb_log;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	/** @var \phpbb\group\helper $group_helper */
 	$group_helper = $phpbb_container->get('group_helper');
@@ -2455,7 +2508,8 @@ function group_create(&$group_id, $type, $name, $desc, $group_attributes, $allow
 
 				if (!empty($user_id_ary))
 				{
-					global $auth;
+					global $phpbb_app_container;
+					$auth = $phpbb_app_container->getAuth();
 
 					// Clear permissions cache of relevant users
 					$auth->acl_clear_prefetch($user_id_ary);
@@ -2559,7 +2613,10 @@ function group_create(&$group_id, $type, $name, $desc, $group_attributes, $allow
 */
 function group_correct_avatar($group_id, $old_entry)
 {
-	global $config, $db, $phpbb_root_path;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
 
 	$group_id		= (int) $group_id;
 	$ext 			= substr(strrchr($old_entry, '.'), 1);
@@ -2583,7 +2640,8 @@ function group_correct_avatar($group_id, $old_entry)
 */
 function avatar_remove_db($avatar_name)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql = 'UPDATE ' . USERS_TABLE . "
 		SET user_avatar = '',
@@ -2598,7 +2656,15 @@ function avatar_remove_db($avatar_name)
 */
 function group_delete($group_id, $group_name = false)
 {
-	global $db, $cache, $auth, $user, $phpbb_root_path, $phpbb_dispatcher, $phpbb_container, $phpbb_log;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$cache = $phpbb_app_container->getCache();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	if (!$group_name)
 	{
@@ -2710,7 +2776,13 @@ function group_delete($group_id, $group_name = false)
 */
 function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false)
 {
-	global $db, $auth, $user, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// We need both username and user_id info
 	$result = user_get_id_name($user_id_ary, $username_ary);
@@ -2875,7 +2947,14 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 */
 function group_user_del($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $log_action = true)
 {
-	global $db, $auth, $config, $user, $phpbb_dispatcher, $phpbb_container, $phpbb_log;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	if ($config['coppa_enable'])
 	{
@@ -3040,7 +3119,8 @@ function group_user_del($group_id, $user_id_ary = false, $username_ary = false, 
 */
 function remove_default_avatar($group_id, $user_ids)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (!is_array($user_ids))
 	{
@@ -3081,7 +3161,8 @@ function remove_default_avatar($group_id, $user_ids)
 */
 function remove_default_rank($group_id, $user_ids)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (!is_array($user_ids))
 	{
@@ -3119,7 +3200,13 @@ function remove_default_rank($group_id, $user_ids)
 */
 function group_user_attributes($action, $group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $group_attributes = false)
 {
-	global $db, $auth, $user, $phpbb_container, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// We need both username and user_id info
 	$result = user_get_id_name($user_id_ary, $username_ary);
@@ -3288,7 +3375,8 @@ function group_user_attributes($action, $group_id, $user_id_ary = false, $userna
 */
 function group_validate_groupname($group_id, $group_name)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$group_name =  utf8_clean_string($group_name);
 
@@ -3336,7 +3424,11 @@ function group_validate_groupname($group_id, $group_name)
 */
 function group_set_user_default($group_id, $user_id_ary, $group_attributes = false, $update_listing = false)
 {
-	global $config, $phpbb_container, $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (empty($user_id_ary))
 	{
@@ -3485,7 +3577,9 @@ function group_set_user_default($group_id, $user_id_ary, $group_attributes = fal
 */
 function get_group_name($group_id)
 {
-	global $db, $phpbb_container;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$sql = 'SELECT group_name, group_type
 		FROM ' . GROUPS_TABLE . '
@@ -3513,7 +3607,8 @@ function get_group_name($group_id)
 */
 function group_memberships($group_id_ary = false, $user_id_ary = false, $return_bool = false)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if (!$group_id_ary && !$user_id_ary)
 	{
@@ -3579,7 +3674,10 @@ function group_memberships($group_id_ary = false, $user_id_ary = false, $return_
 */
 function group_update_listings($group_id)
 {
-	global $db, $cache, $auth;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$cache = $phpbb_app_container->getCache();
+	$auth = $phpbb_app_container->getAuth();
 
 	$hold_ary = $auth->acl_group_raw_data($group_id, array('a_', 'm_'));
 
@@ -3650,7 +3748,8 @@ function group_update_listings($group_id)
 */
 function remove_newly_registered($user_id, $user_data = false)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	if ($user_data === false)
 	{
@@ -3721,7 +3820,8 @@ function remove_newly_registered($user_id, $user_data = false)
 */
 function phpbb_get_banned_user_ids($user_ids = array(), $ban_end = true)
 {
-	global $db;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
 
 	$sql_user_ids = (!empty($user_ids)) ? $db->sql_in_set('ban_userid', $user_ids) : 'ban_userid <> 0';
 
@@ -3767,7 +3867,8 @@ function phpbb_get_banned_user_ids($user_ids = array(), $ban_end = true)
 */
 function phpbb_module_zebra($mode, &$module_row)
 {
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 
 	$template->assign_var('S_ZEBRA_ENABLED', true);
 

@@ -31,8 +31,19 @@ class ucp_main
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template, $phpbb_root_path, $phpbb_dispatcher, $cache;
-		global $request, $phpbb_container, $language;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$cache = $phpbb_app_container->getCache();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$language = $phpbb_app_container->getLanguage();
 
 		/* @var $pagination \phpbb\pagination */
 		$pagination = $phpbb_container->get('pagination');
@@ -772,7 +783,17 @@ class ucp_main
 	*/
 	function assign_topiclist($mode = 'subscribed', $forbidden_forum_ary = array())
 	{
-		global $user, $db, $template, $config, $cache, $auth, $phpbb_root_path, $phpbb_container, $request, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$template = $phpbb_app_container->getTemplate();
+		$config = $phpbb_app_container->getConfig();
+		$cache = $phpbb_app_container->getCache();
+		$auth = $phpbb_app_container->getAuth();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		/* @var $pagination \phpbb\pagination */
 		$pagination = $phpbb_container->get('pagination');

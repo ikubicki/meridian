@@ -25,7 +25,15 @@ class ucp_attachments
 
 	function main($id, $mode)
 	{
-		global $template, $user, $db, $config, $phpbb_root_path, $phpbb_container, $request, $auth;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$request = $phpbb_app_container->getRequest();
+		$auth = $phpbb_app_container->getAuth();
 
 		$start		= $request->variable('start', 0);
 		$sort_key	= $request->variable('sk', 'a');
@@ -227,7 +235,9 @@ class ucp_attachments
 	 */
 	private function can_delete_file(array $row): bool
 	{
-		global $auth, $config;
+		global $phpbb_app_container;
+		$auth = $phpbb_app_container->getAuth();
+		$config = $phpbb_app_container->getConfig();
 
 		if ($row['in_message'])
 		{

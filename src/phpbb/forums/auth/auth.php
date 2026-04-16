@@ -23,12 +23,21 @@ class auth
 	var $acl_options = array();
 	var $acl_forum_ids = false;
 
+	/** @var \phpbb\Container */
+	protected $container;
+
+	public function __construct(\phpbb\Container $container)
+	{
+		$this->container = $container;
+	}
+
 	/**
 	* Init permissions
 	*/
 	function acl(&$userdata)
 	{
-		global $db, $cache;
+		$db = $this->container->getDb();
+		$cache = $this->container->getCache();
 
 		$this->acl = $this->cache = $this->acl_options = array();
 		$this->acl_forum_ids = false;
@@ -108,7 +117,7 @@ class auth
 	*/
 	public function obtain_user_data($user_id)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		$sql = 'SELECT user_id, username, user_permissions, user_type
 			FROM ' . USERS_TABLE . '
@@ -217,6 +226,7 @@ class auth
 	*/
 	function acl_getf($opt, $clean = false)
 	{
+		$db = $this->container->getDb();
 		$acl_f = array();
 		$negate = false;
 
@@ -231,7 +241,6 @@ class auth
 		{
 			if ($this->acl_forum_ids === false)
 			{
-				global $db;
 
 				$sql = 'SELECT forum_id
 					FROM ' . FORUMS_TABLE;
@@ -411,7 +420,7 @@ class auth
 	*/
 	function acl_cache(&$userdata)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		// Empty user_permissions
 		$userdata['user_permissions'] = '';
@@ -514,7 +523,9 @@ class auth
 	*/
 	function acl_clear_prefetch($user_id = false)
 	{
-		global $db, $cache, $phpbb_dispatcher;
+		$db = $this->container->getDb();
+		$cache = $this->container->getCache();
+		$phpbb_dispatcher = $this->container->getDispatcher();
 
 		// Rebuild options cache
 		$cache->destroy('_role_cache');
@@ -571,7 +582,7 @@ class auth
 	*/
 	function acl_role_data($user_type, $role_type, $ug_id = false, $forum_id = false)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		$roles = array();
 
@@ -604,7 +615,7 @@ class auth
 	*/
 	function acl_raw_data($user_id = false, $opts = false, $forum_id = false)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		$sql_user = ($user_id !== false) ? ((!is_array($user_id)) ? 'user_id = ' . (int) $user_id : $db->sql_in_set('user_id', array_map('intval', $user_id))) : '';
 		$sql_forum = ($forum_id !== false) ? ((!is_array($forum_id)) ? 'AND a.forum_id = ' . (int) $forum_id : 'AND ' . $db->sql_in_set('a.forum_id', array_map('intval', $forum_id))) : '';
@@ -720,7 +731,7 @@ class auth
 	*/
 	function acl_user_raw_data($user_id = false, $opts = false, $forum_id = false)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		$sql_user = ($user_id !== false) ? ((!is_array($user_id)) ? 'user_id = ' . (int) $user_id : $db->sql_in_set('user_id', array_map('intval', $user_id))) : '';
 		$sql_forum = ($forum_id !== false) ? ((!is_array($forum_id)) ? 'AND a.forum_id = ' . (int) $forum_id : 'AND ' . $db->sql_in_set('a.forum_id', array_map('intval', $forum_id))) : '';
@@ -772,7 +783,7 @@ class auth
 	*/
 	function acl_group_raw_data($group_id = false, $opts = false, $forum_id = false)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		$sql_group = ($group_id !== false) ? ((!is_array($group_id)) ? 'group_id = ' . (int) $group_id : $db->sql_in_set('group_id', array_map('intval', $group_id))) : '';
 		$sql_forum = ($forum_id !== false) ? ((!is_array($forum_id)) ? 'AND a.forum_id = ' . (int) $forum_id : 'AND ' . $db->sql_in_set('a.forum_id', array_map('intval', $forum_id))) : '';
@@ -828,7 +839,8 @@ class auth
 	*/
 	function acl_raw_data_single_user($user_id)
 	{
-		global $db, $cache;
+		$db = $this->container->getDb();
+		$cache = $this->container->getCache();
 
 		// Check if the role-cache is there
 		if (($role_cache = $cache->get('_role_cache')) === false)
@@ -940,8 +952,10 @@ class auth
 	*/
 	function login($username, $password, $autologin = false, $viewonline = 1, $admin = 0)
 	{
-		global $db, $user, $phpbb_root_path, $phpbb_container;
-		global $phpbb_dispatcher;
+		$db = $this->container->getDb();
+		$user = $this->container->getUser();
+		$phpbb_dispatcher = $this->container->getDispatcher();
+		$phpbb_container = $this->container->get('service_container');
 
 		/* @var $provider_collection \phpbb\auth\provider_collection */
 		$provider_collection = $phpbb_container->get('auth.provider_collection');
@@ -957,7 +971,7 @@ class auth
 				// we are going to use the user_add function so include functions_user.php if it wasn't defined yet
 				if (!function_exists('user_add'))
 				{
-					include($phpbb_root_path . 'src/phpbb/common/functions_user.php');
+					include(__DIR__ . '/../../common/functions_user.php');
 				}
 
 				user_add($login['user_row'], (isset($login['cp_data'])) ? $login['cp_data'] : false);
@@ -992,7 +1006,7 @@ class auth
 				// This data is passed along as GET data to the next page allow the account to be linked
 
 				$params = array('mode' => 'login_link');
-				$url = append_sid($phpbb_root_path . 'ucp.php', array_merge($params, $login['redirect_data']));
+				$url = append_sid(__DIR__ . '/../../../../web/ucp.php', array_merge($params, $login['redirect_data']));
 
 				redirect($url);
 			}
@@ -1073,7 +1087,7 @@ class auth
 	*/
 	function build_auth_option_statement($key, $auth_options, &$sql_opts)
 	{
-		global $db;
+		$db = $this->container->getDb();
 
 		if (!is_array($auth_options))
 		{

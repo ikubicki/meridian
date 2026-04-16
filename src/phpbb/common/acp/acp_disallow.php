@@ -21,7 +21,13 @@ class acp_disallow
 
 	function main($id, $mode)
 	{
-		global $db, $user, $template, $cache, $phpbb_log, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
 
 		$user->add_lang('acp/posting');
 

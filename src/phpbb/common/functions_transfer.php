@@ -287,7 +287,8 @@ class ftp extends transfer
 	*/
 	static public function data()
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return array(
 			'host'		=> 'localhost',
@@ -585,7 +586,8 @@ class ftp_fsock extends transfer
 	*/
 	static public function data()
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		return array(
 			'host'		=> 'localhost',

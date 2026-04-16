@@ -20,9 +20,14 @@
 */
 function adm_page_header($page_title)
 {
-	global $config, $user, $template;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
 	global $phpbb_root_path, $phpbb_admin_path, $SID, $_SID;
-	global $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if (defined('HEADER_INC'))
 	{
@@ -143,9 +148,16 @@ function adm_page_header($page_title)
 */
 function adm_page_footer($copyright_html = true)
 {
-	global $db, $config, $template, $user, $auth;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$config = $phpbb_app_container->getConfig();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
 	global $phpbb_root_path;
-	global $request, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// A listener can set this variable to `true` when it overrides this function
 	$adm_page_footer_override = false;
@@ -190,7 +202,8 @@ function adm_page_footer($copyright_html = true)
 */
 function adm_back_link($u_action)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 	return '<br /><br /><a href="' . $u_action . '">&laquo; ' . $user->lang['BACK_TO_PREV'] . '</a>';
 }
 
@@ -199,7 +212,8 @@ function adm_back_link($u_action)
 */
 function build_select($option_ary, $option_default = false)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$html = '';
 	foreach ($option_ary as $value => $title)
@@ -216,7 +230,8 @@ function build_select($option_ary, $option_default = false)
 */
 function h_radio($name, $input_ary, $input_default = false, $id = false, $key = false, $separator = '')
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$html = '';
 	$id_assigned = false;
@@ -235,7 +250,10 @@ function h_radio($name, $input_ary, $input_default = false, $id = false, $key = 
 */
 function build_cfg_template($tpl_type, $key, &$new_ary, $config_key, $vars)
 {
-	global $user, $module, $phpbb_dispatcher;
+	global $module;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$tpl = '';
 	$name = 'config[' . $config_key . ']';
@@ -407,7 +425,12 @@ function build_cfg_template($tpl_type, $key, &$new_ary, $config_key, $vars)
 */
 function validate_config_vars($config_vars, &$cfg_array, &$error)
 {
-	global $phpbb_root_path, $user, $phpbb_dispatcher, $phpbb_filesystem, $language;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
+	$language = $phpbb_app_container->getLanguage();
 
 	$type	= 0;
 	$min	= 1;
@@ -647,7 +670,8 @@ function validate_config_vars($config_vars, &$cfg_array, &$error)
 */
 function validate_range($value_ary, &$error)
 {
-	global $user;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
 
 	$column_types = array(
 		'BOOL'	=> array('php_type' => 'int', 		'min' => 0, 				'max' => 1),

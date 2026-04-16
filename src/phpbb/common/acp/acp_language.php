@@ -27,8 +27,17 @@ class acp_language
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $template, $phpbb_log, $phpbb_container;
-		global $phpbb_root_path, $request, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!function_exists('validate_language_iso_name'))
 		{

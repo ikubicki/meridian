@@ -25,8 +25,16 @@ class ucp_register
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $template, $phpbb_root_path;
-		global $request, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		//
 		if ($config['require_activation'] == USER_ACTIVATION_DISABLE ||
@@ -702,7 +710,8 @@ class ucp_register
 	*/
 	protected function get_login_link_data_array()
 	{
-		global $request;
+		global $phpbb_app_container;
+		$request = $phpbb_app_container->getRequest();
 
 		$var_names = $request->variable_names(\phpbb\request\request_interface::POST);
 		$login_link_data = array();

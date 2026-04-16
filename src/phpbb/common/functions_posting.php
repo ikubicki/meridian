@@ -20,8 +20,17 @@
 */
 function generate_smilies($mode, $forum_id)
 {
-	global $db, $user, $config, $template, $phpbb_dispatcher, $request;
-	global $phpbb_root_path, $phpbb_container, $phpbb_path_helper;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	$template = $phpbb_app_container->getTemplate();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
 
 	/* @var $pagination \phpbb\pagination */
 	$pagination = $phpbb_container->get('pagination');
@@ -252,7 +261,9 @@ function generate_smilies($mode, $forum_id)
 */
 function update_post_information($type, $ids, $return_update_sql = false)
 {
-	global $db, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (empty($ids))
 	{
@@ -416,7 +427,12 @@ function update_post_information($type, $ids, $return_update_sql = false)
 */
 function posting_gen_topic_icons($mode, $icon_id)
 {
-	global $phpbb_root_path, $phpbb_path_helper, $config, $template, $cache;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$config = $phpbb_app_container->getConfig();
+	$template = $phpbb_app_container->getTemplate();
+	$cache = $phpbb_app_container->getCache();
 
 	// Grab icons
 	$icons = $cache->obtain_icons();
@@ -458,7 +474,10 @@ function posting_gen_topic_icons($mode, $icon_id)
 */
 function posting_gen_topic_types($forum_id, $cur_topic_type = POST_NORMAL)
 {
-	global $auth, $user, $template;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$template = $phpbb_app_container->getTemplate();
 
 	$toggle = false;
 
@@ -516,7 +535,8 @@ function posting_gen_topic_types($forum_id, $cur_topic_type = POST_NORMAL)
 */
 function get_img_size_format($width, $height)
 {
-	global $config;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	// Maximum Width the Image can take
 	$max_width = ($config['img_max_thumb_width']) ? $config['img_max_thumb_width'] : 400;
@@ -612,7 +632,10 @@ function get_supported_image_types($type = false)
 */
 function create_thumbnail($source, $destination, $mimetype)
 {
-	global $config, $phpbb_filesystem, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_filesystem = $phpbb_app_container->getFilesystem();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$min_filesize = (int) $config['img_min_thumb_filesize'];
 	$img_filesize = (file_exists($source)) ? @filesize($source) : false;
@@ -789,7 +812,8 @@ function create_thumbnail($source, $destination, $mimetype)
 */
 function posting_gen_inline_attachments(&$attachment_data)
 {
-	global $template;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
 
 	if (count($attachment_data))
 	{
@@ -819,7 +843,13 @@ function posting_gen_inline_attachments(&$attachment_data)
  */
 function posting_gen_attachment_entry($attachment_data, &$filename_data, $show_attach_box = true, $forum_id = false)
 {
-	global $template, $cache, $config, $phpbb_root_path, $user, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$cache = $phpbb_app_container->getCache();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$allowed_attachments = array_keys($cache->obtain_attach_extensions($forum_id)['_allowed_']);
 
@@ -905,8 +935,14 @@ function posting_gen_attachment_entry($attachment_data, &$filename_data, $show_a
 */
 function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $msg_id = 0)
 {
-	global $user, $db, $template, $auth;
-	global $phpbb_root_path, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$auth = $phpbb_app_container->getAuth();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$topic_ids = $forum_ids = $draft_rows = array();
 
@@ -1034,8 +1070,16 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 */
 function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id = 0, $show_quote_button = true)
 {
-	global $user, $auth, $db, $template;
-	global $config, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	/* @var $phpbb_content_visibility \phpbb\content_visibility */
 	$phpbb_content_visibility = $phpbb_container->get('content.visibility');
@@ -1328,8 +1372,14 @@ function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id
 */
 function delete_post($forum_id, $topic_id, $post_id, &$data, $is_soft = false, $softdelete_reason = '')
 {
-	global $db, $user, $phpbb_container, $phpbb_dispatcher;
-	global $config, $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	// Specify our post mode
 	$post_mode = 'delete';
@@ -1617,7 +1667,16 @@ function delete_post($forum_id, $topic_id, $post_id, &$data, $is_soft = false, $
 */
 function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data_ary, $update_message = true, $update_search_index = true)
 {
-	global $db, $auth, $user, $config, $phpbb_root_path, $phpbb_container, $phpbb_dispatcher, $phpbb_log, $request;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
 
 	$poll = $poll_ary;
 	$data = $data_ary;
@@ -2652,7 +2711,12 @@ function submit_post($mode, $subject, $username, $topic_type, &$poll_ary, &$data
 */
 function phpbb_bump_topic($forum_id, $topic_id, $post_data, $bump_time = false)
 {
-	global $config, $db, $user, $phpbb_root_path, $phpbb_log;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
 
 	if ($bump_time === false)
 	{
@@ -2747,7 +2811,9 @@ function phpbb_bump_topic($forum_id, $topic_id, $post_data, $bump_time = false)
 */
 function phpbb_upload_popup($forum_style = 0)
 {
-	global $template, $user;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
 
 	($forum_style) ? $user->setup('posting', $forum_style) : $user->setup('posting');
 
@@ -2781,8 +2847,15 @@ function phpbb_upload_popup($forum_style = 0)
 */
 function phpbb_handle_post_delete($forum_id, $topic_id, $post_id, &$post_data, $is_soft = false, $delete_reason = '')
 {
-	global $user, $auth, $config, $request;
-	global $phpbb_root_path, $phpbb_log, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$request = $phpbb_app_container->getRequest();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_log = $phpbb_app_container->getLog();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$force_delete_allowed = $force_softdelete_allowed = false;
 	$perm_check = ($is_soft) ? 'softdelete' : 'delete';
@@ -2893,7 +2966,8 @@ function phpbb_handle_post_delete($forum_id, $topic_id, $post_id, &$post_data, $
 		}
 		else
 		{
-			global $template;
+			global $phpbb_app_container;
+			$template = $phpbb_app_container->getTemplate();
 
 			$can_delete = $force_delete_allowed || ($auth->acl_get('m_delete', $forum_id) || ($post_data['poster_id'] == $user->data['user_id'] && $user->data['is_registered'] && $auth->acl_get('f_delete', $forum_id)));
 			$can_softdelete = $force_softdelete_allowed || ($auth->acl_get('m_softdelete', $forum_id) || ($post_data['poster_id'] == $user->data['user_id'] && $user->data['is_registered'] && $auth->acl_get('f_softdelete', $forum_id)));

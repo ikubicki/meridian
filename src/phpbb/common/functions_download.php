@@ -21,7 +21,9 @@
 */
 function send_avatar_to_browser($file, $browser)
 {
-	global $config, $phpbb_root_path;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	$prefix = $config['avatar_salt'] . '_';
 	$image_dir = $config['avatar_path'];
@@ -120,7 +122,12 @@ function wrap_img_in_html($src, $title)
 */
 function send_file_to_browser($attachment, $upload_dir, $category)
 {
-	global $user, $db, $phpbb_dispatcher, $phpbb_root_path, $request;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$request = $phpbb_app_container->getRequest();
 
 	$filename = $phpbb_root_path . $upload_dir . '/' . $attachment['physical_filename'];
 
@@ -296,7 +303,8 @@ function send_file_to_browser($attachment, $upload_dir, $category)
 */
 function header_filename($file)
 {
-	global $request;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
 
 	$user_agent = $request->header('User-Agent');
 
@@ -316,7 +324,11 @@ function header_filename($file)
 */
 function download_allowed()
 {
-	global $config, $user, $db, $request;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$request = $phpbb_app_container->getRequest();
 
 	if (!$config['secure_downloads'])
 	{
@@ -428,7 +440,8 @@ function download_allowed()
 */
 function set_modified_headers($stamp, $browser)
 {
-	global $request;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
 
 	// let's see if we have to send the file at all
 	$last_load 	=  $request->header('If-Modified-Since') ? strtotime(trim($request->header('If-Modified-Since'))) : false;
@@ -460,7 +473,9 @@ function set_modified_headers($stamp, $browser)
 */
 function file_gc($exit = true)
 {
-	global $cache, $db;
+	global $phpbb_app_container;
+	$cache = $phpbb_app_container->getCache();
+	$db = $phpbb_app_container->getDb();
 
 	if (!empty($cache))
 	{
@@ -513,7 +528,8 @@ function phpbb_http_byte_range($filesize)
 */
 function phpbb_find_range_request()
 {
-	global $request;
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
 
 	$value = $request->header('Range');
 
@@ -650,7 +666,8 @@ function phpbb_increment_downloads($db, $ids)
 */
 function phpbb_download_handle_forum_auth($db, $auth, $topic_id)
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$sql_array = [
 		'SELECT'	=> 't.forum_id, t.topic_poster, t.topic_visibility, f.forum_name, f.forum_password, f.parent_id',
@@ -701,7 +718,8 @@ function phpbb_download_handle_forum_auth($db, $auth, $topic_id)
 */
 function phpbb_download_handle_pm_auth($db, $auth, $user_id, $msg_id)
 {
-	global $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!$auth->acl_get('u_pm_download'))
 	{

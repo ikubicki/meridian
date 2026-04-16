@@ -20,9 +20,20 @@
 */
 function mcp_forum_view($id, $mode, $action, $forum_info)
 {
-	global $template, $db, $user, $auth, $cache, $module;
-	global $phpbb_root_path, $config;
-	global $request, $phpbb_dispatcher, $phpbb_container;
+	global $module;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	$cache = $phpbb_app_container->getCache();
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	global $phpbb_app_container;
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	$user->add_lang(array('viewtopic', 'viewforum'));
 
@@ -375,7 +386,11 @@ function mcp_forum_view($id, $mode, $action, $forum_info)
 */
 function mcp_resync_topics($topic_ids)
 {
-	global $db, $user, $phpbb_log, $request;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
 
 	if (!count($topic_ids))
 	{
@@ -423,7 +438,14 @@ function mcp_resync_topics($topic_ids)
 */
 function merge_topics($forum_id, $topic_ids, $to_topic_id)
 {
-	global $db, $template, $user, $phpbb_root_path, $phpbb_log, $request, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$db = $phpbb_app_container->getDb();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_log = $phpbb_app_container->getLog();
+	$request = $phpbb_app_container->getRequest();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if (!count($topic_ids))
 	{

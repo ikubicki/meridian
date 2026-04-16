@@ -172,7 +172,8 @@ class gravatar extends \phpbb\avatar\driver\driver
 	*/
 	protected function get_gravatar_url($row)
 	{
-		global $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$url = self::GRAVATAR_URL;
 		$url .= hash('sha256', strtolower(trim($row['avatar'])));

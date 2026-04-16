@@ -21,8 +21,14 @@ class acp_captcha
 
 	function main($id, $mode)
 	{
-		global $user, $template, $phpbb_log, $request;
-		global $config, $phpbb_container;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$user->add_lang('acp/board');
 
@@ -174,7 +180,8 @@ class acp_captcha
 	*/
 	function deliver_demo($selected)
 	{
-		global $phpbb_container;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$captcha = $phpbb_container->get('captcha.factory')->get_instance($selected);
 		$captcha->init(CONFIRM_REG);

@@ -21,8 +21,16 @@ class acp_email
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $template, $phpbb_log, $request;
-		global $phpbb_root_path, $phpbb_admin_path, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$user->add_lang('acp/email');
 		$this->tpl_name = 'acp_email';

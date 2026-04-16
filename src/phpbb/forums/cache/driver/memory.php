@@ -23,23 +23,20 @@ abstract class memory extends \phpbb\cache\driver\base
 	/**
 	* Set cache path
 	*/
-	function __construct()
+	function __construct($cache_dir = null)
 	{
-		global $dbname, $table_prefix, $phpbb_container;
+		global $dbname, $table_prefix, $acm_type;
 
-		$this->cache_dir	= $phpbb_container->getParameter('core.cache_dir');
+		$this->cache_dir	= $cache_dir ?? (PHPBB_FILESYSTEM_ROOT . 'cache/production/');
 		$this->key_prefix	= substr(md5($dbname . $table_prefix), 0, 8) . '_';
 
 		if (!isset($this->extension) || !extension_loaded($this->extension))
 		{
-			global $acm_type;
-
 			trigger_error("Could not find required extension [{$this->extension}] for the ACM module $acm_type.", E_USER_ERROR);
 		}
 
 		if (isset($this->function) && !function_exists($this->function))
 		{
-			global $acm_type;
 
 			trigger_error("The required function [{$this->function}] is not available for the ACM module $acm_type.", E_USER_ERROR);
 		}
@@ -82,7 +79,8 @@ abstract class memory extends \phpbb\cache\driver\base
 	*/
 	function tidy()
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		// cache has auto GC, no need to have any code here :)
 		$config->set('cache_last_gc', time(), false);

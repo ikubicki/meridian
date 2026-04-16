@@ -31,7 +31,7 @@ define('ATTACHMENT_CATEGORY_FLASH', 5); // Flash/SWF files - @deprecated 3.3
  */
 function register_compatibility_globals()
 {
-	global $phpbb_container;
+	global $phpbb_container, $phpbb_app_container;
 
 	global $cache, $phpbb_dispatcher, $request, $user, $auth, $db, $config, $language, $phpbb_log;
 	global $symfony_request, $phpbb_filesystem, $phpbb_path_helper, $phpbb_extension_manager, $template;

@@ -597,7 +597,8 @@ class diff_renderer_side_by_side extends diff_renderer
 	*/
 	function get_diff_content($diff)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$output = '';
 		$output .= '<table cellspacing="0" class="hrdiff">

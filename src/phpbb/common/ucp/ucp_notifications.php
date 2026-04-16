@@ -21,7 +21,13 @@ class ucp_notifications
 
 	public function main($id, $mode)
 	{
-		global $config, $template, $user, $request, $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 		global $phpbb_root_path;
 
 		add_form_key('ucp_notification');

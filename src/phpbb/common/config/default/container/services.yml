@@ -34,6 +34,11 @@ imports:
     - { resource: parameters.yml }
 
 services:
+    phpbb_app_container:
+        class: phpbb\Container
+        arguments:
+            - '@service_container'
+
     cache:
         class: phpbb\cache\service
         arguments:
@@ -46,6 +51,8 @@ services:
 
     cache.driver:
         class: '%cache.driver.class%'
+        arguments:
+            - '%core.cache_dir%'
 
     class_loader:
         class: phpbb\class_loader

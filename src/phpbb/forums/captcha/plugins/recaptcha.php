@@ -26,7 +26,9 @@ class recaptcha extends captcha_abstract
 
 	function init($type)
 	{
-		global $user, $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
 
 		$user->add_lang('captcha_recaptcha');
 		parent::init($type);
@@ -35,7 +37,9 @@ class recaptcha extends captcha_abstract
 
 	public function is_available()
 	{
-		global $config, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 		$user->add_lang('captcha_recaptcha');
 		return (isset($config['recaptcha_pubkey']) && !empty($config['recaptcha_pubkey']));
 	}
@@ -63,7 +67,12 @@ class recaptcha extends captcha_abstract
 
 	function acp_page($id, $module)
 	{
-		global $config, $template, $user, $phpbb_log, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
 
 		$captcha_vars = array(
 			'recaptcha_pubkey'				=> 'RECAPTCHA_PUBKEY',
@@ -133,7 +142,11 @@ class recaptcha extends captcha_abstract
 
 	function get_template()
 	{
-		global $config, $user, $template, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
 
 		if ($this->is_solved())
 		{
@@ -205,7 +218,9 @@ class recaptcha extends captcha_abstract
 	*/
 	function recaptcha_check_answer()
 	{
-		global $config, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 
 		//discard spam submissions
 		if ($this->response == null || strlen($this->response) == 0)

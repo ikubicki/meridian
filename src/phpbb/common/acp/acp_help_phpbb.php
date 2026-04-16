@@ -21,7 +21,13 @@ class acp_help_phpbb
 
 	function main($id, $mode)
 	{
-		global $config, $request, $template, $user, $phpbb_dispatcher, $phpbb_admin_path, $phpbb_root_path;
+		global $phpbb_admin_path, $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		$template = $phpbb_app_container->getTemplate();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!class_exists('phpbb_questionnaire_data_collector'))
 		{

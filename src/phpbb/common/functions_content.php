@@ -43,7 +43,9 @@
 */
 function gen_sort_selects(&$limit_days, &$sort_by_text, &$sort_days, &$sort_key, &$sort_dir, &$s_limit_days, &$s_sort_key, &$s_sort_dir, &$u_sort_param, $def_st = false, $def_sk = false, $def_sd = false)
 {
-	global $user, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	$sort_dir_text = array('a' => $user->lang['ASCENDING'], 'd' => $user->lang['DESCENDING']);
 
@@ -146,7 +148,14 @@ function gen_sort_selects(&$limit_days, &$sort_by_text, &$sort_days, &$sort_key,
 */
 function make_jumpbox($action, $forum_id = false, $select_all = false, $acl_list = false, $force_display = false)
 {
-	global $config, $auth, $template, $user, $db, $phpbb_path_helper, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$auth = $phpbb_app_container->getAuth();
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$db = $phpbb_app_container->getDb();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// We only return if the jumpbox is not forced to be displayed (in case it is needed for functionality)
 	if (!$config['load_jumpbox'] && $force_display === false)
@@ -285,7 +294,11 @@ function make_jumpbox($action, $forum_id = false, $select_all = false, $acl_list
 */
 function bump_topic_allowed($forum_id, $topic_bumped, $last_post_time, $topic_poster, $last_topic_poster)
 {
-	global $config, $auth, $user, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$auth = $phpbb_app_container->getAuth();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	/**
 	 * Event to run code before the topic bump checks
@@ -483,7 +496,9 @@ function phpbb_clean_search_string($search_string)
 */
 function decode_message(&$message, $bbcode_uid = '')
 {
-	global $phpbb_container, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	/**
 	 * Use this event to modify the message before it is decoded
@@ -542,7 +557,8 @@ function decode_message(&$message, $bbcode_uid = '')
 */
 function strip_bbcode(&$text, $uid = '')
 {
-	global $phpbb_container;
+	global $phpbb_app_container;
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if (preg_match('#^<[rt][ >]#', $text))
 	{
@@ -571,8 +587,13 @@ function strip_bbcode(&$text, $uid = '')
 function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text = true)
 {
 	static $bbcode;
-	global $auth, $config, $user;
-	global $phpbb_dispatcher, $phpbb_container;
+	global $phpbb_app_container;
+	$auth = $phpbb_app_container->getAuth();
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$phpbb_container = $phpbb_app_container->get('service_container');
 
 	if ($text === '')
 	{
@@ -689,7 +710,9 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 */
 function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bbcode = false, $allow_urls = false, $allow_smilies = false, $allow_img_bbcode = true, $allow_flash_bbcode = true, $allow_quote_bbcode = true, $allow_url_bbcode = true, $mode = 'post')
 {
-	global $phpbb_root_path, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	/**
 	* Use this event to modify the text before it is prepared for storage
@@ -772,7 +795,8 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 */
 function generate_text_for_edit($text, $uid, $flags)
 {
-	global $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	/**
 	* Use this event to modify the text before it is decoded for editing
@@ -1057,7 +1081,11 @@ function censor_text($text)
 	// We moved the word censor checks in here because we call this function quite often - and then only need to do the check once
 	if (!isset($censors) || !is_array($censors))
 	{
-		global $config, $user, $auth, $cache;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$cache = $phpbb_app_container->getCache();
 
 		// We check here if the user is having viewing censors disabled (and also allowed to do so).
 		if (!$user->optionget('viewcensors') && $config['allow_nocensors'] && $auth->acl_get('u_chgcensors'))
@@ -1094,7 +1122,11 @@ function bbcode_nl2br($text)
 */
 function smiley_text($text, $force_option = false)
 {
-	global $config, $user, $phpbb_path_helper, $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	if ($force_option || !$config['allow_smilies'] || !$user->optionget('viewsmilies'))
 	{
@@ -1133,8 +1165,14 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 		return;
 	}
 
-	global $template, $cache, $user, $phpbb_dispatcher;
-	global $extensions, $config, $phpbb_root_path;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$cache = $phpbb_app_container->getCache();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	global $extensions, $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
 
 	//
 	$compiled_attachments = array();
@@ -1165,7 +1203,8 @@ function parse_attachments($forum_id, &$message, &$attachments, &$update_count_a
 	// Grab attachments (security precaution)
 	if (count($attach_ids))
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$new_attachment_data = array();
 
@@ -1440,7 +1479,8 @@ function extension_allowed($forum_id, $extension, &$extensions)
 {
 	if (empty($extensions))
 	{
-		global $cache;
+		global $phpbb_app_container;
+		$cache = $phpbb_app_container->getCache();
 		$extensions = $cache->obtain_attach_extensions($forum_id);
 	}
 
@@ -1527,7 +1567,8 @@ function truncate_string($string, $max_length = 60, $max_store_length = 255, $al
 function get_username_string($mode, $user_id, $username, $username_colour = '', $guest_username = false, $custom_profile_url = false)
 {
 	static $_profile_cache;
-	global $phpbb_dispatcher;
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// We cache some common variables we need within this function
 	if (empty($_profile_cache))
@@ -1542,7 +1583,9 @@ function get_username_string($mode, $user_id, $username, $username_colour = '', 
 		$_profile_cache['tpl_profile_colour'] = '<a href="{PROFILE_URL}" style="color: {USERNAME_COLOUR};" class="username-coloured">{USERNAME}</a>';
 	}
 
-	global $user, $auth;
+	global $phpbb_app_container;
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
 
 	// This switch makes sure we only run code required for the mode
 	switch ($mode)
@@ -1660,7 +1703,10 @@ function get_username_string($mode, $user_id, $username, $username_colour = '', 
  */
 function phpbb_add_quickmod_option($url, $option, $lang_string)
 {
-	global $template, $user, $phpbb_path_helper;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$user = $phpbb_app_container->getUser();
+	$phpbb_path_helper = $phpbb_app_container->getPathHelper();
 
 	$lang_string = $user->lang($lang_string);
 	$template->assign_block_vars('quickmod', array(

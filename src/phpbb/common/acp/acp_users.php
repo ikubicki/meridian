@@ -27,10 +27,19 @@ class acp_users
 
 	function main($id, $mode)
 	{
-		global $config, $db, $user, $auth, $template;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
 		global $phpbb_root_path, $phpbb_admin_path;
-		global $phpbb_dispatcher, $request;
-		global $phpbb_container, $phpbb_log;
+		global $phpbb_app_container;
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		$user->add_lang(array('posting', 'ucp', 'acp/users'));
 		$this->tpl_name = 'acp_users';
@@ -2651,7 +2660,8 @@ class acp_users
 	*/
 	function optionset(&$user_row, $key, $value, $data = false)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$var = ($data !== false) ? $data : $user_row['user_options'];
 
@@ -2687,7 +2697,8 @@ class acp_users
 	*/
 	function optionget(&$user_row, $key, $data = false)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$var = ($data !== false) ? $data : $user_row['user_options'];
 		return phpbb_optionget($user->keyoptions[$key], $var);

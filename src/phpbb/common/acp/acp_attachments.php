@@ -47,8 +47,20 @@ class acp_attachments
 
 	function main($id, $mode)
 	{
-		global $db, $user, $auth, $template, $cache, $phpbb_container, $phpbb_filesystem, $phpbb_dispatcher;
-		global $config, $phpbb_admin_path, $phpbb_root_path, $phpbb_log, $request;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$cache = $phpbb_app_container->getCache();
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+		global $phpbb_admin_path, $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
 
 		$this->id = $id;
 		$this->db = $db;
@@ -1412,7 +1424,9 @@ class acp_attachments
 	*/
 	function category_select($select_name, $group_id = false, $key = '')
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$types = array(
 			ATTACHMENT_CATEGORY_NONE		=> $user->lang['NO_FILE_CAT'],
@@ -1453,7 +1467,9 @@ class acp_attachments
 	*/
 	function group_select($select_name, $default_group = false, $key = '')
 	{
-		global $db, $user;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
 
 		$group_select = '<select name="' . $select_name . '"' . (($key) ? ' id="' . $key . '"' : '') . '>';
 
@@ -1498,7 +1514,9 @@ class acp_attachments
 	*/
 	function test_upload(&$error, $upload_dir, $create_directory = false)
 	{
-		global $user, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		// Does the target directory exist, is it a directory and writable.
 		if ($create_directory)
@@ -1542,7 +1560,11 @@ class acp_attachments
 	*/
 	function perform_site_list()
 	{
-		global $db, $user, $request, $phpbb_log;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		if (isset($_REQUEST['securesubmit']))
 		{

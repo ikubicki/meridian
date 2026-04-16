@@ -25,7 +25,8 @@ class acp_search
 
 	function main($id, $mode)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$user->add_lang('acp/search');
 
@@ -46,8 +47,14 @@ class acp_search
 
 	function settings($id, $mode)
 	{
-		global $user, $template, $phpbb_log, $request;
-		global $config, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_admin_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		$submit = $request->is_set_post('submit');
 
@@ -235,8 +242,16 @@ class acp_search
 
 	function index($id, $mode)
 	{
-		global $db, $language, $user, $template, $phpbb_log, $request;
-		global $config, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$language = $phpbb_app_container->getLanguage();
+		$user = $phpbb_app_container->getUser();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_admin_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		$action = $request->variable('action', '');
 		$this->state = explode(',', $config['search_indexing_state']);
@@ -577,7 +592,8 @@ class acp_search
 
 	function get_search_types()
 	{
-		global $phpbb_extension_manager;
+		global $phpbb_app_container;
+		$phpbb_extension_manager = $phpbb_app_container->getExtensionManager();
 
 		$finder = $phpbb_extension_manager->get_finder();
 
@@ -590,7 +606,8 @@ class acp_search
 
 	function get_max_post_id()
 	{
-		global $db;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
 
 		$sql = 'SELECT MAX(post_id) as max_post_id
 			FROM '. POSTS_TABLE;
@@ -609,7 +626,9 @@ class acp_search
 	 */
 	function get_post_index_progress(int $post_counter)
 	{
-		global $db, $language;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$language = $phpbb_app_container->getLanguage();
 
 		$sql = 'SELECT COUNT(post_id) as done_count
 			FROM ' . POSTS_TABLE . '
@@ -638,7 +657,8 @@ class acp_search
 
 	function save_state($state = false)
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		if ($state)
 		{
@@ -657,7 +677,13 @@ class acp_search
 	*/
 	function init_search($type, &$search, &$error)
 	{
-		global $phpbb_root_path, $user, $auth, $config, $db, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$config = $phpbb_app_container->getConfig();
+		$db = $phpbb_app_container->getDb();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (!class_exists($type) || !method_exists($type, 'keyword_search'))
 		{

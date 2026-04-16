@@ -21,7 +21,9 @@ class acp_prune
 
 	function main($id, $mode)
 	{
-		global $user, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$user->add_lang('acp/prune');
 
@@ -51,7 +53,14 @@ class acp_prune
 	*/
 	function prune_forums($id, $mode)
 	{
-		global $db, $user, $auth, $template, $phpbb_log, $request, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$all_forums = $request->variable('all_forums', 0);
 		$forum_id = $request->variable('f', array(0));
@@ -252,8 +261,16 @@ class acp_prune
 	*/
 	function prune_users($id, $mode)
 	{
-		global $db, $user, $auth, $template, $phpbb_log, $request;
-		global $phpbb_root_path, $phpbb_admin_path, $phpbb_container;
+		global $phpbb_app_container;
+		$db = $phpbb_app_container->getDb();
+		$user = $phpbb_app_container->getUser();
+		$auth = $phpbb_app_container->getAuth();
+		$template = $phpbb_app_container->getTemplate();
+		$phpbb_log = $phpbb_app_container->getLog();
+		$request = $phpbb_app_container->getRequest();
+		global $phpbb_root_path, $phpbb_admin_path;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		/** @var \phpbb\group\helper $group_helper */
 		$group_helper = $phpbb_container->get('group_helper');
@@ -393,7 +410,10 @@ class acp_prune
 	*/
 	function get_prune_users(&$user_ids, &$usernames)
 	{
-		global $user, $db, $request;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$db = $phpbb_app_container->getDb();
+		$request = $phpbb_app_container->getRequest();
 
 		$users_by_name = $request->variable('users', '', true);
 		$users_by_id = $request->variable('user_ids', array(0));

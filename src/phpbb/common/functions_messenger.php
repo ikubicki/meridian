@@ -35,7 +35,8 @@ class messenger
 	*/
 	function __construct($use_queue = true)
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		$this->use_queue = (!$config['email_package_size']) ? false : $use_queue;
 		$this->subject = '';
@@ -74,7 +75,8 @@ class messenger
 	*/
 	function to($address, $realname = '')
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		if (!trim($address))
 		{
@@ -202,7 +204,10 @@ class messenger
 	*/
 	function template($template_file, $template_lang = '', $template_path = '', $template_dir_prefix = '')
 	{
-		global $config, $phpbb_root_path, $user;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 
 		$template_dir_prefix = (!$template_dir_prefix || $template_dir_prefix[0] === '/') ? $template_dir_prefix : '/' . $template_dir_prefix;
 
@@ -311,7 +316,10 @@ class messenger
 	*/
 	function send($method = NOTIFY_EMAIL, $break = false)
 	{
-		global $config, $user, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// We add some standard variables we always use, no need to specify them always
 		$this->assign_vars(array(
@@ -415,7 +423,11 @@ class messenger
 	*/
 	function error($type, $msg)
 	{
-		global $user, $config, $request, $phpbb_log;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
+		$phpbb_log = $phpbb_app_container->getLog();
 
 		// Session doesn't exist, create it
 		if (!isset($user->session_id) || $user->session_id === '')
@@ -445,7 +457,8 @@ class messenger
 	*/
 	function save_queue()
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		if ($config['email_package_size'] && $this->use_queue && !empty($this->queue))
 		{
@@ -461,7 +474,9 @@ class messenger
 	*/
 	function generate_message_id()
 	{
-		global $config, $request;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$request = $phpbb_app_container->getRequest();
 
 		$domain = ($config['server_name']) ?: $request->server('SERVER_NAME', 'phpbb.generated');
 
@@ -473,7 +488,9 @@ class messenger
 	*/
 	function build_header($to, $cc, $bcc)
 	{
-		global $config, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		// We could use keys here, but we won't do this for 3.0.x to retain backwards compatibility
 		$headers = array();
@@ -528,7 +545,9 @@ class messenger
 	*/
 	function msg_email()
 	{
-		global $config, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if (empty($config['email_enable']))
 		{
@@ -658,7 +677,10 @@ class messenger
 	*/
 	function msg_jabber()
 	{
-		global $config, $user, $phpbb_root_path;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 
 		if (empty($config['jab_enable']) || empty($config['jab_host']) || empty($config['jab_username']) || empty($config['jab_password']))
 		{
@@ -730,7 +752,9 @@ class messenger
 	*/
 	protected function setup_template()
 	{
-		global $phpbb_container, $phpbb_dispatcher;
+		global $phpbb_app_container;
+		$phpbb_container = $phpbb_app_container->get('service_container');
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		if ($this->template instanceof \phpbb\template\template)
 		{
@@ -795,7 +819,10 @@ class queue
 	*/
 	function __construct()
 	{
-		global $phpbb_root_path, $phpbb_filesystem, $phpbb_container;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$phpbb_filesystem = $phpbb_app_container->getFilesystem();
+		$phpbb_container = $phpbb_app_container->get('service_container');
 
 		$this->data = array();
 		$this->cache_file = $phpbb_container->getParameter('core.cache_dir') . "queue.php";
@@ -826,7 +853,11 @@ class queue
 	*/
 	function process()
 	{
-		global $config, $phpbb_root_path, $user, $phpbb_dispatcher;
+		global $phpbb_root_path;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
+		$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 		$lock = new \phpbb\lock\flock($this->cache_file);
 		$lock->acquire();
@@ -1088,7 +1119,9 @@ class queue
 */
 function smtpmail($addresses, $subject, $message, &$err_msg, $headers = false)
 {
-	global $config, $user;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$user = $phpbb_app_container->getUser();
 
 	// Fix any bare linefeeds in the message to make it RFC821 Compliant.
 	$message = preg_replace("#(?<!\r)\n#si", "\r\n", $message);
@@ -1365,7 +1398,8 @@ class smtp_class
 	*/
 	function server_parse($response, $line)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		$this->server_response = '';
 		$this->responses = array();
@@ -1411,7 +1445,8 @@ class smtp_class
 	*/
 	function log_into_server($hostname, $username, $password, $default_auth_method)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		// Here we try to determine the *real* hostname (reverse DNS entry preferrably)
 		if (function_exists('php_uname') && !empty($local_host = php_uname('n')))
@@ -1439,7 +1474,8 @@ class smtp_class
 		// severe problems and is not fixable!
 		if ($default_auth_method == 'POP-BEFORE-SMTP' && $username && $password)
 		{
-			global $config;
+			global $phpbb_app_container;
+			$config = $phpbb_app_container->getConfig();
 
 			$errno = 0;
 			$errstr = '';
@@ -1583,7 +1619,8 @@ class smtp_class
 	*/
 	protected function starttls()
 	{
-		global $config;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
 
 		// allow SMTPS (what was used by phpBB 3.0) if hostname is prefixed with tls:// or ssl://
 		if (strpos($config['smtp_host'], 'tls://') === 0 || strpos($config['smtp_host'], 'ssl://') === 0)
@@ -1625,7 +1662,8 @@ class smtp_class
 	*/
 	function pop_before_smtp($hostname, $username, $password)
 	{
-		global $user;
+		global $phpbb_app_container;
+		$user = $phpbb_app_container->getUser();
 
 		if (!$this->socket = @fsockopen($hostname, 110, $errno, $errstr, 10))
 		{
@@ -1734,7 +1772,9 @@ class smtp_class
 	*/
 	function digest_md5($username, $password)
 	{
-		global $config, $user;
+		global $phpbb_app_container;
+		$config = $phpbb_app_container->getConfig();
+		$user = $phpbb_app_container->getUser();
 
 		$this->server_send('AUTH DIGEST-MD5');
 		if ($err_msg = $this->server_parse('334', __LINE__))
@@ -1925,7 +1965,10 @@ function mail_encode($str, $eol = "\r\n")
  */
 function phpbb_mail($to, $subject, $msg, $headers, $eol, &$err_msg)
 {
-	global $config, $phpbb_root_path, $phpbb_dispatcher;
+	global $phpbb_root_path;
+	global $phpbb_app_container;
+	$config = $phpbb_app_container->getConfig();
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
 
 	// Convert Numeric Character References to UTF-8 chars (ie. Emojis)
 	$subject = utf8_decode_ncr($subject);

@@ -21,8 +21,15 @@
 function mcp_front_view($id, $mode, $action)
 {
 	global $phpbb_root_path;
-	global $template, $db, $user, $auth, $module;
-	global $phpbb_dispatcher, $request;
+	global $module;
+	global $phpbb_app_container;
+	$template = $phpbb_app_container->getTemplate();
+	$db = $phpbb_app_container->getDb();
+	$user = $phpbb_app_container->getUser();
+	$auth = $phpbb_app_container->getAuth();
+	global $phpbb_app_container;
+	$phpbb_dispatcher = $phpbb_app_container->getDispatcher();
+	$request = $phpbb_app_container->getRequest();
 
 	// Latest 5 unapproved
 	if ($module->loaded('queue'))
