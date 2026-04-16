@@ -74,9 +74,13 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"phpbb\\forums\\": "src/phpbb/forums/",
-			"phpbb\\common\\": "src/phpbb/common/"
-		}
+			"phpbb\\": "src/phpbb/forums/",
+			"phpbb\\common\\": "src/phpbb/common/",
+			"phpbb\\install\\": "src/phpbb/install/"
+		},
+		"files": [
+			"src/phpbb/install/redirect.php"
+		]
 	},
 	"config": {
 		"platform": {

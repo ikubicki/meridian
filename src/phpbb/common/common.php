@@ -29,42 +29,7 @@ if (!defined('PHPBB_ENVIRONMENT'))
 
 if (!defined('PHPBB_INSTALLED'))
 {
-	// Redirect the user to the installer
-	require(__DIR__ . '/functions.php');
-
-	// We have to generate a full HTTP/1.1 header here since we can't guarantee to have any of the information
-	// available as used by the redirect function
-	$server_name = (!empty($_SERVER['HTTP_HOST'])) ? strtolower($_SERVER['HTTP_HOST']) : ((!empty($_SERVER['SERVER_NAME'])) ? $_SERVER['SERVER_NAME'] : getenv('SERVER_NAME'));
-	$server_port = (!empty($_SERVER['SERVER_PORT'])) ? (int) $_SERVER['SERVER_PORT'] : (int) getenv('SERVER_PORT');
-	$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 1 : 0;
-
-	if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
-	{
-		$secure = 1;
-		$server_port = 443;
-	}
-
-	$script_path = phpbb_get_install_redirect($phpbb_root_path);
-
-	// Eliminate . and .. from the path
-	require(__DIR__ . '/../forums/filesystem/filesystem.php');
-	$phpbb_filesystem = new phpbb\filesystem\filesystem();
-	$script_path = $phpbb_filesystem->clean_path($script_path);
-
-	$url = (($secure) ? 'https://' : 'http://') . $server_name;
-
-	if ($server_port && (($secure && $server_port <> 443) || (!$secure && $server_port <> 80)))
-	{
-		// HTTP HOST can carry a port number...
-		if (strpos($server_name, ':') === false)
-		{
-			$url .= ':' . $server_port;
-		}
-	}
-
-	$url .= $script_path;
-	header('Location: ' . $url);
-	exit;
+	\phpbb\install\redirectToInstaller($phpbb_root_path);
 }
 
 // In case $phpbb_adm_relative_path is not set (in case of an update), use the default.
