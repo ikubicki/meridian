@@ -14,10 +14,6 @@
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /**
 * MCP Forum View

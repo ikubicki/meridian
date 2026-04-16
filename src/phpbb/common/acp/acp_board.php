@@ -18,10 +18,6 @@
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 class acp_board
 {

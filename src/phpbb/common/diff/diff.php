@@ -14,10 +14,6 @@
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /**
 * Code from pear.php.net, Text_Diff-1.1.0 package

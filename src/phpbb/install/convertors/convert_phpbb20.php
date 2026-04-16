@@ -20,10 +20,6 @@
 *
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 $phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
 extract($phpbb_config_php_file->get_all());

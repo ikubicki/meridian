@@ -18,10 +18,6 @@ use phpbb\exception\version_check_exception;
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 class acp_extensions
 {

@@ -13,10 +13,6 @@
 
 /**
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 // Enforce ASCII only string handling
 setlocale(LC_CTYPE, 'C');

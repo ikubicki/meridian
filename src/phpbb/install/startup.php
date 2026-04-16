@@ -12,7 +12,7 @@
  */
 
 /** @ignore */
-if (!defined('IN_PHPBB') || !defined('IN_INSTALL'))
+if (!defined('IN_INSTALL'))
 {
 	exit;
 }

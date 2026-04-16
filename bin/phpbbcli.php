@@ -20,7 +20,6 @@ if (php_sapi_name() != 'cli')
 	exit(1);
 }
 
-define('IN_PHPBB', true);
 
 $phpbb_root_path = __DIR__ . '/../';
 require($phpbb_root_path . 'src/phpbb/common/startup.php');

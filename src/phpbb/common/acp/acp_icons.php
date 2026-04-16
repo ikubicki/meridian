@@ -14,10 +14,6 @@
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /**
   * @todo {smilies} check regular expressions for special char replacements (stored specialchared in db)

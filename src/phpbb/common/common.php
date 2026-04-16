@@ -15,10 +15,6 @@
 * Minimum Requirement: PHP 7.2.0
 */
 
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 require(__DIR__ . '/startup.php');
 

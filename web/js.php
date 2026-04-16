@@ -9,7 +9,6 @@
  * Supports ETag / 304 Not Modified.
  */
 
-define('IN_PHPBB', true);
 
 $web_root = __DIR__;
 

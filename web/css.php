@@ -8,7 +8,6 @@
  * with fallback to src/phpbb/styles/prosilver/theme/{file}
  */
 
-define('IN_PHPBB', true);
 
 $phpbb_root_path = __DIR__ . '/../';
 $styles_root = $phpbb_root_path . 'src/phpbb/styles/';

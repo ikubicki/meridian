@@ -13,10 +13,6 @@
 
 /**
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /*
 	Ability to simply add own rules by doing three things:

@@ -14,10 +14,6 @@
 /**
 * @ignore
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /**
 * Messenger
@@ -1009,7 +1005,7 @@ class queue
 		{
 			if ($fp = @fopen($this->cache_file, 'wb'))
 			{
-				fwrite($fp, "<?php\nif (!defined('IN_PHPBB')) exit;\n\$this->queue_data = unserialize(" . var_export(serialize($this->queue_data), true) . ");\n\n?>");
+				fwrite($fp, "<?php\n\$this->queue_data = unserialize(" . var_export(serialize($this->queue_data), true) . ");\n\n?>");
 				fclose($fp);
 
 				if (function_exists('opcache_invalidate'))
@@ -1063,7 +1059,7 @@ class queue
 
 		if ($fp = @fopen($this->cache_file, 'w'))
 		{
-			fwrite($fp, "<?php\nif (!defined('IN_PHPBB')) exit;\n\$this->queue_data = unserialize(" . var_export(serialize($this->data), true) . ");\n\n?>");
+			fwrite($fp, "<?php\n\$this->queue_data = unserialize(" . var_export(serialize($this->data), true) . ");\n\n?>");
 			fclose($fp);
 
 			if (function_exists('opcache_invalidate'))

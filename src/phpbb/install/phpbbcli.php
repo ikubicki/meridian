@@ -20,7 +20,6 @@ if (php_sapi_name() !== 'cli')
 	exit(1);
 }
 
-define('IN_PHPBB', true);
 define('IN_INSTALL', true);
 define('PHPBB_ENVIRONMENT', 'production');
 define('PHPBB_VERSION', '3.3.15');

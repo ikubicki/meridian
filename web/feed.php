@@ -22,7 +22,6 @@ use Symfony\Component\Routing\Exception\InvalidParameterException;
 /**
 * @ignore
 **/
-define('IN_PHPBB', true);
 define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../');
 $phpbb_root_path = './';
 include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');

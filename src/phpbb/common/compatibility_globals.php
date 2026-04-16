@@ -13,10 +13,6 @@
 
 /**
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 //
 // Deprecated globals

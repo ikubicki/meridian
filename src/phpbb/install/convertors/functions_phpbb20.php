@@ -11,10 +11,6 @@
 *
 */
 
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 /**
 * Helper functions for phpBB 2.0.x to phpBB 3.1.x conversion

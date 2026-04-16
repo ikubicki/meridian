@@ -13,10 +13,6 @@
 
 /**
 */
-if (!defined('IN_PHPBB'))
-{
-	exit;
-}
 
 // Report all errors, except notices and deprecation messages
 $level = E_ALL & ~E_NOTICE & ~E_DEPRECATED;
