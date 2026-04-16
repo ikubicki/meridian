@@ -15,6 +15,6 @@ services:
         class: phpbb\user_loader
         arguments:
             - '@dbal.conn'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%tables.users%'

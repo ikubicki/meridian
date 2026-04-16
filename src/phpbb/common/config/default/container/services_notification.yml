@@ -30,7 +30,7 @@ services:
             - '@language'
             - '@user'
             - '@auth'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%tables.user_notifications%'
 
@@ -217,7 +217,7 @@ services:
             - '@user'
             - '@config'
             - '@dbal.conn'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%tables.notification_emails%'
         tags:
@@ -230,7 +230,7 @@ services:
             - '@user_loader'
             - '@user'
             - '@config'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: notification.method }

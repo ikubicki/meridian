@@ -20,9 +20,10 @@ if (!defined('IN_PHPBB'))
 	exit;
 }
 
-require($phpbb_root_path . 'src/phpbb/common/startup.php');
+require(__DIR__ . '/startup.php');
 
-$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
+$phpbb_filesystem_root = defined('PHPBB_FILESYSTEM_ROOT') ? PHPBB_FILESYSTEM_ROOT : realpath(__DIR__ . '/../../../') . '/';
+$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_filesystem_root);
 extract($phpbb_config_php_file->get_all());
 
 if (!defined('PHPBB_ENVIRONMENT'))
@@ -33,7 +34,7 @@ if (!defined('PHPBB_ENVIRONMENT'))
 if (!defined('PHPBB_INSTALLED'))
 {
 	// Redirect the user to the installer
-	require($phpbb_root_path . 'src/phpbb/common/functions.php');
+	require(__DIR__ . '/functions.php');
 
 	// We have to generate a full HTTP/1.1 header here since we can't guarantee to have any of the information
 	// available as used by the redirect function
@@ -50,7 +51,7 @@ if (!defined('PHPBB_INSTALLED'))
 	$script_path = phpbb_get_install_redirect($phpbb_root_path);
 
 	// Eliminate . and .. from the path
-	require($phpbb_root_path . 'src/phpbb/forums/filesystem/filesystem.php');
+	require(__DIR__ . '/../forums/filesystem/filesystem.php');
 	$phpbb_filesystem = new phpbb\filesystem\filesystem();
 	$script_path = $phpbb_filesystem->clean_path($script_path);
 
@@ -75,12 +76,12 @@ $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relati
 $phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
 
 // Include files
-require($phpbb_root_path . 'src/phpbb/common/functions.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_content.php');
-include($phpbb_root_path . 'src/phpbb/common/functions_compatibility.php');
+require(__DIR__ . '/functions.php');
+require(__DIR__ . '/functions_content.php');
+include(__DIR__ . '/functions_compatibility.php');
 
-require($phpbb_root_path . 'src/phpbb/common/constants.php');
-require($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
+require(__DIR__ . '/constants.php');
+require(__DIR__ . '/utf/utf_tools.php');
 
 // Registered before building the container so the development environment stay capable of intercepting
 // the container builder exceptions.
@@ -99,7 +100,7 @@ $phpbb_class_loader_ext->register();
 // Set up container
 try
 {
-	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
+	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpbb_filesystem_root);
 
 	// Check that cache directory is writable before trying to build container
 	$cache_dir = $phpbb_container_builder->get_cache_dir();
@@ -134,12 +135,12 @@ $phpbb_class_loader_ext->set_cache($phpbb_container->get('cache.driver'));
 
 $phpbb_container->get('dbal.conn')->set_debug_sql_explain($phpbb_container->getParameter('debug.sql_explain'));
 $phpbb_container->get('dbal.conn')->set_debug_load_time($phpbb_container->getParameter('debug.load_time'));
-require($phpbb_root_path . 'src/phpbb/common/compatibility_globals.php');
+require(__DIR__ . '/compatibility_globals.php');
 
 register_compatibility_globals();
 
 // Add own hook handler
-require($phpbb_root_path . 'src/phpbb/common/hooks/index.php');
+require(__DIR__ . '/hooks/index.php');
 $phpbb_hook = new phpbb_hook(array('exit_handler', 'phpbb_user_session_handler', 'append_sid', array('template', 'display')));
 
 /* @var $phpbb_hook_finder \phpbb\hook\finder */
@@ -147,7 +148,7 @@ $phpbb_hook_finder = $phpbb_container->get('hook_finder');
 
 foreach ($phpbb_hook_finder->find() as $hook)
 {
-	@include($phpbb_root_path . 'src/phpbb/common/hooks/' . $hook . '.php');
+	@include(__DIR__ . '/hooks/' . $hook . '.php');
 }
 
 /**

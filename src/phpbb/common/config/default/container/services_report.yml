@@ -11,7 +11,7 @@ services:
             - '@captcha.factory'
             - '@phpbb.report.handler_factory'
             - '@phpbb.report.report_reason_list_provider'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
 
 # ----- Report handler factory -----

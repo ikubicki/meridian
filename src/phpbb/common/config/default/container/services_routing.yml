@@ -24,7 +24,7 @@ services:
             - '@symfony_request'
             - '@request'
             - '@filesystem'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
 
 # ---- Route loaders ----
@@ -70,7 +70,7 @@ services:
     routing.resources_locator.default:
         class: phpbb\routing\resources_locator\default_resources_locator
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.environment%'
             - '@ext.manager'
         tags:

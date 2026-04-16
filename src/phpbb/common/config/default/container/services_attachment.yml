@@ -8,7 +8,7 @@ services:
             - '@dispatcher'
             - '@filesystem'
             - '@attachment.resync'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
 
     attachment.manager:
         class: phpbb\attachment\manager
@@ -37,4 +37,4 @@ services:
             - '@dispatcher'
             - '@plupload'
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'

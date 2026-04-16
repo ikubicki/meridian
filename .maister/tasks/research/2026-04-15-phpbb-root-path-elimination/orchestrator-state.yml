@@ -1,0 +1,36 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-15T00:00:00Z"
+  updated: "2026-04-15T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-15-phpbb-root-path-elimination
+
+task:
+  title: "Eliminate $phpbb_root_path from filesystem operations"
+  description: "Research how to remove $phpbb_root_path from all require/include filesystem uses, replacing with Composer autoload and __DIR__-based absolute paths. Triggered by fatal: require(./src/phpbb/common/startup.php) fails because CWD=/var/www/phpbb/web/ but path resolves wrong."
+  status: in_progress
+  tags: [php, paths, refactoring, composer, autoload]
+  priority: high
+
+research_context:
+  research_type: technical
+  research_question: "How to eliminate $phpbb_root_path from all filesystem require/include operations?"
+  scope:
+    included:
+      - All require/include using $phpbb_root_path in common.php, startup.php, bin/phpbbcli.php
+      - DI services receiving $phpbb_root_path (container_builder, class_loader_ext, config_php_file)
+      - src/phpbb/forums/**/*.php services that store/use $phpbb_root_path for file ops
+      - install bootstraps
+    excluded:
+      - URL generation uses of $phpbb_root_path
+      - web_root_path / adm_relative_path
+    constraints:
+      - $phpbb_root_path must remain './' for URL/session logic
+      - PHPBB_FILESYSTEM_ROOT already defined in web/*.php = /var/www/phpbb/
+      - Composer PSR-4 already active for phpbb\ namespace
+  confidence_level: null
+  phase_summaries: {}

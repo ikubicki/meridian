@@ -74,7 +74,8 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"phpbb\\": "src/phpbb/forums/"
+			"phpbb\\forums\\": "src/phpbb/forums/",
+			"phpbb\\common\\": "src/phpbb/common/"
 		}
 	},
 	"config": {

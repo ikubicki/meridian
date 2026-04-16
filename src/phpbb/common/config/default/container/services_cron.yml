@@ -4,7 +4,7 @@ services:
         arguments:
             - '@service_container'
             - '@routing.helper'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@template'
 
@@ -38,7 +38,7 @@ services:
     cron.task.core.prune_all_forums:
         class: phpbb\cron\task\core\prune_all_forums
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
             - '@dbal.conn'
@@ -50,7 +50,7 @@ services:
     cron.task.core.prune_forum:
         class: phpbb\cron\task\core\prune_forum
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
             - '@dbal.conn'
@@ -62,7 +62,7 @@ services:
     cron.task.core.prune_shadow_topics:
         class: phpbb\cron\task\core\prune_shadow_topics
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
             - '@dbal.conn'
@@ -86,7 +86,7 @@ services:
     cron.task.core.queue:
         class: phpbb\cron\task\core\queue
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
             - '%core.cache_dir%'
@@ -108,7 +108,7 @@ services:
     cron.task.core.tidy_database:
         class: phpbb\cron\task\core\tidy_database
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
         calls:
@@ -119,7 +119,7 @@ services:
     cron.task.core.tidy_plupload:
         class: phpbb\cron\task\core\tidy_plupload
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '@config'
             - '@log'
             - '@user'
@@ -131,7 +131,7 @@ services:
     cron.task.core.tidy_search:
         class: phpbb\cron\task\core\tidy_search
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@auth'
             - '@config'
@@ -156,7 +156,7 @@ services:
     cron.task.core.tidy_warnings:
         class: phpbb\cron\task\core\tidy_warnings
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@config'
         calls:

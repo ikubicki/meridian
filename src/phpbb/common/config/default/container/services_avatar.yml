@@ -19,7 +19,7 @@ services:
         arguments:
             - '@config'
             - '@upload_imagesize'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@path_helper'
             - '@cache.driver'
@@ -33,7 +33,7 @@ services:
         arguments:
             - '@config'
             - '@upload_imagesize'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@path_helper'
             - '@cache.driver'
@@ -47,7 +47,7 @@ services:
         arguments:
             - '@config'
             - '@upload_imagesize'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@path_helper'
             - '@cache.driver'
@@ -60,7 +60,7 @@ services:
         class: phpbb\avatar\driver\upload
         arguments:
             - '@config'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@filesystem'
             - '@path_helper'

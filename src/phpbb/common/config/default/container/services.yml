@@ -41,7 +41,7 @@ services:
              - '@config'
              - '@dbal.conn'
              - '@dispatcher'
-             - '%core.root_path%'
+             - '%core.filesystem_root_path%'
              - '%core.php_ext%'
 
     cache.driver:
@@ -51,7 +51,7 @@ services:
         class: phpbb\class_loader
         arguments:
             - phpbb\
-            - '%core.root_path%src/phpbb/forums/'
+            - '%core.filesystem_root_path%src/phpbb/forums/'
             - '%core.php_ext%'
         calls:
             - [register, []]
@@ -61,7 +61,7 @@ services:
         class: phpbb\class_loader
         arguments:
             - \
-            - '%core.root_path%src/phpbb/ext/'
+            - '%core.filesystem_root_path%src/phpbb/ext/'
             - '%core.php_ext%'
         calls:
             - [register, []]
@@ -98,7 +98,7 @@ services:
             - '@symfony_request'
             - '@template'
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.adm_relative_path%'
             - '%core.php_ext%'
             - '%debug.sql_explain%'
@@ -107,7 +107,7 @@ services:
         class: phpbb\controller\resolver
         arguments:
             - '@service_container'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '@template'
 
     ext.manager:
@@ -118,7 +118,7 @@ services:
             - '@config'
             - '@filesystem'
             - '%tables.ext%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '@cache'
 
@@ -129,7 +129,7 @@ services:
         class: phpbb\routing\file_locator
         arguments:
             - '@filesystem'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
 
     group_helper:
         class: phpbb\group\helper
@@ -149,7 +149,7 @@ services:
             - '@user'
             - '@auth'
             - '@dispatcher'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.adm_relative_path%'
             - '%core.php_ext%'
             - '%tables.log%'
@@ -160,14 +160,14 @@ services:
             - '@symfony_request'
             - '@filesystem'
             - '@request'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%core.adm_relative_path%'
 
     plupload:
         class: phpbb\plupload\plupload
         arguments:
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '@config'
             - '@request'
             - '@user'

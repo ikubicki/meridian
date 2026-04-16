@@ -21,7 +21,7 @@ services:
             - '@passwords.manager'
             - '@request'
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: auth.provider }
@@ -34,7 +34,7 @@ services:
             - '@language'
             - '@request'
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: auth.provider }
@@ -64,7 +64,7 @@ services:
             - '%tables.auth_provider_oauth_states%'
             - '%tables.auth_provider_oauth_account_assoc%'
             - '%tables.users%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: auth.provider }

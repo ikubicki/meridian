@@ -20,7 +20,7 @@ services:
             - '%tables.smilies%'
             - '%tables.styles%'
             - '%tables.words%'
-            - '%core.root_path%src/phpbb/styles/'
+            - '%core.filesystem_root_path%src/phpbb/styles/'
 
     text_formatter.parser:
         alias: text_formatter.s9e.parser
@@ -64,7 +64,7 @@ services:
         class: phpbb\textformatter\s9e\quote_helper
         arguments:
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
 
     text_formatter.s9e.renderer:

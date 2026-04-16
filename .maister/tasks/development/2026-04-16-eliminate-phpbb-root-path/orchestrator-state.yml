@@ -1,0 +1,85 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+
+  created: "2026-04-16T00:00:00Z"
+  updated: "2026-04-16T00:00:00Z"
+  task_path: .maister/tasks/development/2026-04-16-eliminate-phpbb-root-path
+
+task:
+  title: "Wyeliminuj $phpbb_root_path z operacji na systemie plików"
+  description: "Zaimplementuj wyniki badań: zastąp $phpbb_root_path w require/include przez ścieżki __DIR__-based w startup.php i common.php (Layer 1), dodaj $filesystem_root_path do container_builder (Layer 2), napraw config_php_file (Layer 2). Layer 3 (YAML services) jest odłożony."
+  status: completed
+  tags: [php, paths, refactoring, composer, autoload, phpbb]
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: false
+    ui_heavy: false
+    # has_reproducible_defect override: gap-analyzer returned true but TDD red gate
+    # not applicable for path arithmetic fix (no unit-testable assertion). Research
+    # already confirms exact changes; verification phase runs tests post-implementation.
+  research_reference:
+    path: .maister/tasks/research/2026-04-15-phpbb-root-path-elimination
+    research_question: "How to eliminate $phpbb_root_path from all filesystem require/include operations?"
+    research_type: technical
+    confidence_level: high
+  phase_summaries:
+    research:
+      summary: "Root cause: $phpbb_root_path='./' is URL-relative; fails with CWD=/var/www/phpbb/web/. Layer 1 (startup.php + common.php): replace with __DIR__-based paths. Layer 2 (container_builder + config_php_file): add $filesystem_root_path param. Layer 3 (35+ YAML services): deferred."
+      key_findings:
+        - "startup.php lines 75+83: vendor/autoload.php via __DIR__/../../../vendor/autoload.php"
+        - "common.php ~12 lines: replace $phpbb_root_path.src/phpbb/ with __DIR__-based"
+        - "container_builder.__construct: add filesystem_root_path 2nd param, use in get_config_path/get_cache_dir/register_ext_compiler_pass"
+        - "config_php_file: pass PHPBB_FILESYSTEM_ROOT instead of $phpbb_root_path"
+        - "bin/phpbbcli.php: update container_builder call site"
+      recommended_approach: "Layers 1+2 in order: startup.php → common.php bootstrap requires → container_builder → config_php_file → phpbbcli.php"
+    codebase_analysis:
+      key_files: []
+      primary_language: php
+      summary: null
+    clarifications: []
+    gap_analysis:
+      integration_points: []
+      summary: null
+    scope_clarifications:
+      scope_expanded: null
+      summary: null
+    specification:
+      summary: null
+    architecture_decision:
+      decision: null
+      summary: null
+
+verification_context:
+  last_status: null
+  issues_found: []
+  fixes_applied: []
+  decisions_made: []
+  reverify_count: 0

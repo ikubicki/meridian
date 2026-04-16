@@ -8,7 +8,7 @@ services:
             - '@dbal.conn'
             - '@dbal.tools'
             - '%tables.migrations%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%core.table_prefix%'
             - '@migrator.tool_collection'
@@ -46,7 +46,7 @@ services:
             - '@cache'
             - '@user'
             - '@module.manager'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
             - '%tables.modules%'
         tags:
@@ -58,7 +58,7 @@ services:
             - '@dbal.conn'
             - '@cache'
             - '@auth'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: migrator.tool }

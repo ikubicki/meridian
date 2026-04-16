@@ -1,0 +1,75 @@
+orchestrator:
+  started_phase: phase-3
+  completed_phases: [phase-1, phase-2]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 2
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: true
+    design_enabled: true
+  created: "2026-04-15T00:00:00Z"
+  updated: "2026-04-15T21:30:00Z"
+  task_path: .maister/tasks/research/2026-04-15-composer-autoload
+
+task:
+  title: "Replace all requires with Composer autoload"
+  description: "Research how to replace all manual require/include statements in the phpBB codebase with Composer PSR-4 autoloading, including scope analysis, impact assessment, and migration strategy."
+  status: completed
+  tags: [php, composer, autoload, refactoring]
+  priority: medium
+
+research_context:
+  research_type: technical
+  research_question: "How can all require/include statements in the phpBB codebase be replaced with Composer PSR-4 autoload?"
+  scope:
+    included:
+      - Manual require/include statements in web/*.php entry points
+      - Manual require/include in src/phpbb/**/*.php classes
+      - composer.json autoload configuration
+      - Bootstrap/startup sequence
+      - Third-party vendor loading
+    excluded:
+      - Twig template files
+      - JavaScript/CSS files
+    constraints:
+      - Must maintain phpBB compatibility
+      - Must work inside Docker container
+  methodology:
+    - Static codebase analysis
+    - Bootstrap chain tracing
+    - Namespace/PSR-4 compliance inventory
+    - Composer autoload map verification
+    - Dynamic include classification and risk analysis
+  sources:
+    - web/*.php entry points
+    - src/phpbb/common/common.php
+    - src/phpbb/common/startup.php
+    - src/phpbb/forums/class_loader.php
+    - src/phpbb/**/*.php namespace and include scans
+    - composer.json
+    - vendor/composer/autoload_psr4.php
+    - vendor/composer/autoload_classmap.php
+    - vendor/composer/autoload_files.php
+  confidence_level: high
+  gathering_strategy:
+    categories:
+      - entry-points
+      - bootstrap
+      - src-classes
+      - composer-config
+      - dynamic-includes
+    count: 5
+    source: planner
+  phase_summaries:
+    phase-1:
+      summary: "Research foundation completed. Composer can replace core class autoloading, but procedural and dynamic includes must remain explicit."
+      steps_completed:
+        - initialize
+        - plan
+        - gather
+        - synthesize

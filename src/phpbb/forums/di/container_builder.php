@@ -39,6 +39,11 @@ class container_builder
 	protected $phpbb_root_path;
 
 	/**
+	 * @var string Absolute filesystem root path
+	 */
+	protected $filesystem_root_path;
+
+	/**
 	 * @var string php file extension
 	 */
 	protected $php_ext;
@@ -125,11 +130,13 @@ class container_builder
 	 * Constructor
 	 *
 	 * @param string $phpbb_root_path Path to the phpbb includes directory.
+	 * @param string $filesystem_root_path Absolute filesystem root path (falls back to realpath of $phpbb_root_path).
 	 * @param string $php_ext php file extension
 	 */
-	public function __construct($phpbb_root_path, $php_ext = 'php')
+	public function __construct($phpbb_root_path, $filesystem_root_path = '', $php_ext = 'php')
 	{
 		$this->phpbb_root_path	= $phpbb_root_path;
+		$this->filesystem_root_path = $filesystem_root_path ?: (realpath($phpbb_root_path) . '/');
 		$this->php_ext			= $php_ext;
 		$this->env_parameters	= $this->get_env_parameters();
 
@@ -412,7 +419,7 @@ class container_builder
 	 */
 	protected function get_config_path()
 	{
-		return $this->config_path ?: $this->phpbb_root_path . 'src/phpbb/common/config';
+		return $this->config_path ?: $this->filesystem_root_path . 'src/phpbb/common/config';
 	}
 
 	/**
@@ -422,7 +429,7 @@ class container_builder
 	 */
 	public function get_cache_dir()
 	{
-		return $this->cache_dir ?: $this->phpbb_root_path . 'cache/' . $this->get_environment() . '/';
+		return $this->cache_dir ?: $this->filesystem_root_path . 'cache/' . $this->get_environment() . '/';
 	}
 
 	/**
@@ -433,7 +440,7 @@ class container_builder
 		if ($this->config_php_file !== null)
 		{
 			// Build an intermediate container to load the ext list from the database
-			$container_builder = new container_builder($this->phpbb_root_path, $this->php_ext);
+			$container_builder = new container_builder($this->phpbb_root_path, $this->filesystem_root_path, $this->php_ext);
 			$ext_container = $container_builder
 				->without_cache()
 				->without_extensions()
@@ -593,8 +600,9 @@ class container_builder
 	{
 		return array_merge(
 			[
-				'core.root_path'     => $this->phpbb_root_path,
-				'core.php_ext'       => $this->php_ext,
+				'core.root_path'            => $this->phpbb_root_path,
+				'core.filesystem_root_path' => $this->filesystem_root_path,
+				'core.php_ext'              => $this->php_ext,
 				'core.environment'   => $this->get_environment(),
 				'core.debug'         => defined('DEBUG') ? DEBUG : false,
 				'core.cache_dir'     => $this->get_cache_dir(),
@@ -677,7 +685,7 @@ class container_builder
 			->ignoreUnreadableDirs(true)
 			->ignoreVCS(true)
 			->followLinks()
-			->in($this->phpbb_root_path . 'ext')
+			->in($this->filesystem_root_path . 'ext')
 		;
 
 		/** @var \SplFileInfo $pass */

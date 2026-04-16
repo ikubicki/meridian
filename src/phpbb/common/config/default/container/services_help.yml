@@ -13,7 +13,7 @@ services:
             - '@phpbb.help.manager'
             - '@template'
             - '@language'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
 
     phpbb.help.controller.faq:
@@ -23,5 +23,5 @@ services:
             - '@phpbb.help.manager'
             - '@template'
             - '@language'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'

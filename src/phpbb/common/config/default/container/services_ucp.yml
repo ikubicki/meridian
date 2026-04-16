@@ -7,7 +7,7 @@ services:
             - '@language'
             - '@request'
             - '@user'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
 
     phpbb.ucp.controller.reset_password:
@@ -24,5 +24,5 @@ services:
             - '@template'
             - '@user'
             - '%tables.users%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'

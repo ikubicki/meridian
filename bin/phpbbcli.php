@@ -39,7 +39,7 @@ require($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
 require($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
 require($phpbb_root_path . 'src/phpbb/common/functions_compatibility.php');
 
-$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
+$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpbb_root_path);
 $phpbb_container = $phpbb_container_builder->with_config($phpbb_config_php_file);
 
 $input = new ArgvInput();

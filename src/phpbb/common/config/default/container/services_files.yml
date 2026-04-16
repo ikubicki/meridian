@@ -12,7 +12,7 @@ services:
             - '@language'
             - '@php_ini'
             - '@upload_imagesize'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '@mimetype.guesser'
             - '@plupload'
 
@@ -54,4 +54,4 @@ services:
             - '@language'
             - '@php_ini'
             - '@request'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'

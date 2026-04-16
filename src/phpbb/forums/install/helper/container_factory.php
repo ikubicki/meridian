@@ -144,7 +144,7 @@ class container_factory
 		}
 
 		$phpbb_config_php_file = new \phpbb\config_php_file($this->phpbb_root_path, $this->php_ext);
-		$phpbb_container_builder = new \phpbb\di\container_builder($this->phpbb_root_path, $this->php_ext);
+		$phpbb_container_builder = new \phpbb\di\container_builder($this->phpbb_root_path, '', $this->php_ext);
 
 		// For BC with functions that we need during install
 		global $phpbb_container, $table_prefix;

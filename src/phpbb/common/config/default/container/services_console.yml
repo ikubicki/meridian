@@ -104,7 +104,7 @@ services:
             - '@cache'
             - '@log'
             - '@filesystem'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
         tags:
             - { name: console.command }
 
@@ -207,7 +207,7 @@ services:
             - '@config'
             - '@user'
             - '@dbal.conn'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
         tags:
             - { name: console.command }
 
@@ -218,7 +218,7 @@ services:
             - '@user'
             - '@dbal.conn'
             - '@cache'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: console.command }
@@ -250,7 +250,7 @@ services:
             - '@log'
             - '@notification_manager'
             - '@user_loader'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: console.command }
@@ -263,7 +263,7 @@ services:
             - '@config'
             - '@language'
             - '@passwords.manager'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: console.command }
@@ -276,7 +276,7 @@ services:
             - '@language'
             - '@log'
             - '@user_loader'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: console.command }
@@ -292,7 +292,7 @@ services:
             - '%tables.bots%'
             - '%tables.user_group%'
             - '%tables.users%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'
         tags:
             - { name: console.command }

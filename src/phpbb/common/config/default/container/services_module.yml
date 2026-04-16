@@ -6,5 +6,5 @@ services:
             - '@dbal.conn'
             - '@ext.manager'
             - '%tables.modules%'
-            - '%core.root_path%'
+            - '%core.filesystem_root_path%'
             - '%core.php_ext%'

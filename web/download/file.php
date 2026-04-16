@@ -15,7 +15,8 @@
 * @ignore
 */
 define('IN_PHPBB', true);
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../../';
+$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : './';
+$phpbb_filesystem_root = defined('PHPBB_FILESYSTEM_ROOT') ? PHPBB_FILESYSTEM_ROOT : realpath(__DIR__ . '/../../') . '/';
 
 // Thank you sun.
 if (isset($_SERVER['CONTENT_TYPE']))
@@ -32,13 +33,13 @@ else if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'
 
 if (isset($_GET['avatar']))
 {
-	require($phpbb_root_path . 'src/phpbb/common/startup.php');
+	require($phpbb_filesystem_root . 'src/phpbb/common/startup.php');
 
-	require($phpbb_root_path . 'src/phpbb/forums/class_loader.php');
-	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_root_path}src/phpbb/forums/");
+	require($phpbb_filesystem_root . 'src/phpbb/forums/class_loader.php');
+	$phpbb_class_loader = new \phpbb\class_loader('phpbb\\', "{$phpbb_filesystem_root}src/phpbb/forums/");
 	$phpbb_class_loader->register();
 
-	$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_root_path);
+	$phpbb_config_php_file = new \phpbb\config_php_file($phpbb_filesystem_root);
 	extract($phpbb_config_php_file->get_all());
 
 	if (!defined('PHPBB_ENVIRONMENT'))
@@ -51,17 +52,17 @@ if (isset($_GET['avatar']))
 		exit;
 	}
 
-	require($phpbb_root_path . 'src/phpbb/common/constants.php');
-	require($phpbb_root_path . 'src/phpbb/common/functions.php');
-	require($phpbb_root_path . 'src/phpbb/common/functions_download' . '.php');
-	require($phpbb_root_path . 'src/phpbb/common/utf/utf_tools.php');
+	require($phpbb_filesystem_root . 'src/phpbb/common/constants.php');
+	require($phpbb_filesystem_root . 'src/phpbb/common/functions.php');
+	require($phpbb_filesystem_root . 'src/phpbb/common/functions_download' . '.php');
+	require($phpbb_filesystem_root . 'src/phpbb/common/utf/utf_tools.php');
 
 	// Setup class loader first
-	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_root_path}ext/");
+	$phpbb_class_loader_ext = new \phpbb\class_loader('\\', "{$phpbb_filesystem_root}ext/");
 	$phpbb_class_loader_ext->register();
 
 	// Set up container
-	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path);
+	$phpbb_container_builder = new \phpbb\di\container_builder($phpbb_root_path, $phpbb_filesystem_root);
 	$phpbb_container = $phpbb_container_builder->with_config($phpbb_config_php_file)->get_container();
 
 	$phpbb_class_loader->set_cache($phpbb_container->get('cache.driver'));
@@ -146,8 +147,8 @@ if (isset($_GET['avatar']))
 }
 
 // implicit else: we are not in avatar mode
-include($phpbb_root_path . 'src/phpbb/common/common.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_download' . '.php');
+include($phpbb_filesystem_root . 'src/phpbb/common/common.php');
+require($phpbb_filesystem_root . 'src/phpbb/common/functions_download' . '.php');
 
 $attach_id = $request->variable('id', 0);
 $mode = $request->variable('mode', '');
