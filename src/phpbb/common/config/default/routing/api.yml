@@ -1,0 +1,45 @@
+api_health:
+    path:     /api/v1/health
+    defaults:
+        _controller: phpbb.api.v1.controller.health:index
+    methods:  [GET]
+
+api_forums:
+    path:     /api/v1/forums
+    defaults:
+        _controller: phpbb.api.v1.controller.forums:index
+    methods:  [GET]
+
+api_forum_topics:
+    path:     /api/v1/forums/{id}
+    defaults:
+        _controller: phpbb.api.v1.controller.forums:topics
+    methods:  [GET]
+    requirements:
+        id: \d+
+
+api_topics:
+    path:     /api/v1/topics
+    defaults:
+        _controller: phpbb.api.v1.controller.topics:index
+    methods:  [GET]
+
+api_topic_show:
+    path:     /api/v1/topics/{id}
+    defaults:
+        _controller: phpbb.api.v1.controller.topics:show
+    methods:  [GET]
+    requirements:
+        id: \d+
+
+api_users_me:
+    path:     /api/v1/users/me
+    defaults:
+        _controller: phpbb.api.v1.controller.users:me
+    methods:  [GET]
+
+api_auth_login:
+    path:     /api/v1/auth/login
+    defaults:
+        _controller: phpbb.api.v1.controller.auth:login
+    methods:  [POST]

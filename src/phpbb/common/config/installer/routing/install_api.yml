@@ -1,0 +1,11 @@
+install_api_health:
+    path:     /install/api/v1/health
+    defaults:
+        _controller: phpbb.install.api.v1.controller.health:index
+    methods:  [GET]
+
+install_api_status:
+    path:     /install/api/v1/status
+    defaults:
+        _controller: phpbb.install.api.v1.controller.status:index
+    methods:  [GET]

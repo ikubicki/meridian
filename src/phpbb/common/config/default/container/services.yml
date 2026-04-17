@@ -33,6 +33,8 @@ imports:
     - { resource: tables.yml }
     - { resource: parameters.yml }
 
+    - { resource: services_api.yml }
+
 services:
     phpbb_app_container:
         class: phpbb\Container

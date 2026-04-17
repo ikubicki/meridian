@@ -1,2 +1,5 @@
 core.default:
     resource: installer.yml
+
+core.install_api:
+    resource: install_api.yml

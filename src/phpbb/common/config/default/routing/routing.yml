@@ -30,3 +30,11 @@ phpbb_report_routing:
 phpbb_ucp_routing:
     resource: ucp.yml
     prefix: /user
+
+phpbb_api_routing:
+    resource: api.yml
+    prefix:   /
+
+phpbb_admin_api_routing:
+    resource: admin_api.yml
+    prefix:   /

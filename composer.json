@@ -53,7 +53,8 @@
 		"symfony/routing": "~3.4",
 		"symfony/twig-bridge": "~3.4",
 		"symfony/yaml": "~3.4",
-		"twig/twig": "^1.0 || ^2.0"
+		"twig/twig": "^1.0 || ^2.0",
+		"firebase/php-jwt": "^7.0"
 	},
 	"require-dev": {
 		"fabpot/goutte": "~3.2",
@@ -74,8 +75,11 @@
 	},
 	"autoload": {
 		"psr-4": {
+			"phpbb\\core\\": "src/phpbb/core/",
 			"phpbb\\": "src/phpbb/forums/",
+			"phpbb\\admin\\": "src/phpbb/admin/",
 			"phpbb\\common\\": "src/phpbb/common/",
+			"phpbb\\api\\": "src/phpbb/api/",
 			"phpbb\\install\\": "src/phpbb/install/"
 		},
 		"files": [

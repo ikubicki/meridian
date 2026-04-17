@@ -1,0 +1,30 @@
+services:
+    # ─── Application wrapper ─────────────────────────────────────────────────────
+
+    install_api.application:
+        class: phpbb\core\Application
+        arguments:
+            - '@http_kernel'
+            - '@service_container'
+
+    # ─── Event subscribers ───────────────────────────────────────────────────────
+
+    install_api.json_exception_subscriber:
+        class: phpbb\api\event\json_exception_subscriber
+        arguments:
+            - '%debug.exceptions%'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    install_api.auth_subscriber:
+        class: phpbb\api\event\auth_subscriber
+        tags:
+            - { name: kernel.event_subscriber }
+
+    # ─── Install API controllers ─────────────────────────────────────────────────
+
+    phpbb.install.api.v1.controller.health:
+        class: phpbb\install\api\v1\controller\health
+
+    phpbb.install.api.v1.controller.status:
+        class: phpbb\install\api\v1\controller\status

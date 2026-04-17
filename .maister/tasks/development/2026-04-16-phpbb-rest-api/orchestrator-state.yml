@@ -1,0 +1,79 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: "2026-04-16T00:00:00Z"
+  updated: "2026-04-16T00:00:00Z"
+  task_path: .maister/tasks/development/2026-04-16-phpbb-rest-api
+
+task:
+  title: "phpBB REST API — phpbb\\core\\Application + 3 entry points"
+  description: |
+    Zbudować REST API dla phpBB Vibed:
+    - src/phpbb/core/Application.php (phpbb\core\Application — kompozycja nad HttpKernel)
+    - web/api.php → phpbb\api (forum REST API, mockowane dane, auth: API token)
+    - web/adm/api.php → phpbb\admin\api (admin REST API, auth gate: acl('a_'))
+    - web/install/api.php → phpbb\install\api (installer REST API, startup.php bootstrap)
+    Wszystkie entry pointy delegują do phpbb\core\Application::run().
+  status: in_progress
+  tags: [rest-api, symfony, phpbb, architecture]
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-04-16-phpbb-rest-api
+    research_question: |
+      Jak zbudować phpbb\core jako bazę dla phpbb\api, phpbb\admin\api i phpbb\install\api
+      — trzech samodzielnych aplikacji Symfony wystawiających REST API?
+    research_type: mixed
+    confidence_level: high
+  phase_summaries:
+    research:
+      summary: >
+        phpBB już używa raw Symfony HttpKernel bez FrameworkBundle. Trzy API dzielą wspólną
+        klasę phpbb\core\Application (~40 linii) ale różne kontenery DI: forum+admin przez
+        common.php, install przez startup.php. Autentykacja via API token (Bearer), routing
+        przez YAML, dane mockowane hardcoded w kontrolerach. 23 pliki do stworzenia.
+      key_findings:
+        - phpBB używa HttpKernel bez FrameworkBundle — API to rozszerzenie YAML konfiguracji
+        - install API MUSI używać startup.php, nigdy common.php (checkInstallation redirect)
+        - json_exception_subscriber priority 10 zastępuje Twig-zależny forum subscriber
+        - API token auth: nowa tabela phpbb_api_tokens + kernel.request subscriber
+        - Nginx: 3 bloki location ^~ przed regex PHP block
+      recommended_approach: >
+        Kompozycja (phpbb\core\Application wraps HttpKernel), YAML routing, osobne
+        PSR-4 namespace, hardcoded mock data w kontrolerach Fazy 1
+    codebase_analysis:
+      key_files: []
+      primary_language: PHP
+      summary: null
+    clarifications: []
+    gap_analysis:
+      integration_points: []
+      summary: null

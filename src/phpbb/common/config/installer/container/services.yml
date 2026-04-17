@@ -8,6 +8,8 @@ imports:
     - { resource: ../../default/container/services_routing.yml }
     - { resource: ../../default/container/services_twig.yml }
 
+    - { resource: services_install_api.yml }
+
 services:
     cache.driver:
         class: '%cache.driver.class%'

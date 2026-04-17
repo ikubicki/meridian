@@ -1,0 +1,11 @@
+admin_api_health:
+    path:     /adm/api/v1/health
+    defaults:
+        _controller: phpbb.admin.api.v1.controller.health:index
+    methods:  [GET]
+
+admin_api_users:
+    path:     /adm/api/v1/users
+    defaults:
+        _controller: phpbb.admin.api.v1.controller.users:index
+    methods:  [GET]

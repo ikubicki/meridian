@@ -1,0 +1,59 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-16T00:00:00Z"
+  updated: "2026-04-16T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-16-phpbb-rest-api
+
+task:
+  title: "phpBB REST API — web/api.php + adm/api.php + install/api.php"
+  description: |
+    Zaprojektować i zaimplementować REST API dla phpBB:
+    - web/api.php → phpbb\api (Symfony app, dziedziczy z phpbb\core)
+    - web/adm/api.php → phpbb\admin\api (Symfony app, dziedziczy z phpbb\core)
+    - web/install/api.php → phpbb\install\api (Symfony app, dziedziczy z phpbb\core)
+    Poki co zwraca mockowane dane. Docelowo zastępuje wszystkie istniejące entry pointy.
+  status: in_progress
+  tags: [rest-api, symfony, phpbb, architecture]
+  priority: high
+
+research_context:
+  research_type: mixed
+  research_question: |
+    Jak zbudować phpbb\core jako bazę dla phpbb\api, phpbb\admin\api i phpbb\install\api
+    — trzech samodzielnych aplikacji Symfony wystawiających REST API, które docelowo
+    zastąpią wszystkie istniejące web entry pointy phpBB?
+  scope:
+    included:
+      - Composer.json i PSR-4 autoloading
+      - Istniejące Symfony komponenty (HttpKernel, HttpFoundation, Routing, DI)
+      - Struktura istniejących entry pointów (app.php, index.php, adm/index.php)
+      - Symfony Application/HttpKernel jako base klasa
+      - Wzorce REST API z autentykacją sesji phpBB
+      - Mockowane endpointy jako punkt startowy
+    excluded:
+      - Implementacja wszystkich endpointów (zbyt szeroki zakres)
+      - Migracja bazy danych
+      - Zmiany w szablonach Twig
+    constraints:
+      - PHP 7.2+ (composerjson platform)
+      - Symfony 3.4 (aktualna wersja w projekcie)
+      - Musi działać obok istniejących entry pointów
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 4
+    source: default
+  phase_summaries: {}
+
+options:
+  brainstorming_enabled: null
+  design_enabled: null

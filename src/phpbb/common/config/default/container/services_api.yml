@@ -1,0 +1,53 @@
+services:
+    # ─── Application wrapper ─────────────────────────────────────────────────────
+
+    api.application:
+        class: phpbb\core\Application
+        arguments:
+            - '@http_kernel'
+            - '@service_container'
+
+    admin_api.application:
+        class: phpbb\core\Application
+        arguments:
+            - '@http_kernel'
+            - '@service_container'
+
+    # ─── Event subscribers ───────────────────────────────────────────────────────
+
+    api.json_exception_subscriber:
+        class: phpbb\api\event\json_exception_subscriber
+        arguments:
+            - '%debug.exceptions%'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    api.auth_subscriber:
+        class: phpbb\api\event\auth_subscriber
+        tags:
+            - { name: kernel.event_subscriber }
+
+    # ─── Forum API controllers ───────────────────────────────────────────────────
+
+    phpbb.api.v1.controller.health:
+        class: phpbb\api\v1\controller\health
+
+    phpbb.api.v1.controller.forums:
+        class: phpbb\api\v1\controller\forums
+
+    phpbb.api.v1.controller.topics:
+        class: phpbb\api\v1\controller\topics
+
+    phpbb.api.v1.controller.users:
+        class: phpbb\api\v1\controller\users
+
+    phpbb.api.v1.controller.auth:
+        class: phpbb\api\v1\controller\auth
+
+    # ─── Admin API controllers ───────────────────────────────────────────────────
+
+    phpbb.admin.api.v1.controller.health:
+        class: phpbb\admin\api\v1\controller\health
+
+    phpbb.admin.api.v1.controller.users:
+        class: phpbb\admin\api\v1\controller\users
