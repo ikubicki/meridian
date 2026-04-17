@@ -163,3 +163,74 @@ if ($count > MAX_ITEMS_PER_PAGE)
 - All user-visible strings must go through the language system (`$user->lang()` or `$language->lang()`)
 - Never hardcode English strings in output — always use language keys
 - String keys: `UPPER_SNAKE_CASE` (e.g., `'LOGIN_ERROR_USERNAME'`)
+
+## Code Style Enforcement
+
+### Tool
+
+Use **PHP CS Fixer** (`php-cs-fixer`) as the authoritative code style tool:
+
+```bash
+vendor/bin/php-cs-fixer fix
+```
+
+The configuration file **`.php-cs-fixer.php`** must be committed to the repository root. It is the single source of truth — style rules in this document describe intent, but `.php-cs-fixer.php` is what is actually enforced.
+
+### Ruleset
+
+The `.php-cs-fixer.php` configuration must target PHP 8.3 and extend `@PSR12` with PHP 8 specific fixers:
+
+```php
+<?php
+$finder = PhpCsFixer\Finder::create()
+    ->in(__DIR__ . '/src')
+    ->in(__DIR__ . '/tests')
+    ->exclude('vendor');
+
+return (new PhpCsFixer\Config())
+    ->setRules([
+        '@PSR12'                           => true,
+        '@PHP83Migration'                  => true,
+        'declare_strict_types'             => true,
+        'strict_param'                     => true,
+        'array_syntax'                     => ['syntax' => 'short'],
+        'ordered_imports'                  => ['sort_algorithm' => 'alpha'],
+        'no_unused_imports'                => true,
+        'single_quote'                     => true,
+        'trailing_comma_in_multiline'      => true,
+        'nullable_type_declaration_for_default_null_value' => true,
+    ])
+    ->setFinder($finder)
+    ->setRiskyAllowed(true);
+```
+
+> **Note**: `src/phpbb/` legacy files may be excluded from the finder to avoid touching backward-compatible code. Only new code under `src/phpbb/api/` and `tests/` must pass the fixer.
+
+### When to Run
+
+- **Before every commit** — must be run manually or enforced via a pre-commit hook
+- **In CI** — the pipeline runs `php-cs-fixer fix --dry-run --diff` and fails on any violation
+- **In IDE** — configure your editor to run php-cs-fixer on save (PhpStorm: Tools → External Tools; VS Code: `junstyle.php-cs-fixer` extension)
+
+### Pre-commit Hook (optional but recommended)
+
+Add to `.git/hooks/pre-commit`:
+
+```bash
+#!/bin/sh
+vendor/bin/php-cs-fixer fix --quiet
+git add -u
+```
+
+Make it executable: `chmod +x .git/hooks/pre-commit`
+
+### CI Integration
+
+Add to your CI pipeline (e.g., GitHub Actions):
+
+```yaml
+- name: Check code style
+  run: vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes
+```
+
+Fail the build on any style violation — do not use `--quiet` in CI so diffs are visible in the log.

@@ -18,7 +18,7 @@
 Coding standards and conventions for the project.
 
 ### [Global](standards/global/STANDARDS.md)
-PHP 8.3 / PSR-1 conventions: `PascalCase` classes and methods (new code), `snake_case` variables, `declare(strict_types=1)`, Allman-style braces, PHPDoc only where native types are insufficient, file headers, constants, i18n. Legacy `includes/` layer keeps `snake_case` for backward compatibility.
+PHP 8.3 / PSR-1 conventions: `PascalCase` classes and methods (new code), `snake_case` variables, `declare(strict_types=1)`, Allman-style braces, PHPDoc only where native types are insufficient, file headers, constants, i18n. **Code style enforcement via `php-cs-fixer`** (`@PSR12` + `@PHP83Migration` ruleset, `.php-cs-fixer.php` in repo root, mandatory before every commit and in CI). Legacy `includes/` layer keeps `snake_case` for backward compatibility.
 
 ### [Backend](standards/backend/STANDARDS.md)
 PHP 8.3 patterns: `declare(strict_types=1)`, typed return/property types, `readonly` constructor promotion, `match` expressions, named arguments, nullsafe operator, first-class callables, enums. PSR-4 namespacing under `phpbb\`, `PascalCase` class names (new code), constructor-only DI, single-quote strings, DBAL SQL safety (escape/cast/helper methods), cross-DB compatibility (`<>` not `!=`), CSRF, ACL, legacy `includes/` patterns.
