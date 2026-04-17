@@ -1,15 +1,25 @@
 # Global Coding Standards
 
-General conventions applicable across the entire phpBB project, verified by analysis of actual codebase (phpBB 3.3.15).
+Conventions for the phpBB Vibed project targeting **PHP 8.3** and PSR-1/PSR-12 compliance.
+Legacy rules (phpBB 3.3 `includes/` layer) are preserved in a clearly labelled section below.
 
 ## Naming Conventions
 
-- **Variables**: `snake_case` — e.g., `$current_user`, `$forum_id`, `$post_count` *(NOT camelCase)*
-- **Functions** (legacy procedural, `includes/`): `snake_case` — e.g., `make_forum_select()`, `delete_topics()`. New utility functions that bridge both layers use `phpbb_` prefix.
-- **Classes** (OOP, `phpbb/`): `snake_case` — e.g., `exception_subscriber`, `cron_list`, `viglink_helper` *(NOT PascalCase — phpBB-specific convention, differs from PSR-1)*
-- **Class methods**: `snake_case` — e.g., `run_all()`, `set_subject()`, `get_forum_ids()` *(NOT camelCase)*
-- **Constants**: `UPPER_SNAKE_CASE` — e.g., `PHPBB_VERSION`, `USERS_TABLE`
-- **File names**: `snake_case` — e.g., `exception_subscriber.php`, `driver_interface.php` (100% consistency across 866+ sampled files)
+### New Code (PHP 8.3 / PSR-1)
+- **Variables**: `snake_case` — e.g., `$currentUser`, `$forumId`, `$postCount` *(camelCase accepted for local vars in new code too)*
+- **Classes & Interfaces**: `PascalCase` — e.g., `ExceptionSubscriber`, `AuthProvider`, `ForumController`
+- **Interface names**: `PascalCase` with `Interface` suffix — e.g., `DriverInterface`, `TreeInterface`
+- **Abstract base classes**: `PascalCase` — e.g., `BaseCommand`, `MigrationCommand`
+- **Class methods**: `camelCase` — e.g., `runAll()`, `setSubject()`, `getForumIds()`
+- **File names for class files**: `PascalCase.php` matching the class name — e.g., `ExceptionSubscriber.php`
+- **Constants (class)**: `UPPER_SNAKE_CASE` — e.g., `MAX_ITEMS`, `DEFAULT_LIMIT`
+- **Constants (global)**: `UPPER_SNAKE_CASE` with `define()` — e.g., `PHPBB_VERSION`, `USERS_TABLE`
+
+### Legacy Code (`includes/` layer — do not change)
+- **Classes**: `snake_case` — e.g., `exception_subscriber`, `viglink_helper` *(backward-compat only)*
+- **Methods**: `snake_case` — e.g., `run_all()`, `get_forum_ids()`
+- **File names**: `snake_case.php` — e.g., `exception_subscriber.php`
+- Procedural functions: `snake_case` with `phpbb_` prefix for bridge functions
 
 ## Indentation & Whitespace
 
@@ -59,6 +69,14 @@ switch ($mode)
 
 ## File Structure
 
+### PHP Version Declaration
+Every new PHP file must begin with `declare(strict_types=1)` immediately after the opening `<?php` tag:
+
+```php
+<?php
+declare(strict_types=1);
+```
+
 ### Closing PHP Tag
 Never use the optional closing `?>` tag in PHP-only files. Prevents accidental whitespace output.
 
@@ -82,32 +100,44 @@ Every phpBB PHP file must begin with this exact license/copyright block immediat
 
 ## PHPDoc Requirements
 
-### On Class Properties
-Every class property must have a `@var` PHPDoc inline doc comment:
+### On Class Properties (PHP 8.3)
+Typed properties declared natively do **not** require a `@var` docblock. Use PHPDoc only when native typing is insufficient:
 
 ```php
-/** @var \phpbb\language\language */
-protected $language;
+// Preferred — native types, no @var needed:
+protected string $language;
+private readonly ContainerInterface $container;
 
-/** @var \phpbb\db\driver\driver_interface */
-protected $db;
-
-/** @var \phpbb\config\config */
-protected $config;
+// @var needed only for complex/generic types:
+/** @var list<string> */
+private array $roles = [];
 ```
 
 ### On Class Methods
-All public and protected methods must have a `/** ... */` docblock with `@param` and `@return` tags:
+All `public` and `protected` methods must have a docblock only when:
+- The method has non-obvious behavior or side effects
+- A parameter/return type cannot be fully expressed in the signature
+
+Minimal example for well-typed methods:
+
+```php
+public function checkPermissions(User $user, int $id): bool
+{
+    // no docblock needed — signature is self-documenting
+}
+```
+
+Full docblock when needed:
 
 ```php
 /**
- * Brief description.
+ * Validate user login credentials.
  *
- * @param \phpbb\user $user   The user object
- * @param int         $id     The ID
- * @return bool
+ * @param array<string, string> $credentials  Associative array with 'username' and 'password'
+ * @return array{user_id: int, token: string}
+ * @throws RuntimeException when the auth provider is unavailable
  */
-public function check_permissions(\phpbb\user $user, int $id)
+public function login(array $credentials): array
 ```
 
 - Document `@throws` for methods that can throw exceptions

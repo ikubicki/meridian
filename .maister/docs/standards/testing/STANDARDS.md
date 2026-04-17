@@ -1,61 +1,131 @@
 # Testing Standards
 
-PHPUnit conventions and patterns for the phpBB test suite.
+PHPUnit 10+ conventions and patterns for the phpBB Vibed test suite.
 
 ## Framework & Version
 
-- **PHPUnit 7+** (compatible with PHPUnit 9 for newer environments)
+- **PHPUnit 10+** (target: `^10.0`)
 - Tests live in `tests/` mirroring the source structure (e.g., `phpbb/auth/` → `tests/auth/`)
 - Run the suite: `vendor/bin/phpunit -c phpunit.xml`
 
 ## Test Naming
 
 ### Files & Classes
-- Test file: `<subject>_test.php` (e.g., `session_test.php`)
-- Test class: `phpbb_<component>_test` or `phpbb\tests\<component>\<subject>_test`
+- Test file: `<SubjectName>Test.php` (PascalCase, e.g., `SessionTest.php`, `AuthProviderTest.php`)
+- Test class: `phpbb\tests\<component>\<Subject>Test` (matches file name)
 
 ### Method Names
-- Pattern: `test_<method>_<condition>` (snake_case)
-- Be descriptive about the scenario being tested:
+- Use descriptive `camelCase` starting with `test`:
+  - `testGetUserReturnsFalseForUnknownId()`
+  - `testLoginThrowsOnInvalidCredentials()`
+  - `testPostCreatedWithCorrectTimestamp()`
+- Or use the `#[Test]` attribute with any descriptive method name:
+  ```php
+  #[Test]
+  public function getUserReturnsFalseForUnknownId(): void { ... }
+  ```
+- Never name tests `test1()`, `testA()`, or other meaningless identifiers
+
+## PHP 8 Attributes (PHPUnit 10+)
+
+Use PHP 8 attributes instead of annotations for all test metadata:
 
 ```php
-public function test_get_user_returns_false_for_unknown_id() { ... }
-public function test_login_throws_on_invalid_credentials()   { ... }
-public function test_post_created_with_correct_timestamp()   { ... }
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\After;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+
+#[Test]
+public function loginReturnsTokenOnSuccess(): void { ... }
+
+#[Test]
+#[DataProvider('provideInvalidUsernames')]
+public function validateUsernameRejectsInvalid(string $username): void { ... }
+
+#[Before]
+public function initDatabase(): void { ... }
+
+#[Group('slow')]
+#[Test]
+public function heavyIntegrationTest(): void { ... }
 ```
 
-- Never name tests `test1()`, `testA()`, or other meaningless identifiers
+> **No annotations**: Do not use `/** @test */`, `/** @dataProvider */`, `/** @group */`, `/** @requires */`. These are deprecated in PHPUnit 10.
 
 ## Test Structure (AAA)
 
 Follow Arrange–Act–Assert in every test:
 
 ```php
-public function test_calculate_post_count_includes_soft_deleted()
+#[Test]
+public function calculatePostCountIncludesSoftDeleted(): void
 {
     // Arrange
     $user = $this->createMockedUser(['post_count' => 5]);
 
     // Act
-    $result = $this->counter->calculate($user, true);
+    $result = $this->counter->calculate($user, include_deleted: true);
 
     // Assert
     $this->assertSame(5, $result);
 }
 ```
 
+## `setUp()` and `tearDown()`
+
+Always declare explicit `void` return type:
+
+```php
+protected function setUp(): void
+{
+    parent::setUp();
+    $this->subject = new AuthProvider($this->createMock(DriverInterface::class));
+}
+
+protected function tearDown(): void
+{
+    // clean up open resources
+    parent::tearDown();
+}
+```
+
+## Data Providers
+
+Providers must be `public static` methods returning an iterable. Use named keys for descriptive failure messages:
+
+```php
+public static function provideInvalidUsernames(): array
+{
+    return [
+        'empty string'   => [''],
+        'too long'       => [str_repeat('a', 256)],
+        'special chars'  => ['user<script>'],
+    ];
+}
+
+#[Test]
+#[DataProvider('provideInvalidUsernames')]
+public function validateUsernameRejectsInvalid(string $username): void
+{
+    $this->assertFalse($this->validator->validate($username));
+}
+```
+
 ## Database Tests
 
-- Extend `phpbb_database_test_case` for tests that require DB interaction
-- Provide fixtures via `getDataSet()` returning a `PHPUnit_Extensions_Database_DataSet_XmlDataSet`
+- Extend `phpbb_database_test_case` for tests requiring DB interaction
+- Provide fixtures via `getDataSet()` returning an `XmlDataSet`
 - Use `tests/dbal/fixtures/` for XML fixture files
 - Reset auto-increment and truncate tables in `setUp()` via `$this->db->sql_query('TRUNCATE ...')`
 - Never share DB state between tests — each test must be fully independent
 
 ```php
-class phpbb_dbal_select_test extends phpbb_database_test_case
+class SelectTest extends phpbb_database_test_case
 {
-    protected function getDataSet()
+    protected function getDataSet(): \PHPUnit\DbUnit\DataSet\IDataSet
     {
         return $this->createXMLDataSet(__DIR__ . '/fixtures/select.xml');
     }
@@ -66,11 +136,11 @@ class phpbb_dbal_select_test extends phpbb_database_test_case
 
 - Use PHPUnit's built-in `createMock()` / `getMockBuilder()` — no third-party mock libraries
 - Mock at the interface boundary, not the concrete class where possible
-- Verify interactions with `expects($this->once())` / `expects($this->exactly(n))` when the call count matters
+- Verify interactions with `expects($this->once())` / `expects($this->exactly(n))` when call count matters
 - Avoid over-mocking: if setup is complex, consider an integration test with the real class
 
 ```php
-$db = $this->createMock(\phpbb\db\driver\driver_interface::class);
+$db = $this->createMock(DriverInterface::class);
 $db->expects($this->once())
    ->method('sql_query')
    ->willReturn($mockResult);
@@ -86,39 +156,33 @@ $db->expects($this->once())
 ## Assertions
 
 - Use the most specific assertion available:
-  - Prefer `assertSame()` over `assertEquals()` (strict type check)
-  - Prefer `assertCount()` over `assertEquals(n, count(...))`
-  - Use `assertInstanceOf()` to verify return types
+  - `assertSame()` over `assertEquals()` (strict type + value check)
+  - `assertCount()` over `assertEquals(n, count(...))`
+  - `assertInstanceOf()` to verify return types
 - One logical assertion per test (multiple `assert*` calls are fine if they verify the same outcome)
+- For expected exceptions use `$this->expectException()` — **never** use `@expectedException` annotation
+
+```php
+#[Test]
+public function loginThrowsForUnknownUser(): void
+{
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('User not found');
+    $this->auth->login('nobody', 'pass');
+}
+```
 
 ## Coverage & Quality
 
-- Aim for ≥ 80% line coverage on new phpbb\ OOP code
-- Mark known-failing or environment-dependent tests with `@group slow` or `@requires extension ...`
-- Use `@dataProvider` for parameterized tests rather than loops inside a test method
-
-```php
-/** @dataProvider provide_invalid_usernames */
-public function test_validate_username_rejects_invalid(string $username): void
-{
-    $this->assertFalse($this->validator->validate($username));
-}
-
-public static function provide_invalid_usernames(): array
-{
-    return [
-        'empty string'      => [''],
-        'too long'          => [str_repeat('a', 256)],
-        'special chars'     => ['user<script>'],
-    ];
-}
-```
+- Aim for ≥ 80% line coverage on new `phpbb\` OOP code
+- Mark known-failing or environment-dependent tests with `#[Group('slow')]` or `#[RequiresPhpExtension('pdo')]`
+- Use `#[DataProvider]` for parameterized tests — never use loops inside a test method
 
 ## Test Toolchain
 
 ### Version Requirements
-- **PHPUnit**: `^7.0` (configured in `composer.json` require-dev)
-- **phpunit/dbunit**: `~4.0` — for database integration tests extending `phpbb_database_test_case`
+- **PHPUnit**: `^10.0`
+- **phpunit/dbunit**: replaced by `phpunit/db-unit` or direct DB setup in `setUp()`
 - **fabpot/goutte**: `~3.2` — functional/integration HTTP tests
 - **php-webdriver/webdriver**: `~1.8` — E2E browser tests via Selenium WebDriver
 - **Code style**: `squizlabs/php_codesniffer: ~3.4`
@@ -128,8 +192,8 @@ Run all tests: `vendor/bin/phpunit -c phpunit.xml`
 ### Test Layers
 | Layer | Tool | Use for |
 |---|---|---|
-| Unit | PHPUnit 7 | Single class/method, fully mocked dependencies |
-| DB Integration | PHPUnit + DbUnit 4 | Tests requiring real database operations |
+| Unit | PHPUnit 10 | Single class/method, fully mocked dependencies |
+| DB Integration | PHPUnit + manual setUp | Tests requiring real database operations |
 | Functional (HTTP) | Goutte | Full HTTP request/response testing without a real browser |
 | E2E | Selenium WebDriver | Full browser automation for UI-critical flows |
-```
+

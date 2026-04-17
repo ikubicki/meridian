@@ -1,20 +1,49 @@
 # Backend Coding Standards
 
-PHP-specific standards for the phpBB backend codebase, verified by analysis of 30+ classes and configuration.
+PHP 8.3 standards for the phpBB Vibed backend codebase.
+
+## Strict Types
+
+Every new PHP file must declare strict types immediately after `<?php`:
+
+```php
+<?php
+declare(strict_types=1);
+```
+
+This enforces type coercion strictness for scalar type declarations and is **mandatory** for all new code under `src/phpbb/`.
+
+## Return & Property Types
+
+All methods must declare explicit return types. All class properties must have native type declarations:
+
+```php
+// Properties with types:
+private string $jwtSecret;
+private readonly int $tokenTtl;
+
+// Methods with return types:
+public function getUser(int $id): ?User
+public function listForums(): array
+public function handleLogin(): JsonResponse
+public function tearDown(): void
+```
+
+Use `?Type` (nullable) only when `null` is a meaningful return. Prefer `never` for methods that always throw.
 
 ## Namespacing (PSR-4)
 
 - All new OOP code lives under the `phpbb\` namespace
 - Namespace mirrors the directory structure exactly:
-  - `phpbb/auth/provider/db.php` → `namespace phpbb\auth\provider;`
-  - `phpbb/cache/driver/driver_interface.php` → `namespace phpbb\cache\driver;`
+  - `phpbb/auth/provider/Db.php` → `namespace phpbb\auth\provider;`
+  - `phpbb/cache/driver/DriverInterface.php` → `namespace phpbb\cache\driver;`
 - Never use global namespace for new classes; always declare `namespace phpbb\...;`
 - Extensions use `<vendor>\<extension>\` namespace
 
 ```php
 namespace phpbb\auth\provider;
 
-class db extends base
+class Db extends Base
 {
     // ...
 }
@@ -22,38 +51,111 @@ class db extends base
 
 ## Class Naming Conventions
 
-- **Classes**: `snake_case` — e.g., `class exception_subscriber`, `class cron_list`, `class viglink_helper`
-  - This is a phpBB-specific convention that **differs from PSR-1** (which uses PascalCase)
-- **Interfaces**: `snake_case` with `_interface` suffix — e.g., `interface driver_interface`, `interface tree_interface`
-- **Abstract base classes**: `snake_case` — e.g., `class base`, `class migration_command`
+- **Classes**: `PascalCase` — e.g., `ExceptionSubscriber`, `CronList`, `ViglinkHelper`
+- **Interfaces**: `PascalCase` with `Interface` suffix — e.g., `DriverInterface`, `TreeInterface`
+- **Abstract base classes**: `PascalCase` — e.g., `Base`, `MigrationCommand`
+
+> **Legacy note**: Existing files in the old phpBB layer still use `snake_case` (e.g., `viglink_helper`). Do not rename them — keep backward compatibility. New files under `src/phpbb/api/` and extensions must use `PascalCase`.
 
 ## Dependency Injection
 
-- **Constructor injection only** — all dependencies injected via `__construct()` (100% consistency in phpbb/ layer)
-- Dependencies stored as `protected` properties (not `public`, not `var`)
+- **Constructor injection only** — all dependencies injected via `__construct()`
+- Use **constructor property promotion** with `readonly` for injected services:
+
+```php
+class ForumRepository
+{
+    public function __construct(
+        private readonly \phpbb\db\driver\driver_interface $db,
+        private readonly \phpbb\config\config $config,
+    ) {}
+}
+```
+
+- Properties that must be mutable after construction use `private` without `readonly`
 - Service definition in YAML: `config/default/container/services_*.yml`
 - Avoid `global` in new OOP code — use DI container
 
+## Readonly Properties
+
+Use `readonly` for all constructor-injected dependencies and any value that must not change after construction:
+
 ```php
-class viglink_helper
+private readonly string $jwtSecret;
+private readonly ContainerInterface $container;
+```
+
+For PHP 8.2+ readonly classes where all properties are readonly, consider `readonly class`:
+
+```php
+readonly class TokenClaims
 {
-    /** @var \phpbb\config\config */
-    protected $config;
+    public function __construct(
+        public int $userId,
+        public bool $isAdmin,
+        public int $exp,
+    ) {}
+}
+```
 
-    /** @var \phpbb\db\driver\driver_interface */
-    protected $db;
+## Modern PHP Constructs
 
-    /**
-     * Constructor.
-     *
-     * @param \phpbb\config\config              $config
-     * @param \phpbb\db\driver\driver_interface $db
-     */
-    public function __construct(\phpbb\config\config $config, \phpbb\db\driver\driver_interface $db)
-    {
-        $this->config = $config;
-        $this->db = $db;
-    }
+### `match` Expression
+Prefer `match` over `switch` for value-returning expressions:
+
+```php
+// Preferred:
+$label = match($status) {
+    'active'  => 'Active',
+    'banned'  => 'Banned',
+    default   => 'Unknown',
+};
+
+// Avoid (switch for value mapping):
+switch ($status) { ... }
+```
+
+### Named Arguments
+Use named arguments when calling functions with multiple parameters or non-obvious positional arguments:
+
+```php
+array_slice(array: $items, offset: 0, length: 10, preserve_keys: true);
+str_contains(haystack: $path, needle: '/api/');
+```
+
+### Nullsafe Operator
+Use `?->` instead of null-checks for chained property/method access:
+
+```php
+// Preferred:
+$userId = $this->request->attributes->get('_api_token')?->userId;
+
+// Avoid:
+$token = $this->request->attributes->get('_api_token');
+$userId = $token !== null ? $token->userId : null;
+```
+
+### First-Class Callables
+Use first-class callables instead of closures when passing existing methods as callbacks:
+
+```php
+// Preferred:
+$formatted = array_map($this->formatForum(...), $forums);
+
+// Avoid unnecessary closure wrapper:
+$formatted = array_map(fn($f) => $this->formatForum($f), $forums);
+```
+
+### Enums
+Use `enum` for fixed value sets:
+
+```php
+enum HttpMethod: string
+{
+    case Get    = 'GET';
+    case Post   = 'POST';
+    case Patch  = 'PATCH';
+    case Delete = 'DELETE';
 }
 ```
 
@@ -61,7 +163,7 @@ class viglink_helper
 
 - Always use explicit visibility: `public`, `protected`, `private`
 - Never use `var` (PHP 4 legacy — only in `includes/`, never in new code)
-- `static` keyword comes after visibility: `public static function`, `protected static $var`
+- `static` keyword comes after visibility: `public static function`, `protected static int $count`
 
 ## String Quoting
 
@@ -72,22 +174,21 @@ class viglink_helper
 // Correct:
 $str = 'This is a string without variables.';
 $table = USERS_TABLE . " WHERE username = '" . $db->sql_escape($name) . "'";
-
-// Avoid (unless interpolation needed):
-$str = "This is a string without variables.";
 ```
 
 ## `use` Statements
 
 - Place `use` import statements after `namespace` declaration, before the class body
-- Use for Symfony classes and frequently referenced external classes
-- phpBB's own types may be referenced as FQN in constructor signatures alternatively
+- Group: PHP built-ins → external/vendor → project-internal, separated by blank lines
 
 ```php
 namespace phpbb\console\command;
 
+use RuntimeException;
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+
 use phpbb\db\driver\driver_interface;
 ```
 
@@ -99,6 +200,7 @@ use phpbb\db\driver\driver_interface;
   - `phpbb\exception\http_exception` — HTTP-layer errors (401, 403, 404)
   - `phpbb\exception\module_not_found_exception` — module loading failures
   - SPL exceptions: `\RuntimeException`, `\OutOfBoundsException`, `\InvalidArgumentException`
+- **API layer**: return `JsonResponse` with appropriate HTTP status (see `REST_API.md`)
 - **Legacy procedural** (`includes/`): use `trigger_error()` with `E_USER_ERROR` / `E_USER_WARNING`
 - Never expose raw exception messages or stack traces to end users
 
@@ -133,31 +235,14 @@ $sql = "SELECT * FROM " . USERS_TABLE . " WHERE username = '$username'";
 
 ### DBAL Helper Methods
 - `$db->sql_build_array('INSERT', $data_array)` — for INSERT/UPDATE
-- `$db->sql_build_query('SELECT', $sql_ary)` — for complex SELECT queries  
+- `$db->sql_build_query('SELECT', $sql_ary)` — for complex SELECT queries
 - `$db->sql_in_set('column', $id_array)` — for IN clauses
 - `$db->sql_query_limit($sql, $total, $offset)` — for LIMIT/pagination
-
-```php
-$sql_ary = [
-    'user_id'    => (int) $user_id,
-    'post_text'  => $db->sql_escape($text),
-];
-$sql = 'INSERT INTO ' . POSTS_TABLE . ' ' . $db->sql_build_array('INSERT', $sql_ary);
-$db->sql_query($sql);
-```
 
 ### Cross-Database Compatibility
 - All SQL must work across MySQL, PostgreSQL, MSSQL, SQLite3, Oracle
 - Use `<>` for not-equals (SQL:2003 standard) — NOT `!=`
 - Do not use database-specific functions (`CONCAT` vs `||`, etc.)
-
-```php
-// Correct:
-WHERE forum_id <> 0
-
-// Wrong:
-WHERE forum_id != 0
-```
 
 ## Security Practices
 
