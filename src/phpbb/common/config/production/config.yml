@@ -1,2 +1,5 @@
 imports:
     - { resource: ../default/config.yml }
+
+core:
+    allow_install_dir: true

@@ -15,6 +15,10 @@
 * Minimum Requirement: PHP 7.2.0
 */
 
+// Normalize DOCUMENT_ROOT to web root so Symfony's getBasePath() returns ''
+// instead of a filesystem path like /var/www/phpbb/web
+$_SERVER['DOCUMENT_ROOT'] = '/';
+$_SERVER['PHPBB_ROOT_PATH'] = '/';
 
 require(__DIR__ . '/startup.php');
 
@@ -29,9 +33,12 @@ if (!defined('PHPBB_ENVIRONMENT'))
 
 \phpbb\install\checkInstallation($phpbb_root_path);
 
+// Base URL path for all forum links (always '/' in this setup)
+define('URL_BASE_PATH', '/');
+
 // In case $phpbb_adm_relative_path is not set (in case of an update), use the default.
 $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relative_path : 'web/adm/';
-$phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
+$phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : '/' . ltrim($phpbb_adm_relative_path, '/');
 
 // Include files
 require(__DIR__ . '/functions.php');

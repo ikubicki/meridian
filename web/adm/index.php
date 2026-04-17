@@ -15,13 +15,15 @@
 */
 define('ADMIN_START', true);
 define('NEED_SID', true);
+define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../../');
+define('PHPBB_ADMIN_PATH', '/adm/');
 
 // Include files
-$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../../';
-require($phpbb_root_path . 'src/phpbb/common/common.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_acp.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_admin.php');
-require($phpbb_root_path . 'src/phpbb/common/functions_module.php');
+$phpbb_root_path = (defined('PHPBB_ROOT_PATH')) ? PHPBB_ROOT_PATH : '../';
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_acp.php');
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_admin.php');
+require(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/functions_module.php');
 
 // Start session management
 $user->session_begin();
@@ -51,13 +53,13 @@ $file_uploads	= (@ini_get('file_uploads') == '1' || strtolower(@ini_get('file_up
 $module_id		= $request->variable('i', '');
 $mode			= $request->variable('mode', '');
 
-// Set custom style for admin area
+// Set custom style for admin area — pass filesystem path, not URL path
 $template->set_custom_style(array(
 	array(
 		'name' 		=> 'adm',
 		'ext_path' 	=> 'adm/style/',
 	),
-), $phpbb_admin_path . 'style');
+), PHPBB_FILESYSTEM_ROOT . 'web/adm/style');
 
 $template->assign_var('T_ASSETS_PATH', $phpbb_path_helper->update_web_root_path($phpbb_root_path . 'assets'));
 $template->assign_var('T_TEMPLATE_PATH', $phpbb_path_helper->update_web_root_path($phpbb_root_path . 'style'));

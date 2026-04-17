@@ -40,7 +40,8 @@ class p_master
 	{
 		global $phpbb_root_path;
 
-		$this->include_path = ($include_path !== false) ? $include_path : $phpbb_root_path . 'src/phpbb/common/';
+		$fs_root = defined('PHPBB_FILESYSTEM_ROOT') ? PHPBB_FILESYSTEM_ROOT : $phpbb_root_path;
+		$this->include_path = ($include_path !== false) ? $include_path : $fs_root . 'src/phpbb/common/';
 
 		// Make sure the path ends with /
 		if (substr($this->include_path, -1) !== '/')

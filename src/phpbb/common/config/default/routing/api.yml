@@ -43,3 +43,9 @@ api_auth_login:
     defaults:
         _controller: phpbb.api.v1.controller.auth:login
     methods:  [POST]
+
+api_auth_signup:
+    path:     /api/v1/auth/signup
+    defaults:
+        _controller: phpbb.api.v1.controller.auth:signup
+    methods:  [POST]

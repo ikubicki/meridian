@@ -1533,10 +1533,19 @@ function append_sid($url, $params = false, $is_amp = true, $session_id = false, 
 		$params = false;
 	}
 
-	// Update the root path with the correct relative web path
-	if (!$is_route && $phpbb_path_helper instanceof \phpbb\path_helper)
+	// Convert relative path to absolute using URL_BASE_PATH
+	if (!$is_route && defined('URL_BASE_PATH'))
 	{
-		$url = $phpbb_path_helper->update_web_root_path($url);
+		if (preg_match('#^\.{1,2}/(.+)$#', $url, $m))
+		{
+			// ./foo.php or ../foo.php → /foo.php
+			$url = URL_BASE_PATH . $m[1];
+		}
+		elseif ($url !== '' && $url[0] !== '/' && strpos($url, '://') === false)
+		{
+			// bare foo.php → /foo.php
+			$url = URL_BASE_PATH . $url;
+		}
 	}
 
 	$append_sid_overwrite = false;
@@ -2462,7 +2471,19 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 		// The result parameter is always an array, holding the relevant information...
 		if ($result['status'] == LOGIN_SUCCESS)
 		{
-			$redirect = $request->variable('redirect', "{$phpbb_root_path}index.php");
+			$redirect = $request->variable('redirect', defined('URL_BASE_PATH') ? URL_BASE_PATH . 'index.php' : "{$phpbb_root_path}index.php");
+			// Strip any filesystem path prefix - keep only /page.php?params
+			if (defined('URL_BASE_PATH') && strpos($redirect, '/') === 0 && !preg_match('#^https?://#', $redirect))
+			{
+				if (preg_match('#/([a-z0-9_-]+\.php(?:\?.*)?)$#i', $redirect, $m))
+				{
+					$redirect = URL_BASE_PATH . $m[1];
+				}
+				else
+				{
+					$redirect = URL_BASE_PATH . 'index.php';
+				}
+			}
 
 			/**
 			* This event allows an extension to modify the redirection when a user successfully logs in
@@ -2556,6 +2577,25 @@ function login_box($redirect = '', $l_explain = '', $l_success = '', $admin = fa
 
 	if ($redirect)
 	{
+		// Normalize redirect to absolute URL path using URL_BASE_PATH
+		if (defined('URL_BASE_PATH'))
+		{
+			if (strpos($redirect, './') === 0)
+			{
+				$redirect = URL_BASE_PATH . substr($redirect, 2);
+			}
+			else if (strpos($redirect, '/') === 0 && !preg_match('#^https?://#', $redirect))
+			{
+				if (preg_match('#/([a-z0-9_-]+\.php(?:\?.*)?)$#i', $redirect, $m))
+				{
+					$redirect = URL_BASE_PATH . $m[1];
+				}
+				else
+				{
+					$redirect = URL_BASE_PATH . 'index.php';
+				}
+			}
+		}
 		$s_hidden_fields['redirect'] = $redirect;
 	}
 
@@ -4109,7 +4149,15 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 	$controller_helper = $phpbb_container->get('controller.helper');
 	$notification_mark_hash = generate_link_hash('mark_all_notifications_read');
 
-	$s_login_redirect = build_hidden_fields(array('redirect' => $phpbb_path_helper->remove_web_root_path(build_url())));
+	$s_login_redirect_url = $phpbb_path_helper->remove_web_root_path(build_url());
+	if (defined('URL_BASE_PATH') && strpos($s_login_redirect_url, '/') === 0)
+	{
+		if (preg_match('#/([a-z0-9_-]+\.php(?:\?.*)?)$#i', $s_login_redirect_url, $m))
+		{
+			$s_login_redirect_url = URL_BASE_PATH . $m[1];
+		}
+	}
+	$s_login_redirect = build_hidden_fields(array('redirect' => $s_login_redirect_url));
 
 	// Add form token for login box, in case page is presenting a login form.
 	add_form_key('login', '_LOGIN');
@@ -4229,23 +4277,23 @@ function page_header($page_title = '', $display_online_list = false, $item_id = 
 		'S_SEARCH_HIDDEN_FIELDS'	=> build_hidden_fields($s_search_hidden_fields),
 
 		'T_ASSETS_VERSION'		=> $config['assets_version'],
-		'T_ASSETS_PATH'			=> "{$web_path}assets",
-		'T_THEME_PATH'			=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme',
-		'T_TEMPLATE_PATH'		=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/template',
-		'T_SUPER_TEMPLATE_PATH'	=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/template',
-		'T_IMAGES_PATH'			=> "{$web_path}images/",
-		'T_SMILIES_PATH'		=> "{$web_path}{$config['smilies_path']}/",
-		'T_AVATAR_PATH'			=> "{$web_path}{$config['avatar_path']}/",
-		'T_AVATAR_GALLERY_PATH'	=> "{$web_path}{$config['avatar_gallery_path']}/",
-		'T_ICONS_PATH'			=> "{$web_path}{$config['icons_path']}/",
-		'T_RANKS_PATH'			=> "{$web_path}{$config['ranks_path']}/",
-		'T_UPLOAD_PATH'			=> "{$web_path}{$config['upload_path']}/",
-		'T_STYLESHEET_LINK'		=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme/stylesheet.css?assets_version=' . $config['assets_version'],
-		'T_STYLESHEET_LANG_LINK'=> "{$web_path}src/phpbb/styles/" . rawurlencode($user->style['style_path']) . '/theme/' . $user->lang_name . '/stylesheet.css?assets_version=' . $config['assets_version'],
+		'T_ASSETS_PATH'			=> '/assets',
+		'T_THEME_PATH'			=> '/src/phpbb/styles/' . rawurlencode($user->style['style_path']) . '/theme',
+		'T_TEMPLATE_PATH'		=> '/src/phpbb/styles/' . rawurlencode($user->style['style_path']) . '/template',
+		'T_SUPER_TEMPLATE_PATH'	=> '/src/phpbb/styles/' . rawurlencode($user->style['style_path']) . '/template',
+		'T_IMAGES_PATH'			=> '/images/',
+		'T_SMILIES_PATH'		=> '/' . $config['smilies_path'] . '/',
+		'T_AVATAR_PATH'			=> '/' . $config['avatar_path'] . '/',
+		'T_AVATAR_GALLERY_PATH'	=> '/' . $config['avatar_gallery_path'] . '/',
+		'T_ICONS_PATH'			=> '/' . $config['icons_path'] . '/',
+		'T_RANKS_PATH'			=> '/' . $config['ranks_path'] . '/',
+		'T_UPLOAD_PATH'			=> '/' . $config['upload_path'] . '/',
+		'T_STYLESHEET_LINK'		=> '/src/phpbb/styles/' . rawurlencode($user->style['style_path']) . '/theme/stylesheet.css?assets_version=' . $config['assets_version'],
+		'T_STYLESHEET_LANG_LINK'=> '/src/phpbb/styles/' . rawurlencode($user->style['style_path']) . '/theme/' . $user->lang_name . '/stylesheet.css?assets_version=' . $config['assets_version'],
 
-		'T_FONT_AWESOME_LINK'	=> !empty($config['allow_cdn']) && !empty($config['load_font_awesome_url']) ? $config['load_font_awesome_url'] : "{$web_path}assets/css/font-awesome.min.css?assets_version=" . $config['assets_version'],
+		'T_FONT_AWESOME_LINK'	=> !empty($config['allow_cdn']) && !empty($config['load_font_awesome_url']) ? $config['load_font_awesome_url'] : '/assets/css/font-awesome.min.css?assets_version=' . $config['assets_version'],
 
-		'T_JQUERY_LINK'			=> !empty($config['allow_cdn']) && !empty($config['load_jquery_url']) ? $config['load_jquery_url'] : "{$web_path}assets/javascript/jquery-3.7.1.min.js?assets_version=" . $config['assets_version'],
+		'T_JQUERY_LINK'			=> !empty($config['allow_cdn']) && !empty($config['load_jquery_url']) ? $config['load_jquery_url'] : '/assets/javascript/jquery-3.7.1.min.js?assets_version=' . $config['assets_version'],
 		'S_ALLOW_CDN'			=> !empty($config['allow_cdn']),
 		'S_COOKIE_NOTICE'		=> !empty($config['cookie_notice']),
 

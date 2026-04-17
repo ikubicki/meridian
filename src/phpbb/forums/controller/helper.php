@@ -117,7 +117,7 @@ class helper
 		$this->symfony_request = $symfony_request;
 		$this->request = $request;
 		$this->routing_helper = $routing_helper;
-		$this->admin_path = $root_path . $admin_path;
+		$this->admin_path = '/' . ltrim(preg_replace('#^([^/]*/)?web/#', '', $admin_path), '/');
 		$this->php_ext = $php_ext;
 		$this->sql_explain = $sql_explain;
 	}

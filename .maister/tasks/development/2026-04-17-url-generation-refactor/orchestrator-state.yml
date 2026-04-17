@@ -1,0 +1,57 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+
+  created: "2026-04-17T00:00:00Z"
+  updated: "2026-04-17T00:00:00Z"
+  task_path: .maister/tasks/development/2026-04-17-url-generation-refactor
+
+task:
+  title: "Refactor URL generation — clean adm/ and base paths"
+  description: "Refactor all functions that generate URLs to not use filesystem paths like $phpbb_root_path or $phpbb_admin_path directly. URLs should be generated using absolute web paths (/adm/ for admin, / for base) regardless of where PHP runs from. Fix root causes so append_sid(), generate_board_url(), redirect(), and $phpbb_admin_path all produce clean web URLs without filesystem prefixes."
+  status: in-progress
+  tags: [php, paths, url-generation, phpbb, refactoring]
+  priority: high
+
+task_context:
+  risk_level: null
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: false
+    involves_data_operations: false
+    ui_heavy: false
+  research_reference:
+    path: null
+    research_question: null
+  phase_summaries:
+    codebase_analysis:
+      key_files: []
+      primary_language: PHP
+      summary: null
+    gap_analysis:
+      integration_points: []
+      summary: null
+    specification:
+      summary: null

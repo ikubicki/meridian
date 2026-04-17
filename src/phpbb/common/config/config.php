@@ -8,7 +8,7 @@ $dbname = 'phpbb';
 $dbuser = 'phpbb';
 $dbpasswd = 'phpbb';
 $table_prefix = 'phpbb_';
-$phpbb_adm_relative_path = 'web/adm/';
+$phpbb_adm_relative_path = 'adm/';
 $acm_type = 'phpbb\\cache\\driver\\file';
 
 @define('PHPBB_INSTALLED', true);

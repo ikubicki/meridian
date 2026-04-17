@@ -103,9 +103,24 @@ class twig extends \phpbb\template\base
 		}
 
 		// Add admin namespace
-		if ($this->path_helper->get_adm_relative_path() !== null && is_dir($this->phpbb_root_path . $this->path_helper->get_adm_relative_path() . 'style/'))
+		if ($this->path_helper->get_adm_relative_path() !== null)
 		{
-			$this->twig->getLoader()->setPaths($this->phpbb_root_path . $this->path_helper->get_adm_relative_path() . 'style/', 'admin');
+			// Try filesystem_root_path + web/ + adm_relative_path first (custom layout),
+			// then fall back to phpbb_root_path + adm_relative_path (standard layout)
+			$adm_style_path = null;
+			foreach (array('web/', '') as $prefix)
+			{
+				$candidate = $this->phpbb_root_path . $prefix . $this->path_helper->get_adm_relative_path() . 'style/';
+				if (is_dir($candidate))
+				{
+					$adm_style_path = $candidate;
+					break;
+				}
+			}
+			if ($adm_style_path !== null)
+			{
+				$this->twig->getLoader()->setPaths($adm_style_path, 'admin');
+			}
 		}
 	}
 

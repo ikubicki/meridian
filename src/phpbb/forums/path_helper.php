@@ -105,6 +105,25 @@ class path_helper
 	{
 		$web_root_path = $this->get_web_root_path();
 
+		// When web_root_path is '/', the normal relative-path logic breaks because
+		// strpos($path, '/') === 0 matches every absolute path and would double-prepend
+		// the filesystem root. Handle this case entirely here and return early.
+		if ($web_root_path === '/')
+		{
+			if (strpos($path, './') === 0)
+			{
+				// ./foo.php → /foo.php
+				return '/' . substr($path, 2);
+			}
+			if (strpos($path, '/') === 0)
+			{
+				// Already absolute – return unchanged
+				return $path;
+			}
+			// Bare path like foo.php → /foo.php
+			return '/' . $path;
+		}
+
 		// Removes the web root path if it is already present
 		if (strpos($path, $web_root_path) === 0)
 		{
@@ -201,7 +220,9 @@ class path_helper
 		*/
 		if ($path_info === '/')
 		{
-			return $this->web_root_path = $this->phpbb_root_path;
+			// Use absolute web root path '/' so append_sid() and redirect() produce
+			// clean URLs like /index.php and /adm/index.php instead of ./index.php
+			return $this->web_root_path = '/';
 		}
 
 		/*

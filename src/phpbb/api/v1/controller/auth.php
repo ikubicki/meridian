@@ -77,5 +77,94 @@ class auth
 			'expires_in' => $this->ttl,
 		]);
 	}
-}
 
+	/**
+	 * POST /api/v1/auth/signup
+	 *
+	 * Phase 1 mock — registers a new user (hardcoded response, no DB write).
+	 * Validates: username (3-20 chars, alphanumeric + underscore), email, password (min 6 chars).
+	 * Returns 409 if username or email matches the mock existing user (admin).
+	 *
+	 * Accepts JSON body: {"username": "...", "email": "...", "password": "..."}
+	 * Returns:           {"token": "<jwt>", "expires_in": 3600, "user": {...}}
+	 *
+	 * @param Request $request
+	 * @return JsonResponse
+	 */
+	public function signup(Request $request)
+	{
+		$body = json_decode($request->getContent(), true);
+
+		$username = isset($body['username']) ? trim((string) $body['username']) : '';
+		$email    = isset($body['email'])    ? trim((string) $body['email'])    : '';
+		$password = isset($body['password']) ? (string) $body['password']       : '';
+
+		// Validation
+		$errors = [];
+
+		if ($username === '')
+		{
+			$errors[] = 'username is required';
+		}
+		else if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username))
+		{
+			$errors[] = 'username must be 3-20 characters (letters, digits, underscore)';
+		}
+
+		if ($email === '')
+		{
+			$errors[] = 'email is required';
+		}
+		else if (filter_var($email, FILTER_VALIDATE_EMAIL) === false)
+		{
+			$errors[] = 'email is not valid';
+		}
+
+		if (strlen($password) < 6)
+		{
+			$errors[] = 'password must be at least 6 characters';
+		}
+
+		if (!empty($errors))
+		{
+			return new JsonResponse(['errors' => $errors, 'status' => 422], 422);
+		}
+
+		// Phase 1 mock conflict check — admin username and email are "taken"
+		if (strtolower($username) === 'admin')
+		{
+			return new JsonResponse(['error' => 'Username already taken', 'status' => 409], 409);
+		}
+
+		if (strtolower($email) === 'admin@example.com')
+		{
+			return new JsonResponse(['error' => 'Email already registered', 'status' => 409], 409);
+		}
+
+		// Mock new user — Phase 2 will INSERT into phpbb_users
+		$new_user_id = 100;
+
+		$now = time();
+		$payload = [
+			'iss'      => 'phpBB',
+			'iat'      => $now,
+			'exp'      => $now + $this->ttl,
+			'user_id'  => $new_user_id,
+			'username' => $username,
+			'admin'    => false,
+		];
+
+		$token = JWT::encode($payload, $this->jwt_secret, 'HS256');
+
+		return new JsonResponse([
+			'token'      => $token,
+			'expires_in' => $this->ttl,
+			'user'       => [
+				'id'       => $new_user_id,
+				'username' => $username,
+				'email'    => $email,
+				'admin'    => false,
+			],
+		], 201);
+	}
+}

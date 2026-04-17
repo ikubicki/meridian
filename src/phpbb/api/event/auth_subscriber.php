@@ -58,7 +58,7 @@ class auth_subscriber implements EventSubscriberInterface
 		}
 
 		// Public endpoints — no token required
-		if (substr($path, -strlen('/health')) === '/health' || substr($path, -strlen('/auth/login')) === '/auth/login')
+		if (substr($path, -strlen('/health')) === '/health' || substr($path, -strlen('/auth/login')) === '/auth/login' || substr($path, -strlen('/auth/signup')) === '/auth/signup')
 		{
 			return;
 		}
