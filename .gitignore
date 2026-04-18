@@ -6,3 +6,4 @@ store/*
 !store/index.htm
 files/*
 !files/index.htm
+node_modules

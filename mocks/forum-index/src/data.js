@@ -1,0 +1,211 @@
+/*
+ * Sample forum data mirroring phpbb_forums table structure.
+ * Hierarchy uses parent_id references (categories → forums → subforums).
+ */
+
+const FORUM_TYPE_CAT = 0;
+const FORUM_TYPE_POST = 1;
+const FORUM_TYPE_LINK = 2;
+
+const forums = [
+  // ── Category 1 ──────────────────────────────────────────
+  {
+    forum_id: 1,
+    parent_id: 0,
+    forum_type: FORUM_TYPE_CAT,
+    forum_name: 'General',
+    forum_desc: '',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 0,
+    forum_topics_approved: 0,
+    forum_last_post_id: 0,
+    forum_last_post_subject: '',
+    forum_last_post_time: 0,
+    forum_last_poster_name: '',
+    forum_last_poster_colour: '',
+    display_subforum_list: 1,
+    left_id: 1,
+    right_id: 12,
+  },
+  {
+    forum_id: 2,
+    parent_id: 1,
+    forum_type: FORUM_TYPE_POST,
+    forum_name: 'Announcements',
+    forum_desc: 'Important news and updates from the team.',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 47,
+    forum_topics_approved: 12,
+    forum_last_post_id: 310,
+    forum_last_post_subject: 'Forum upgrade scheduled for May',
+    forum_last_post_time: 1744905600, // 2025-04-17
+    forum_last_poster_name: 'Admin',
+    forum_last_poster_colour: 'AA0000',
+    display_subforum_list: 1,
+    left_id: 2,
+    right_id: 3,
+    moderators: ['Admin'],
+  },
+  {
+    forum_id: 3,
+    parent_id: 1,
+    forum_type: FORUM_TYPE_POST,
+    forum_name: 'General Discussion',
+    forum_desc: 'Talk about anything and everything.',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 1534,
+    forum_topics_approved: 287,
+    forum_last_post_id: 4021,
+    forum_last_post_subject: 'Re: What are you listening to?',
+    forum_last_post_time: 1744992000, // 2025-04-18
+    forum_last_poster_name: 'JaneDoe',
+    forum_last_poster_colour: '',
+    display_subforum_list: 1,
+    left_id: 4,
+    right_id: 9,
+    moderators: ['Moderator1', 'Moderator2'],
+    subforums: [
+      { forum_id: 10, forum_name: 'Off-Topic', unread: true, is_link: false },
+      { forum_id: 11, forum_name: 'Introductions', unread: false, is_link: false },
+    ],
+  },
+  {
+    forum_id: 4,
+    parent_id: 1,
+    forum_type: FORUM_TYPE_POST,
+    forum_name: 'Feedback & Suggestions',
+    forum_desc: 'Share your ideas on how to improve our community.',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 326,
+    forum_topics_approved: 98,
+    forum_last_post_id: 2001,
+    forum_last_post_subject: 'Dark mode please!',
+    forum_last_post_time: 1744819200, // 2025-04-16
+    forum_last_poster_name: 'UserX',
+    forum_last_poster_colour: '00AA00',
+    display_subforum_list: 1,
+    left_id: 10,
+    right_id: 11,
+  },
+
+  // ── Category 2 ──────────────────────────────────────────
+  {
+    forum_id: 5,
+    parent_id: 0,
+    forum_type: FORUM_TYPE_CAT,
+    forum_name: 'Technology',
+    forum_desc: '',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 0,
+    forum_topics_approved: 0,
+    forum_last_post_id: 0,
+    forum_last_post_subject: '',
+    forum_last_post_time: 0,
+    forum_last_poster_name: '',
+    forum_last_poster_colour: '',
+    display_subforum_list: 1,
+    left_id: 13,
+    right_id: 22,
+  },
+  {
+    forum_id: 6,
+    parent_id: 5,
+    forum_type: FORUM_TYPE_POST,
+    forum_name: 'Programming',
+    forum_desc: 'Discuss languages, frameworks, and coding techniques.',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 4210,
+    forum_topics_approved: 780,
+    forum_last_post_id: 8900,
+    forum_last_post_subject: 'Re: React vs Vue in 2025',
+    forum_last_post_time: 1744992000,
+    forum_last_poster_name: 'DevGuru',
+    forum_last_poster_colour: '0055BF',
+    display_subforum_list: 1,
+    left_id: 14,
+    right_id: 19,
+    moderators: ['DevGuru'],
+    subforums: [
+      { forum_id: 12, forum_name: 'PHP', unread: false, is_link: false },
+      { forum_id: 13, forum_name: 'JavaScript', unread: true, is_link: false },
+      { forum_id: 14, forum_name: 'Python', unread: false, is_link: false },
+    ],
+  },
+  {
+    forum_id: 7,
+    parent_id: 5,
+    forum_type: FORUM_TYPE_POST,
+    forum_name: 'Hardware & Networking',
+    forum_desc: 'From server racks to home labs — hardware talk.',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 892,
+    forum_topics_approved: 201,
+    forum_last_post_id: 5040,
+    forum_last_post_subject: 'Best NAS for 2025?',
+    forum_last_post_time: 1744732800, // 2025-04-15
+    forum_last_poster_name: 'NetAdmin',
+    forum_last_poster_colour: '',
+    display_subforum_list: 1,
+    left_id: 20,
+    right_id: 21,
+  },
+  {
+    forum_id: 15,
+    parent_id: 5,
+    forum_type: FORUM_TYPE_LINK,
+    forum_name: 'phpBB Official Docs',
+    forum_desc: '',
+    forum_link: 'https://www.phpbb.com/support/docs/',
+    forum_image: '',
+    forum_status: 0,
+    forum_posts_approved: 0,
+    forum_topics_approved: 0,
+    forum_last_post_id: 0,
+    forum_last_post_subject: '',
+    forum_last_post_time: 0,
+    forum_last_poster_name: '',
+    forum_last_poster_colour: '',
+    display_subforum_list: 0,
+    left_id: 22,
+    right_id: 23,
+    clicks: 347,
+  },
+];
+
+const stats = {
+  total_posts: '7,009',
+  total_topics: '1,378',
+  total_users: '4,521',
+  newest_user: 'NewMember42',
+  newest_user_colour: '00AA00',
+  record_users: '312 users online — Sat Jan 04, 2025 3:22 pm',
+};
+
+const onlineUsers = {
+  total_online: '23 users online :: 5 registered, 0 hidden and 18 guests',
+  users: [
+    { name: 'Admin', colour: 'AA0000' },
+    { name: 'DevGuru', colour: '0055BF' },
+    { name: 'JaneDoe', colour: '' },
+    { name: 'Moderator1', colour: '00AA00' },
+    { name: 'NetAdmin', colour: '' },
+  ],
+  legend: [
+    { name: 'Administrators', colour: 'AA0000' },
+    { name: 'Global moderators', colour: '00AA00' },
+  ],
+};
+
+const birthdays = [
+  { name: 'HappyUser', age: 29 },
+  { name: 'BirthdayBob', age: 35 },
+];
+
+export { forums, stats, onlineUsers, birthdays, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK };

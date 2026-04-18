@@ -1,0 +1,69 @@
+orchestrator:
+  started_phase: phase-6
+  completed_phases: [phase-1, phase-2, phase-5]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: false
+    design_enabled: true
+  created: "2026-04-18T00:00:00Z"
+  updated: "2026-04-18T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-18-auth-service
+
+task:
+  title: "phpbb\\auth Service — Authentication & Authorization for REST API"
+  description: |
+    Zaprojektować nowoczesny serwis phpbb\auth odpowiedzialny za:
+    1. Uwierzytelnianie użytkowników (w oparciu o phpbb\user Service)
+    2. Sprawdzanie uprawnień (ACL) do komponentów systemu
+    3. Zarządzanie uprawnieniami (role, opcje, przypisania)
+    Serwis będzie docelowo używany przez middleware nowego REST API.
+    Oparty na analizie legacy kodu phpBB (auth.php, ACL system).
+  status: in_progress
+  tags: [auth, acl, permissions, rest-api, middleware, php82]
+  priority: high
+
+research_context:
+  research_type: "technical"
+  research_question: "Jak zaprojektować serwis phpbb\\auth ekstrakcja z legacy kodu — uwierzytelnianie (integracja z phpbb\\user), sprawdzanie uprawnień ACL, zarządzanie rolami/opcjami, docelowo middleware REST API?"
+  scope:
+    included:
+      - Legacy auth system (phpbb/forums/auth/)
+      - ACL system (auth.php, acl_get, acl_gets, acl_f_get)
+      - Permission options (phpbb_acl_options)
+      - Permission roles (phpbb_acl_roles, phpbb_acl_roles_data)
+      - User/group permission assignments (phpbb_acl_users, phpbb_acl_groups)
+      - Session-based auth flow
+      - API token auth concept
+      - Integration with phpbb\user Service
+      - REST API middleware pattern
+    excluded:
+      - User CRUD (handled by phpbb\user Service)
+      - Session management details (handled by phpbb\user Service)
+      - OAuth/social login providers
+      - CAPTCHA / anti-spam
+    constraints:
+      - PHP 8.2+ (enums, readonly, strict types)
+      - Zero legacy dependencies
+      - PDO with prepared statements
+      - Interface-first design
+      - Must coexist with legacy ACL system (same DB tables)
+  methodology:
+    - "technical-codebase-analysis"
+    - "architecture-extraction"
+  sources: []
+  confidence_level: "high"
+  gathering_strategy:
+    categories: ["acl-core", "acl-database", "auth-providers", "admin-acl", "user-service-integration", "rest-api-middleware"]
+    count: 6
+    source: "planner"
+  phase_summaries:
+    phase-1:
+      summary: "Full legacy ACL analysis complete. 15 auth.php methods documented, 125 permission options catalogued, 5 DB tables mapped, auth provider pattern extracted, user service boundary defined, REST API middleware gap identified. Key finding: phpbb\\auth = pure AuthorizationService (authentication already in phpbb\\user). 5-layer permission resolution algorithm understood. Bitfield cache mechanism documented."
+      steps_completed: ["init", "plan", "gather", "synthesize"]

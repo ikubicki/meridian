@@ -1,0 +1,54 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: false
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: "2026-04-18T00:00:00Z"
+  updated: "2026-04-18T00:00:00Z"
+  task_path: .maister/tasks/development/2026-04-18-user-service
+
+task:
+  title: "Modern User Service — phpbb\\user\\"
+  description: |
+    Zbudować nowoczesny serwis użytkowników pod phpbb\user\ wyekstrahowany
+    z legacy phpBB codebase. Serwis zawiera:
+    - Entities (User, Session, Group, Ban, etc.)
+    - Repositories (PDO, prepared statements)
+    - Services (Authentication, Registration, Password, Profile, Session, Group, Ban, Search)
+    - DTOs, Enums, Events, Exceptions, Contracts
+    ~50 plików PHP 8.2+ z strict types, readonly properties, enums.
+    Zero zależności od legacy kodu — czyste DI, PDO, interfejsy.
+  status: ready_for_implementation
+  tags: [user-service, php82, ddd, architecture, extraction]
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: "Extract-and-modernize: pull all user functionality into new phpbb\\user\\ namespace with clean PHP 8.2+ code, zero legacy dependencies"
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: false
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-04-18-user-service
+  implementation_spec:
+    path: src/phpbb/user/IMPLEMENTATION_SPEC.md

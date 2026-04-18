@@ -1,0 +1,70 @@
+orchestrator:
+  started_phase: phase-6
+  completed_phases: [phase-1, phase-2, phase-3, phase-4, phase-5]
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: true
+    design_enabled: true
+    plugin_model: "events + request/response decorators (no legacy extensions)"
+  created: "2026-04-18T00:00:00Z"
+  updated: "2026-04-18T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-18-hierarchy-service
+
+task:
+  title: "phpbb\\hierarchy Service — Category & Forum Management"
+  description: |
+    Zaprojektować nowoczesny serwis phpbb\hierarchy odpowiedzialny za:
+    1. Zarządzanie hierarchią kategorii i forów (nested set tree)
+    2. CRUD kategorii i forów z walidacją
+    3. Operacje na drzewie (move, copy, reorder)
+    4. Tracking forów (read status) i subskrypcje (watch)
+    5. Architektura pluginowa — rozszerzenia przez komponenty/pluginy
+    Serwis NIE odpowiada za uprawnienia (ACL → phpbb\auth).
+    Oparty na analizie legacy kodu phpBB (nested set, acp_forums, functions_display).
+  status: in_progress
+  tags: [hierarchy, forums, categories, nested-set, tree, plugins, php82]
+  priority: high
+
+research_context:
+  research_type: "technical"
+  research_question: "Jak zaprojektować serwis phpbb\\hierarchy — ekstrakcja z legacy kodu: zarządzanie kategoriami/forami (nested set), operacje na drzewie, tracking, subskrypcje, z pluginową architekturą rozszerzeń, bez ACL?"
+  scope:
+    included:
+      - Legacy nested set implementation (phpbb/forums/tree/)
+      - Forum/category CRUD (acp_forums.php)
+      - Forum display logic (functions_display.php — display_forums())
+      - Forum DB tables (phpbb_forums, phpbb_forums_access, phpbb_forums_track, phpbb_forums_watch)
+      - Forum attributes and settings
+      - Tree operations (move, copy, reorder, delete with subtree)
+      - Forum tracking (read/unread status)
+      - Forum subscriptions (watch lists)
+      - Plugin/component extension architecture
+      - Integration points with phpbb\auth and phpbb\user
+    excluded:
+      - ACL/permissions (handled by phpbb\auth)
+      - User management (handled by phpbb\user)
+      - Topic/post management (future phpbb\post service)
+      - Search subsystem
+      - Moderation subsystem
+      - Content visibility (ACL-dependent, handled by phpbb\auth)
+    constraints:
+      - PHP 8.2+ with strict types
+      - PSR-4 namespace phpbb\hierarchy
+      - Direct PDO (no legacy DBAL)
+      - Symfony DI container
+      - Must support plugin/component extension points
+      - Must preserve nested set left/right indexing
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
