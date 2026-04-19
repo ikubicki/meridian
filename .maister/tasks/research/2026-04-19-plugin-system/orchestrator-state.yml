@@ -1,0 +1,56 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19"
+  updated: "2026-04-19"
+  task_path: .maister/tasks/research/2026-04-19-plugin-system
+
+task:
+  title: "Unified Plugin System"
+  description: "Design a unified plugin system enabling domain service extension with request/response decorators, events, metadata JSON storage on main records, and plugin-managed tables"
+  status: in_progress
+  tags: [plugins, architecture, extensibility, decorators, events]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: "How to design a unified plugin system that enables domain service extension through request/response decorators, events, JSON metadata on main records, and plugin-owned tables?"
+  scope:
+    included:
+      - "Plugin lifecycle (registration, activation, deactivation, uninstall)"
+      - "Request/response decorator pattern integration"
+      - "Event system integration"
+      - "JSON metadata field on domain records"
+      - "Plugin-owned table schema management"
+      - "Plugin discovery and configuration"
+      - "Cross-service plugin capabilities"
+    excluded:
+      - "Legacy phpBB extension system (no backward compatibility)"
+      - "Frontend/theme plugins"
+      - "Admin UI for plugin management (surface only)"
+    constraints:
+      - "PHP 8.2+ with readonly classes, enums"
+      - "PDO prepared statements"
+      - "Symfony DI container"
+      - "Symfony EventDispatcher"
+      - "DecoratorPipeline pattern already established"
+      - "PSR-4 autoloading under phpbb\\ namespace"
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries: {}

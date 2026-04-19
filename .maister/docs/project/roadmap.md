@@ -10,59 +10,68 @@
 
 ---
 
-## Modernization Goals
+## Service Rewrite Plan
 
-### Critical (Must Do)
+Full details: [services-architecture.md](services-architecture.md) | Assessment: [cross-cutting-assessment.md](../../tasks/research/cross-cutting-assessment.md)
 
-- [ ] **Upgrade Symfony 3.4 → 6.x/7.x LTS** — Symfony 3.4 is EOL with known CVEs; upgrade is essential for security and long-term maintenance `Risk: High if delayed`
-- [ ] **Upgrade Twig 1.x/2.x → 3.x** — Required by Symfony 6+ twig-bridge; offers better security sandboxing and performance `Risk: Medium`
-- [ ] **Add GitHub Actions CI pipeline** — Lint + test + `composer audit` on every commit; prevents regression and security drift `Effort: S`
-- [ ] **Add `composer audit` to development workflow** — Identify vulnerable dependency versions (Guzzle 6.3, Symfony 3.4 components) `Effort: XS`
+### Phase 0: Infrastructure Foundation
+- [x] **Composer PSR-4 autoload** — Delete custom class_loader, use Composer for `phpbb\` `Research: Complete`
+- [x] **Root path elimination** — Replace `$phpbb_root_path` with `PHPBB_FILESYSTEM_ROOT` constant `Research: Complete`
+- [ ] **GitHub Actions CI pipeline** — Lint + test + `composer audit` `Effort: S`
 
-### Important (Should Do)
+### Phase 1: Core Infrastructure Services
+- [x] **Cache Service** — PSR-16 TagAwareCacheInterface, filesystem-first, pool isolation `Research: Complete`
+- [ ] **User Service** — User entity, authentication, session management `Research: NEEDED ⚠️`
+- [x] **Auth Service** — AuthZ engine, 5-layer permission resolver, bitfield cache `Research: Complete`
+- [x] **REST API Framework** — Symfony HttpKernel, YAML routes, DB token auth `Research: Complete`
 
-- [ ] **Add PHPStan at level 5** — Replace PHP_CodeSniffer-only workflow with static analysis to surface typing errors and logic bugs `Effort: M`
-- [ ] **Bring test suite into repository** — Add `tests/` directory with PHPUnit configuration for local test runs; currently tests live only in upstream `Effort: M`
-- [ ] **Raise PHP minimum to 8.1** — Enables readonly properties, enums, fibers, and first-class callable syntax; align with Symfony 6.x requirements `Effort: M`
-- [ ] **Introduce PHP 8.x type hints in `phpbb/` layer** — Union types, named arguments, readonly properties for all new code and refactored services `Effort: L`
+### Phase 2: Domain Services
+- [x] **Hierarchy Service** — Forums, categories, subforums, nested set `Research: Complete`
+- [x] **Storage Service** — Flysystem, UUID v7, single `stored_files` table `Research: Complete`
+- [x] **Threads Service** — Topics, posts, content pipeline, hybrid counters `Research: Complete`
+- [x] **Messaging Service** — Thread-per-participant-set, pinned+archive `Research: Complete`
+- [x] **Notifications Service** — Full rewrite, HTTP polling 30s, React frontend `Research: Complete`
 
-### Improvements (Nice to Do)
+### Phase 3: Supporting Services (research needed)
+- [ ] **Search Service** — Full-text search backends
+- [ ] **Content Formatting Plugins** — BBCode, Markdown, Smilies
+- [ ] **Moderation Service** — Reports, queue, mod actions
+- [ ] **Configuration Service** — Unified config access
+- [ ] **Admin Panel** — ACP service/API
 
-- [ ] **Reduce `global` variable usage in `includes/`** — Replace `global $db, $config, $user` with injected DI services; improve testability `Effort: L`
-- [ ] **Replace PHP_CodeSniffer with PHP-CS-Fixer** — More modern, auto-fixing formatter; align with PSR-12 `Effort: S`
-- [ ] **Add Rector for automated refactoring** — Automate PHP 8.x syntax upgrades across legacy code `Effort: M`
-- [ ] **Evaluate minimal frontend tooling** — Consider Alpine.js or HTMX for interactive UI improvements without full SPA complexity `Effort: L`
-- [ ] **Add OpenAPI documentation** — Document `app.php` routes for extension developers `Effort: M`
-- [ ] **Dockerize development environment** — Replace Homestead/Vagrant with a `docker-compose.yml` for reproducible local setup `Effort: S`
+### Cross-Cutting (must resolve before implementation)
+- [ ] **User Service research** — Blocks Auth → REST API → all services
+- [ ] **Extension model ADR** — Tagged DI vs events+decorators alignment
+- [ ] **Token type ADR** — JWT vs DB opaque token alignment
+- [ ] **Migration strategy** — Legacy data → new schemas
+- [ ] **Frontend strategy** — React islands vs full SPA
 
 ---
 
-## Migration Strategy
+## Implementation Strategy
 
-### Symfony 3.4 → 6.x/7.x Upgrade Path
+### Approach: Full Service Rewrite
+- Legacy code = reference, not dependency
+- Each service owns its domain completely (Repository → Service → Controller)
+- Services communicate via Symfony events (loose coupling)
+- REST API is the primary interface for frontend
+- React for interactive components (notifications, messaging)
 
-1. **Audit deprecations**: Run `symfony/phpunit-bridge` deprecation listener to identify all deprecated 3.4 API usages
-2. **Upgrade to Symfony 4.4 LTS** as intermediate step (maintaining BC) with deprecation fixes
-3. **Upgrade to Symfony 5.4 LTS** — resolve any remaining deprecations
-4. **Upgrade to Symfony 6.x/7.x** — PHP 8.1 required; finalize strict typing migration
-5. Run full test suite at each step before proceeding
-
-### PHP 7.2 → 8.1 Path
-
-1. Run `composer require --dev phpstan/phpstan` and fix all level-1 errors first
-2. Gradually raise PHPStan level (1 → 3 → 5) with each code cleanup iteration
-3. Replace `var` property declarations in `includes/acp/`, `includes/mcp/`, `includes/ucp/`
-4. Add return types and parameter types to `phpbb/` classes
-5. Add `declare(strict_types=1)` to new files in `phpbb/`
+### Implementation Order
+1. Infrastructure (autoload, root path, cache)
+2. User + Auth + REST API framework
+3. Domain services (hierarchy, threads, storage, messaging)
+4. Cross-cutting services (notifications, search, moderation)
 
 ---
 
 ## Risk Mitigation
 
-- **Incremental approach**: Upgrade one major component at a time; run `composer audit` and PHPStan after each
-- **Feature flags**: Use phpBB's config system to gate experimental changes
-- **Backward compatibility**: Keep `includes/` functional throughout migration — it's the production-critical path
-- **Test before upgrading**: Establish local test baseline before any framework upgrade begins
+- **Service-by-service**: Implement and test one service at a time
+- **Research-backed**: Every service has completed architectural research with ADRs
+- **Cross-cutting assessment**: Alignment issues identified and tracked
+- **Test-driven**: Each service gets full PHPUnit coverage before next service begins
+- **Fallback**: Legacy `includes/` remains functional throughout transition
 
 ---
 

@@ -1,0 +1,60 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T12:00:00Z"
+  updated: "2026-04-19T12:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-search-service
+
+task:
+  title: "Search Service - New Implementation Based on Legacy Mechanisms"
+  description: "Research for a new phpbb\\search service implementing search mechanisms from the legacy phpBB solution but built from scratch with complete isolation from old code. Plugin-based backends, word indexing, result caching, query parsing."
+  status: in_progress
+  tags: [search, service, research, fulltext]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: "How should the new phpbb\\search service be designed to implement legacy search mechanisms (pluggable backends, word indexing, result caching, query parsing) from scratch with complete isolation from the old solution?"
+  scope:
+    included:
+      - "Search backend plugin architecture (native, MySQL FULLTEXT, PostgreSQL tsvector, Sphinx)"
+      - "Word indexing pipeline (split, normalize, store in inverted index)"
+      - "Query parsing (operators: +must, -exclude, |or, wildcards, parentheses)"
+      - "Result caching mechanism"
+      - "Integration with Threads service (post create/edit/delete triggers indexing)"
+      - "Admin management (backend selection, index rebuild, configuration)"
+      - "REST API for search"
+      - "Event/decorator extensibility"
+    excluded:
+      - "Legacy code coupling or reuse"
+      - "Direct phpBB DBAL usage (use PDO)"
+      - "Global variables"
+      - "Non-PSR-4 code"
+    constraints:
+      - "PHP 8.2+ with readonly classes, enums, match"
+      - "PDO prepared statements only"
+      - "Symfony DI container"
+      - "Symfony EventDispatcher for lifecycle events"
+      - "DecoratorPipeline for extensible operations"
+      - "Must integrate with phpbb\\threads (post events trigger indexing)"
+      - "Must integrate with phpbb\\user (shadow ban filtering in results)"
+      - "Database schema based on existing phpbb_search_* tables"
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries: {}

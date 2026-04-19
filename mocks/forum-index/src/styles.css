@@ -13,8 +13,8 @@ body {
   font-size: 10px;
   line-height: normal;
   color: #536482;
-  background-color: #fff;
-  background: linear-gradient(to bottom, #0076B1 0, #12A3EB 100px, #fff 300px, #fff 100%) no-repeat;
+  background-color: #F5F7FA;
+  background: #F5F7FA linear-gradient(to bottom, #0076B1 0, #12A3EB 100px, #F5F7FA 300px, #F5F7FA 100%) no-repeat;
   margin: 0;
   padding: 12px 0;
 }
@@ -36,6 +36,135 @@ a:hover { color: #D31141; text-decoration: underline; }
 #page-header {
   padding: 0;
 }
+
+/* ── Sticky header ─────────────────────────────────────── */
+.sticky-header {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #0d96daf0;
+  color: #fff;
+  transition: top 0.25s ease;
+  pointer-events: none;
+}
+.sticky-header.sticky-visible {
+  top: 0;
+  pointer-events: auto;
+}
+
+.sticky-inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 6px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sticky-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.sticky-logo .sticky-ico {
+  height: 24px;
+  width: 24px;
+  display: block;
+}
+.sticky-logo .sticky-svg {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+
+.sticky-left .breadcrumbs {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+.sticky-left .breadcrumbs .crumb a {
+  color: #105289;
+  font-weight: bold;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 1.1em;
+  text-shadow: 0px 1px 1px #fff8;
+}
+.sticky-left .breadcrumbs .crumb a:hover {
+  color: #D31141;
+  text-decoration: underline;
+}
+
+.sticky-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sticky-search-btn {
+  background: rgba(255,255,255,0.25);
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.sticky-search-btn:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+.sticky-search-bar {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 15px 8px;
+}
+.sticky-search-bar input {
+  width: 100%;
+  border: 0;
+  border-radius: 5px;
+  height: 30px;
+  padding: 4px 10px;
+  font-size: 1.3em;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  outline: none;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.sticky-search-bar input:focus {
+  background: rgba(255,255,255,0.8);
+  color: #333;
+}
+
+/* Sticky header hamburger reuses .header-hamburger styles */
+.sticky-right .header-hamburger {
+  padding: 0;
+}
+.sticky-right .hamburger-btn {
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+}
+
+
 
 .headerbar {
   color: #FFFFFF;
@@ -149,6 +278,13 @@ a:hover { color: #D31141; text-decoration: underline; }
   z-index: 100;
   padding: 0;
   min-width: 180px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+.header-hamburger:hover > .dropdown {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Hamburger dropdown aligned to right edge */
@@ -157,8 +293,6 @@ a:hover { color: #D31141; text-decoration: underline; }
   right: 0;
   width: max-content;
 }
-
-
 
 .dropdown-contents {
   list-style: none;
@@ -315,7 +449,7 @@ ul.topiclist.forums {
 
 .topiclist.forums .row-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   padding: 5px 10px;
   min-height: 35px;
   transition: background-color 0.12s;
@@ -333,8 +467,11 @@ ul.topiclist.forums {
 .topiclist.forums dt .list-inner {
   padding-left: 45px;
   position: relative;
-  min-height: 35px;
+  min-height: 36px;
   line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* ── Forum icon ────────────────────────────────────────── */
@@ -342,17 +479,17 @@ ul.topiclist.forums {
   position: absolute;
   left: 0;
   top: 0;
+  bottom: 0;
+  margin: auto 0;
   display: block;
   width: 36px;
   height: 36px;
-  line-height: 36px;
-  text-align: center;
-  font-size: 22px;
+  object-fit: contain;
   border-radius: 4px;
 }
-.forum-icon-unread { background: #C0DDEF; }
-.forum-icon-read { background: #D5DEE5; }
-.forum-icon-link { background: #E8DFC0; }
+.forum-icon-unread { }
+.forum-icon-read { }
+.forum-icon-link { }
 
 /* ── Forum title ───────────────────────────────────────── */
 a.forumtitle {
@@ -425,7 +562,6 @@ time { color: #536482; font-size: 1em; }
 .stat-blocks { margin-top: 8px; }
 
 .stat-block {
-  background-color: #ECF1F3;
   color: #28313F;
   border-radius: 7px;
   margin-bottom: 4px;

@@ -1,0 +1,68 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T12:00:00Z"
+  updated: "2026-04-19T12:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-messaging-service
+
+task:
+  title: "phpbb\\messaging Service Design"
+  description: "Design a messaging service replacing legacy privmsgs. Conversations, folders, rules, notifications, attachments (via storage plugin), reporting."
+  status: in_progress
+  tags: [messaging, privmsgs, conversations, notifications]
+  priority: high
+
+research_context:
+  research_type: "technical"
+  research_question: "How to design phpbb\\messaging service replacing legacy privmsgs with modern conversation-based architecture, folder/rules system, notifications, attachment support via storage plugin?"
+  scope:
+    included:
+      - Legacy privmsgs tables (phpbb_privmsgs, phpbb_privmsgs_to, phpbb_privmsgs_folder, phpbb_privmsgs_rules)
+      - submit_pm() workflow and message lifecycle
+      - Folder system (inbox, sentbox, outbox, custom folders)
+      - Filtering rules engine (rule_check, rule_connection, rule_action)
+      - PM notifications (notification.type.pm)
+      - PM attachments (via phpbb\storage)
+      - Read/unread tracking, mark as important
+      - Multi-recipient (TO/BCC)
+      - Message threading (root_level)
+      - PM reporting to moderators
+      - Quota/limits (pm_max_msgs, pm_max_recipients, pm_max_boxes)
+      - PM drafts
+      - User blocking (foe list / ignore)
+    excluded:
+      - Forum posts (→ phpbb\threads)
+      - Email sending implementation (→ notification infrastructure)
+      - Auth/permissions enforcement (→ phpbb\auth middleware)
+      - Storage file handling (→ phpbb\storage)
+      - User profiles (→ phpbb\user)
+    constraints:
+      - Event-driven API (methods return domain events)
+      - Auth via middleware (service trusts caller)
+      - Request/response decorators for plugin extensibility
+      - NO legacy extension system
+      - PSR-4 namespace phpbb\messaging\
+      - Attachments via phpbb\storage plugin (not built-in)
+      - Integration with phpbb\user (participants), phpbb\auth (permissions), phpbb\storage (files)
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries:
+    phase-1:
+      summary: null
+      steps_completed: []

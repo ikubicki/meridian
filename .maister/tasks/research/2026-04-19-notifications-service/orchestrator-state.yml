@@ -1,0 +1,135 @@
+orchestrator:
+  started_phase: phase-6
+  completed_phases:
+    - phase-1
+    - phase-2
+    - phase-3
+    - phase-4
+    - phase-5
+    - phase-6
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T00:00:00Z"
+  updated: "2026-04-19T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-notifications-service
+
+task:
+  title: "Notifications Service — REST API, Email, Frontend Notifications"
+  description: >
+    Usługa phpbb\notifications odpowiedzialna za powiadomienia użytkowników,
+    wysyłkę emaili i powiadomienia w aplikacji frontendowej. Lekki endpoint
+    REST API informujący o ilości powiadomień i kilku najnowszych.
+    Facebook-style notification system.
+  status: completed
+  tags: [notifications, rest-api, email, frontend, real-time]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: >
+    Jak zaprojektować usługę phpbb\notifications odpowiedzialną za powiadomienia
+    do użytkowników, wysyłkę emaili oraz powiadomienia w aplikacji frontendowej,
+    z lekkim REST API endpointem informującym o ilości i najnowszych powiadomieniach?
+  scope:
+    included:
+      - Istniejący system powiadomień phpBB (manager, types, methods)
+      - Schemat bazy danych notifications
+      - Mechanizm wysyłki emaili
+      - REST API endpoint (GET /api/v1/notifications)
+      - Integracja z cache service i auth service
+      - Frontend notification badge
+      - Polling vs SSE vs WebSocket
+      - Notification grouping/aggregation (Facebook-style)
+    excluded:
+      - Nowe typy powiadomień
+      - Push notifications (PWA/native)
+      - Modyfikacja Jabber
+      - Admin panel
+      - Migracja danych
+    constraints:
+      - Sesyjna autentykacja (Phase 1) + kompatybilność z JWT
+      - Max 50ms response time
+      - Symfony DI container
+      - PSR-4 namespace phpbb\notifications
+      - Parametryzowane zapytania SQL
+  methodology:
+    - Codebase analysis (existing notification system)
+    - Architecture pattern research (Facebook-style notifications)
+    - REST API design patterns
+    - Real-time delivery strategies
+  sources: []
+  confidence_level: "high"
+  gathering_strategy:
+    categories:
+      - codebase-notifications
+      - codebase-api
+      - codebase-integration
+      - external-patterns
+      - external-phpbb
+    count: 5
+    source: "planner"
+  phase_summaries:
+    phase-1:
+      summary: >
+        Research foundation complete. 5 gatherers explored codebase (notification manager, REST API, integration points)
+        and external patterns (Facebook-style, REST best practices, phpBB ecosystem). Synthesis identified 6 decision areas:
+        real-time strategy, aggregation approach, cache strategy, API response format, repository pattern, frontend integration.
+        Key recommendation: hybrid architecture with new PDO repository for reads, legacy manager for writes,
+        HTTP polling 30s with 304 optimization, tag-aware cache 30s TTL.
+      steps_completed:
+        - step-1
+        - step-2
+        - step-3
+        - step-4
+
+options:
+  brainstorming_enabled: true
+  design_enabled: true
+
+  phase_summaries_extra:
+    phase-3:
+      summary: >
+        6 decision areas explored with 19 total alternatives.
+        Recommended: pragmatic facade with zero new infrastructure.
+    phase-4:
+      summary: >
+        All 6 decision areas converged with user. Key divergences from recommendation:
+        Decision 4 changed to Full Rewrite (user assumes legacy doesn't exist, rewriting from scratch).
+        Decision 6 changed to React (no jQuery, new UI in React).
+      decision_areas:
+        - area: "Real-Time Delivery"
+          alternatives_count: 4
+          chosen_approach: "1A: HTTP Polling 30s with Last-Modified/304"
+        - area: "Notification Aggregation"
+          alternatives_count: 3
+          chosen_approach: "2A: Write-Time Responders (existing)"
+        - area: "Cache Strategy"
+          alternatives_count: 4
+          chosen_approach: "3A: Tag-Aware Pool + fallback 3C File Cache"
+        - area: "Service Architecture"
+          alternatives_count: 4
+          chosen_approach: "4D: Full Rewrite — standalone service, bypass legacy manager"
+        - area: "API Response Design"
+          alternatives_count: 3
+          chosen_approach: "5A: Flat List + Embedded Responders"
+        - area: "Frontend Integration"
+          alternatives_count: 3
+          chosen_approach: "React component with fetch + Visibility API"
+      deferred_ideas:
+        - "SSE Real-Time Upgrade (v2)"
+        - "Read-Time Aggregation (v2)"
+        - "Push Notifications (v3)"
+        - "Notification Preferences API"
+        - "Denormalized Count Optimization"
+        - "Notification Analytics"
+        - "Bulk Operations API"
+        - "Email Digest Preferences"

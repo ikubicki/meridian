@@ -1,4 +1,5 @@
 import { FORUM_TYPE_LINK } from '../data.js';
+import forumReadIcon from '../assets/images/forum_read.gif';
 
 /**
  * Single forum row – mirrors the <!-- IF not forumrow.S_IS_CAT --> block
@@ -8,8 +9,8 @@ import { FORUM_TYPE_LINK } from '../data.js';
  */
 export default function ForumRow({ forum }) {
   const isLink = forum.forum_type === FORUM_TYPE_LINK;
-  const hasLastPost = forum.forum_last_post_id > 0;
-  const unread = hasLastPost; // simplified: treat any last post as "has content"
+  const hasLastPost = !!(forum.forum_last_post_subject || forum.forum_last_post_time);
+  const unread = hasLastPost;
 
   return (
     <li className="row">
@@ -96,13 +97,12 @@ function ForumIcon({ isLink, unread }) {
     return <span className="forum-icon forum-icon-link" title="Forum link" aria-hidden="true">🔗</span>;
   }
   return (
-    <span
+    <img
       className={`forum-icon ${unread ? 'forum-icon-unread' : 'forum-icon-read'}`}
+      src={forumReadIcon}
+      alt={unread ? 'Unread posts' : 'No unread posts'}
       title={unread ? 'Unread posts' : 'No unread posts'}
-      aria-hidden="true"
-    >
-      {unread ? '💬' : '📁'}
-    </span>
+    />
   );
 }
 

@@ -7,7 +7,8 @@
 | File | Description |
 |------|-------------|
 | [project/vision.md](project/vision.md) | Project goals, current state, and modernization direction for phpBB Vibed |
-| [project/roadmap.md](project/roadmap.md) | Prioritized modernization roadmap: Symfony upgrade, PHP 8.x, CI/CD, static analysis |
+| [project/roadmap.md](project/roadmap.md) | Service rewrite roadmap: 10 researched services, implementation phases, cross-cutting items |
+| [project/services-architecture.md](project/services-architecture.md) | **NEW** — Services architecture plan: inventory, dependency graph, implementation order, shared patterns |
 | [project/tech-stack.md](project/tech-stack.md) | Languages, frameworks, and tooling choices with rationale |
 | [project/architecture.md](project/architecture.md) | Hybrid monolith architecture: legacy procedural layer vs. modern `phpbb/` OOP core |
 

@@ -1,0 +1,51 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T00:00:00Z"
+  updated: "2026-04-19T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-database-service
+
+task:
+  title: "Database Service — YAML→DDL, Versioning, Multi-Engine"
+  description: "Research and design a database service layer for phpBB rebuild. Greenfield design (no legacy). Must support declarative YAML→DDL schema management, schema versioning, and multiple database engines (MySQL, PostgreSQL, SQLite)."
+  status: in_progress
+  tags: [database, schema, multi-engine, yaml-ddl]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: "How to design a database service for phpBB rebuild that provides declarative YAML→DDL schema management, schema versioning, and multi-engine support (MySQL, PostgreSQL, SQLite)?"
+  scope:
+    included:
+      - "Declarative schema definition (YAML format)"
+      - "YAML→DDL compilation for multiple DB engines"
+      - "Schema versioning and migration (diff-based)"
+      - "Multi-engine support (MySQL 8+, PostgreSQL 14+, SQLite)"
+      - "Connection management and query building"
+      - "Integration with plugin system (plugin schema.yml)"
+    excluded:
+      - "Legacy phpBB DBAL code"
+      - "ORM/entity mapping (project uses raw PDO)"
+      - "NoSQL databases"
+      - "Database replication/clustering"
+    constraints:
+      - "PHP 8.2+"
+      - "PDO as the base driver layer"
+      - "Must integrate with plugin system's schema.yml (DA-5 from plugin research)"
+      - "No Doctrine ORM dependency (design decision)"
+      - "Symfony DI container for service registration"
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries: {}

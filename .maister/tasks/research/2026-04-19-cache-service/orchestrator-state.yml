@@ -1,0 +1,53 @@
+orchestrator:
+  started_phase: phase-5
+  completed_phases: [phase-1, phase-3, phase-4, phase-5]
+  failed_phases: []
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T00:00:00Z"
+  updated: "2026-04-19T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-cache-service
+
+task:
+  title: "Cache Service Design"
+  description: "Utility caching service (phpbb\\cache) — filesystem default, configurable backends (Redis, Memcache, DB), reusable by all services"
+  status: in_progress
+  tags: [cache, utility, infrastructure]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: "How should the phpbb\\cache utility service be designed to provide a reusable caching layer with filesystem default and configurable external backends (Redis, Memcached, database), usable by all other phpbb services?"
+  scope:
+    included:
+      - Legacy cache system analysis (drivers, service, data types)
+      - Cache driver interface design (PSR-6/PSR-16 compliance consideration)
+      - Backend configuration (filesystem, Redis, Memcached, APCu, database)
+      - Cache key namespacing for multi-service usage
+      - TTL strategies and invalidation
+      - Cache warming and stampede prevention
+      - Serialization strategies
+      - Integration with DI container
+      - Tag-based invalidation
+    excluded:
+      - HTTP caching / CDN
+      - Browser-side caching
+      - Compiled container/routing cache (infrastructure concern)
+      - Template caching (Twig handles its own)
+    constraints:
+      - Must be reusable by all phpbb services (threads, messaging, storage, auth, etc.)
+      - Default to filesystem (zero-config for simple deployments)
+      - Event-driven architecture (consistent with other services)
+      - PSR-4 namespace phpbb\cache
+      - PHP 8.2+
+      - No legacy extension system
+      - DI via Symfony container
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries: {}

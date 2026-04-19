@@ -1,0 +1,67 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T10:00:00Z"
+  updated: "2026-04-19T10:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-storage-service
+
+task:
+  title: "phpbb\\storage Service Design"
+  description: "Design a storage service managing assets (attachments, avatars, etc.), global and per-user/per-forum quotas. Available to plugins extending phpbb\\threads and phpbb\\user. Compatible with legacy file storage."
+  status: in_progress
+  tags: [storage, assets, quotas, plugins]
+  priority: high
+
+research_context:
+  research_type: "technical"
+  research_question: "How to design phpbb\\storage service managing assets (attachments, avatars, etc.) with global and per-user/per-forum quotas, available for plugins, compatible with legacy file storage?"
+  scope:
+    included:
+      - Legacy attachment storage (files/, phpbb_attachments, attachment manager)
+      - Legacy avatar storage (images/avatars/, avatar drivers, avatar manager)
+      - File upload system (phpbb\forums\files\upload)
+      - Download/serving system (web/download/file.php)
+      - Filesystem abstraction (phpbb\filesystem)
+      - Quota configuration (attachment_quota, avatar_filesize, etc.)
+      - Storage paths and configuration
+      - File metadata tracking
+      - Orphan handling (is_orphan pattern)
+      - Thumbnail generation
+      - Secure downloads / permission-gated serving
+    excluded:
+      - Content pipeline (BBCode inline attachments → threads plugin concern)
+      - Post/topic association logic (→ attachment plugin extending threads)
+      - User profile avatar assignment (→ user service concern)
+      - Search indexing
+      - CDN/cloud storage (future extension, not core)
+    constraints:
+      - Must be compatible with legacy file paths (files/, images/avatars/upload/)
+      - Plugin-friendly: expose contracts for thread attachments, user avatars, etc.
+      - Quota system: global, per-user, per-forum quotas
+      - Event-driven API (methods return domain events)
+      - Auth via middleware (service trusts caller)
+      - Request/response decorators for plugin extensibility
+      - NO legacy extension system (no service_collection, no tagged services)
+      - PSR-4 namespace phpbb\storage\
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries:
+    phase-1:
+      summary: null
+      steps_completed: []

@@ -1,0 +1,59 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-19T18:00:00Z"
+  updated: "2026-04-19T18:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-users-service
+
+task:
+  title: "Users Service Research"
+  description: "Design phpbb\\user service for user management, preferences, groups, banning (shadow+permanent), sessions, authentication. Based on existing DB schemas, zero legacy coupling, extensible via events+decorators, REST API."
+  status: in_progress
+  tags: [users, service-design, authentication, groups, bans, sessions]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: "How should the phpbb\\user service be designed to provide user management, preferences, group membership, banning (shadow+permanent), session management, and authentication — as a standalone PSR-4 service with zero legacy dependencies?"
+  scope:
+    included:
+      - "User CRUD, registration, activation"
+      - "Authentication (login/logout/session/tokens)"
+      - "Preferences (lang, timezone, notifications, privacy)"
+      - "Groups (CRUD, membership, leaders, types)"
+      - "Banning (user/IP/email, shadow, permanent, timed, exclusions)"
+      - "Profile (avatar, signature, custom fields)"
+      - "Session management (lifecycle, GC, who-is-online)"
+      - "REST API endpoints"
+      - "Domain events for all state changes"
+      - "Extensibility via events + decorators"
+    excluded:
+      - "Authorization/ACL (phpbb\\auth)"
+      - "Email delivery"
+      - "Admin Control Panel UI"
+      - "Content formatting/BBCode"
+      - "Search"
+    constraints:
+      - "PHP 8.2+ (readonly, enums, match)"
+      - "PDO prepared statements"
+      - "Symfony DI + EventDispatcher"
+      - "No legacy phpbb\\ imports"
+      - "Reuse existing DB schemas"
+      - "DB opaque tokens (not JWT)"
+  methodology: ["codebase-analysis", "requirements-synthesis", "literature-review"]
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: "pending"
+  phase_summaries:
+    phase-1:
+      summary: null
+      steps_completed: ["init"]

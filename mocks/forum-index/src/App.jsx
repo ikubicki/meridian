@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { forums, stats, onlineUsers, birthdays, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK } from './data.js';
 import ForumList from './components/ForumList.jsx';
 import StatBlocks from './components/StatBlocks.jsx';
@@ -7,6 +7,7 @@ export default function App() {
   return (
     <div id="wrap" className="wrap">
       <Header />
+      <StickyHeader />
       <main id="page-body">
         <div className="page-body-inner">
           <ActionBar />
@@ -62,36 +63,76 @@ function Header() {
   );
 }
 
-/* ── Hamburger menu ─────────────────────────────────────── */
+/* ── Hamburger menu (CSS-only hover) ────────────────────── */
 function HamburgerMenu() {
-  const [open, setOpen] = useState(false);
+  return (
+    <div className="header-hamburger">
+      <button className="hamburger-btn" aria-label="Menu">☰</button>
+      <div className="dropdown dropdown-right">
+        <ul className="dropdown-contents" role="menu">
+          <li><a href="#" role="menuitem">❓ FAQ</a></li>
+          <li className="separator" />
+          <li><a href="#" role="menuitem">Unanswered topics</a></li>
+          <li><a href="#" role="menuitem">Active topics</a></li>
+          <li><a href="#" role="menuitem">The team</a></li>
+          <li><a href="#" role="menuitem">Members</a></li>
+          <li className="separator" />
+          <li><a href="#" role="menuitem">✏ Register</a></li>
+          <li><a href="#" role="menuitem">⏻ Login</a></li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sticky Header (appears after 100px scroll) ─────────── */
+function StickyHeader() {
+  const [visible, setVisible] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 100);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <div
-      className="header-hamburger dropdown-container"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        className="hamburger-btn"
-        aria-label="Menu"
-        aria-expanded={open}
-      >
-        ☰
-      </button>
-      {open && (
-        <div className="dropdown dropdown-right">
-          <ul className="dropdown-contents" role="menu">
-            <li><a href="#" role="menuitem">❓ FAQ</a></li>
-            <li className="separator" />
-            <li><a href="#" role="menuitem">Unanswered topics</a></li>
-            <li><a href="#" role="menuitem">Active topics</a></li>
-            <li><a href="#" role="menuitem">The team</a></li>
-            <li><a href="#" role="menuitem">Members</a></li>
-            <li className="separator" />
-            <li><a href="#" role="menuitem">✏ Register</a></li>
-            <li><a href="#" role="menuitem">⏻ Login</a></li>
+    <div className={`sticky-header${visible ? ' sticky-visible' : ''}`}>
+      <div className="sticky-inner">
+        <div className="sticky-left">
+          <a href="#" className="sticky-logo" title="Board index">
+            <img src="/favicon.ico" alt="phpBB" className="sticky-ico" />
+            <img src="/src/assets/site_logo.svg" alt="phpBB" className="sticky-svg" />
+          </a>
+          <ul className="breadcrumbs">
+            <li className="crumb"><a href="#">Board index</a></li>
           </ul>
+        </div>
+
+        <div className="sticky-right">
+          <button
+            className="sticky-search-btn"
+            onClick={() => setSearchOpen((v) => !v)}
+            title="Search"
+          >
+            🔍
+          </button>
+          <HamburgerMenu />
+        </div>
+      </div>
+
+      {searchOpen && (
+        <div className="sticky-search-bar">
+          <form onSubmit={(e) => e.preventDefault()}>
+            <input
+              name="keywords"
+              type="search"
+              maxLength={128}
+              className="inputbox search"
+              placeholder="Search…"
+              autoFocus
+            />
+          </form>
         </div>
       )}
     </div>
