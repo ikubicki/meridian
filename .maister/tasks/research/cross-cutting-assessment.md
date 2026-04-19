@@ -2,13 +2,13 @@
 
 **Date**: 2026-04-19
 **Scope**: All 10 research tasks under `.maister/tasks/research/`
-**Status**: ⚠️ Needs Alignment
+**Status**: ✅ Critical Blockers Resolved
 
 ---
 
 ## 1. Executive Summary
 
-This collection of researches represents a **technically sophisticated and well-reasoned** body of architectural work. Each individual service design is internally coherent, with detailed interfaces, clear ADRs, and realistic entity models. However, as a holistic system architecture, there are **3 critical misalignments, 2 missing foundational services, and 1 unresolved architectural contradiction** that must be addressed before implementation begins. The most pressing issues are: (1) the **User Service is entirely missing** despite being an explicit dependency of the Auth service and implicitly needed by all others, (2) the **extension model is fundamentally contradictory** between services (events+decorators vs tagged DI), and (3) **JWT vs DB token confusion** between Auth and REST API designs. The individual pieces are strong — the integration between them needs work.
+This collection of researches represents a **technically sophisticated and well-reasoned** body of architectural work. Each individual service design is internally coherent, with detailed interfaces, clear ADRs, and realistic entity models. The 3 previously critical misalignments have been **resolved**: (1) **User Service** has been researched (`2026-04-19-users-service/`), (2) the **extension model** is unified as macrokernel architecture (domain core + plugins, no tagged DI), and (3) **JWT tokens** are the chosen auth mechanism (`2026-04-19-auth-unified-service/`). Two medium-priority items remain tracked as research TODOs: content storage migration (s9e XML → raw text) and forum counter update contract (Threads ↔ Hierarchy).
 
 ---
 
@@ -57,13 +57,13 @@ All 10 tasks have complete research outputs with HLD and decision logs. Document
 | **Counter Management** | ⚠️ Similar but unnormalized | Threads: "hybrid tiered" (ADR-004). Messaging: "tiered hot+cold" (ADR-7). Same approach with different names — should be unified into a shared pattern specification. |
 | **Domain Events as Returns** | ⚠️ Partially adopted | Hierarchy and Threads return domain events from mutations. Messaging and Notifications use more traditional return types (result DTOs). Not consistent. |
 
-### ❌ Conflicting
+### ✅ Resolved (previously conflicting)
 
 | Pattern | Assessment | Details |
-|---------|-----------|---------|
-| **Extension/Plugin Model** | ❌ Contradictory | **See §7.1** |
-| **Authentication Token Type** | ❌ Contradictory | **See §7.2** |
-| **User Entity Source** | ❌ Missing foundation | **See §6.1** |
+|---------|-----------|--------|
+| **Extension/Plugin Model** | ✅ Resolved — Macrokernel | Dropped tagged DI. All services: domain core + plugins via events/decorators. **See §7.1** |
+| **Authentication Token Type** | ✅ Resolved — JWT | Unified auth research chose JWT tokens. **See §7.2** |
+| **User Entity Source** | ✅ Researched | User service research exists at `2026-04-19-users-service/`. **See §6.1** |
 
 ---
 
@@ -207,73 +207,41 @@ Hierarchy, Auth, and Storage all mention admin operations. No ACP service/API is
 
 ## 7. Contradictions & Misalignments
 
-### 7.1 ❌ CRITICAL: Extension Model Contradiction
+### 7.1 ✅ RESOLVED: Extension Model — Macrokernel Architecture
 
-**Hierarchy ADR-004** explicitly states:
-> *"The user explicitly decided to drop the legacy extension system entirely for `phpbb\hierarchy`. [...] no `service_collection`, no `ordered_service_collection`, no [`Plugin`]Interface"*
+**Decision (2026-04-19)**: Tagged DI is **dropped entirely**. All services adopt a unified **macrokernel architecture**: domain service core + extending plugins.
 
-**Threads ADR-003** follows the same approach — events + request/response decorators only.
+**Previous contradiction**: Hierarchy/Threads/Messaging used events+decorators while Notifications used tagged DI for type registration. This is now resolved — **all services use the same pattern**:
+- **Domain service** owns core logic
+- **Plugins** extend behavior via EventDispatcher events and request/response decorators
+- **No `service_collection`**, no `ordered_service_collection`, no tagged DI for type registration
+- Notification types and delivery methods must be redesigned to use event-based registration (same as `RegisterForumTypesEvent` in Hierarchy)
 
-**Messaging** also uses events + decorators.
+**Impact**: Notifications HLD must be updated to replace tagged DI with plugin-based event registration. See research task `2026-04-19-plugin-system` for unified plugin architecture.
 
-**BUT Notifications ADR-007** explicitly states:
-> *"Tagged DI services with interface contracts [...] this is the established phpBB pattern for extensible collections (type tags for `notification.type`, `notification.method`). [...] follows established phpBB DI pattern"*
+### 7.2 ✅ RESOLVED: JWT Tokens
 
-This is a **direct architectural contradiction**. Three services have explicitly dropped taggedDI / service_collection as an extension model, while one service adopts it as its primary extension mechanism. Either:
-- All services use events+decorators (Notifications must be redesigned), OR  
-- All services use tagged DI for type registration (Hierarchy/Threads must be redesigned), OR
-- The distinction is intentional and documented (types-of-things via tagged DI, lifecycle-events via EventDispatcher) — but this needs to be specified in a cross-cutting architecture decision.
+**Decision (2026-04-19)**: **JWT tokens** are the chosen authentication mechanism. This has been addressed by a dedicated research task (`2026-04-19-auth-unified-service`).
 
-**Recommendation**: The tagged DI pattern for **type registration** (notification types, delivery methods) is genuinely different from the **lifecycle extension** pattern (request/response decoration). These can coexist IF intentionally documented. But `ForumTypeRegistry` in Hierarchy uses events for type registration (`RegisterForumTypesEvent`), which is the opposite of tagged DI. Pick one for type registration globally.
+The unified auth service research covers JWT token lifecycle (creation, validation, refresh, revocation), key management, and integration with the REST API layer. The previous REST API ADR-002 DB token design is superseded by the JWT approach from the auth unified service research.
 
-### 7.2 ❌ CRITICAL: JWT vs DB Token
+### 7.3 ✅ RESOLVED: Symfony Kernel Rewrite
 
-**Auth Service HLD** System Context says:
-> *"Mobile / SPA Client sends HTTP requests with Bearer JWT"*
+**Decision (2026-04-19)**: The Symfony kernel will be **rewritten from scratch** alongside the phpBB refactor, with an **updated Symfony version**. This eliminates the subscriber priority conflict entirely — the new kernel will define a clean request lifecycle with proper authentication → authorization ordering built in from the start.
 
-**REST API ADR-002** and Phase 2 design specifies:
-> *"DB API token — `Authorization: Bearer <token>`, new `phpbb_api_tokens` table, `token_auth_subscriber`"*
-> Token verification: `hash('sha256', $incoming_token)` → SELECT from `phpbb_api_tokens`
+Previous concern about priority 8 vs 16 conflicts between Auth/REST API/Notifications subscribers is moot — the new kernel will have a well-defined middleware/subscriber stack with explicit ordering.
 
-These are fundamentally different approaches:
-- **JWT**: Self-contained token, no DB lookup on every request, contains claims (user_id, expiry). Standard approach with `firebase/php-jwt` (already in vendor).
-- **DB Token**: Opaque token, SHA-256 hashed, DB lookup on every request. Simpler but requires write per request (last_used).
+### 7.4 🔜 DEFERRED: Content Storage Inconsistency
 
-The REST API design is explicit and detailed about DB tokens. The Auth HLD casually mentions "JWT" without any JWT infrastructure. This must be resolved — one approach must be chosen and documented.
+**Status**: Deferred to dedicated research. See `TODO-content-storage-migration.md`.
 
-**Recommendation**: The REST API's DB token design is more thoroughly thought through and simpler for the phpBB context (no JWT key management, no token refresh flow, immediate revocability). Align Auth HLD to use "Bearer token" instead of "Bearer JWT."
+**Summary**: Threads ADR-001 specifies raw text storage, but legacy `phpbb_posts` contains s9e XML. Requires either bulk migration or dual-format ContentPipeline. Not yet resolved — needs its own research task.
 
-### 7.3 ⚠️ HIGH: Auth Subscriber Priority Conflict
+### 7.5 🔜 DEFERRED: Forum Counter Update Contract
 
-**Auth Service ADR-005**: `AuthorizationSubscriber` at priority 8.
-**REST API Phase 2**: `token_auth_subscriber` at priority 16.
-**Notifications HLD**: `auth_subscriber JWT → _api_user (priority 8)`.
+**Status**: Deferred to dedicated research. See `TODO-forum-counter-contract.md`.
 
-The REST API token auth is at 16 (authentication), Auth ACL is at 8 (authorization). This is logically correct — authenticate first, then authorize. But the Notifications HLD says "auth_subscriber JWT → _api_user (priority 8)" suggesting authentication happens at 8, which collides with ACL. 
-
-**Resolution**: Authentication at 16 (token validation, user hydration), Authorization at 8 (ACL check). Notifications HLD must be corrected.
-
-### 7.4 ⚠️ MEDIUM: Content Storage Inconsistency
-
-**Threads ADR-001**: "Raw text only — single `post_text` column, full parse+render on every display."
-
-**Messaging HLD**: `messaging_messages.message_text MEDIUMTEXT` + `metadata JSON DEFAULT NULL` — "No BBCode/formatting columns — content pipeline plugin handles rendering."
-
-**Legacy threads**: Uses s9e XML storage with `bbcode_uid`, `bbcode_bitfield`, `enable_bbcode`, etc.
-
-If services reuse legacy `phpbb_posts` table (which they do — Threads works with existing schema), the `post_text` column currently contains s9e XML, not raw text. The "raw text only" decision requires either:
-- A one-time migration converting all s9e XML → raw text (massive, risky), OR
-- A compatibility mode that the ContentPipeline handles both formats
-
-This migration complexity is not addressed anywhere.
-
-### 7.5 ⚠️ MEDIUM: Forum Counter Update Contract
-
-Threads HLD says: *"Threads calls `updateForumStats()` and `updateForumLastPost()` synchronously within the same transaction."*
-
-Hierarchy HLD does not define `updateForumStats()` or `updateForumLastPost()` as public interface methods on any service. The `HierarchyService` facade doesn't list these methods. The `ForumRepository` is described as "CRUD operations on `phpbb_forums`."
-
-**This is a one-way dependency assumption** — Threads assumes Hierarchy exposes an API that Hierarchy hasn't defined.
+**Summary**: Threads assumes `updateForumStats()` / `updateForumLastPost()` exist on Hierarchy, but Hierarchy hasn't defined them. One-way dependency assumption that needs contract alignment research.
 
 ---
 
@@ -329,18 +297,18 @@ No service research addresses testing strategy. Given the services are designed 
 
 | # | Action | Priority | Reason |
 |---|--------|----------|--------|
-| 1 | **Research + Design User Service** | ❌ Critical | Auth depends on User entity, all services need user_id. Blocks implementation Phase 2+. |
-| 2 | **Resolve Extension Model** | ❌ Critical | Write an ADR: tagged DI for type-registries, events+decorators for lifecycle extension. Apply consistently. Align Notifications to use the same ForumType-style event registration OR document why tagged DI is acceptable for notification types. |
-| 3 | **Resolve JWT vs DB Token** | ❌ Critical | Pick one. Update Auth HLD to say "Bearer token" not "Bearer JWT." Confirm DB token approach from REST API ADR-002. |
+| 1 | ~~**Research + Design User Service**~~ | ✅ Done | Researched at `2026-04-19-users-service/`. |
+| 2 | ~~**Resolve Extension Model**~~ | ✅ Done | Macrokernel architecture — domain service + plugins. No tagged DI. |
+| 3 | ~~**Resolve JWT vs DB Token**~~ | ✅ Done | JWT tokens. Addressed by `2026-04-19-auth-unified-service/` research. |
 
 ### Before Implementation Begins
 
 | # | Action | Priority | Reason |
 |---|--------|----------|--------|
 | 4 | **Define Migration Strategy** | ⚠️ High | Document whether this is big-bang or incremental. How do old and new tables coexist? What's the PM data migration path? |
-| 5 | **Define Hierarchy's Counter Update API** | ⚠️ High | Threads assumes `updateForumStats()` exists. Hierarchy must expose it. |
-| 6 | **Fix Auth Subscriber Priorities** | ⚠️ High | Document: Auth (token validation) priority 16, ACL (authorization) priority 8. Fix Notifications HLD. |
-| 7 | **Address post_text format migration** | ⚠️ High | If reusing legacy `phpbb_posts`, existing data is s9e XML, not raw text. ContentPipeline must handle both, or data must be migrated. |
+| 5 | **Define Hierarchy's Counter Update API** | 🔜 Deferred | See `TODO-forum-counter-contract.md`. |
+| 6 | ~~**Fix Auth Subscriber Priorities**~~ | ✅ Done | Symfony kernel rewrite eliminates priority conflicts. |
+| 7 | **Address post_text format migration** | 🔜 Deferred | See `TODO-content-storage-migration.md`. |
 | 8 | **Write cross-cutting ADR for shared patterns** | ⚠️ Medium | Exception base classes, error response format, counter management pattern, transaction coordination. |
 
 ### During Implementation
@@ -358,16 +326,19 @@ No service research addresses testing strategy. Given the services are designed 
 
 ## 10. Deployment Decision
 
-### ⚠️ Needs Alignment
+### ✅ Ready for Implementation (with caveats)
 
 **Verdict**: The individual service researches are **high quality** and demonstrate deep understanding of both the legacy phpBB codebase and modern PHP architecture. There is no fundamental architectural flaw — the services compose logically, the dependency graph is clean, and the technical decisions are well-reasoned.
 
-However, **implementation cannot begin** on the full service stack until:
+**Previously blocking items — all 3 resolved:**
 
-1. **User Service** is researched and designed (blocks Auth, which blocks everything)
-2. **Extension model contradiction** is resolved (affects how all services handle plugins)
-3. **Token type** is aligned between Auth and REST API
+1. ~~**User Service**~~ → ✅ Researched at `2026-04-19-users-service/`
+2. ~~**Extension model**~~ → ✅ Macrokernel architecture (domain core + plugins, no tagged DI)
+3. ~~**Token type**~~ → ✅ JWT tokens, unified auth research at `2026-04-19-auth-unified-service/`
 
-After resolving these 3 critical items, the remaining issues (migration strategy, counter API, subscriber priorities) can be addressed during implementation planning.
+**Remaining open items** (non-blocking, deferred to research):
+- Content storage migration (s9e XML → raw text) — see `TODO-content-storage-migration.md`
+- Forum counter update contract (Threads ↔ Hierarchy) — see `TODO-forum-counter-contract.md`
+- Migration strategy, shared DB wrapper, frontend strategy — addressable during implementation planning
 
-**Bottom line**: The parts are well-made. The assembly instructions are missing. Fix the 3 critical items, write a thin cross-cutting architecture document that standardizes the shared patterns, and this becomes a solid foundation for implementation.
+**Bottom line**: The 3 critical blockers have been resolved. Implementation can proceed following the phased plan. Two medium-priority items are tracked as research TODOs for resolution before their respective services are implemented.

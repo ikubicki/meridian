@@ -1,0 +1,82 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: true
+    design_enabled: true
+  created: "2026-04-19T22:00:00Z"
+  updated: "2026-04-19T22:00:00Z"
+  task_path: .maister/tasks/research/2026-04-19-auth-unified-service
+  task_ids:
+    phase-1: null
+    phase-2: null
+    phase-3: null
+    phase-4: null
+    phase-5: null
+    phase-6: null
+
+task:
+  title: "Unified Auth Service — Authentication, Authorization & JWT Sessions"
+  description: |
+    Design phpbb\auth as a unified service handling both authentication (AuthN)
+    and authorization (AuthZ). Stateless JWT-based sessions with two token types:
+    user tokens (standard operations) and group tokens (admin ACP/MCP operations).
+    Tight integration with user, group, and forum entities.
+  status: in_progress
+  tags: [auth, jwt, acl, security, sessions]
+  priority: high
+
+research_context:
+  research_type: "mixed"
+  research_question: |
+    How should phpbb\auth be designed as a unified service responsible for both
+    authentication and authorization? Key constraints:
+    - Stateless JWT tokens (no DB session lookups per request)
+    - Two token types: user token (user_id, basic claims) and group token
+      (user_id + group_id, for ACP/MCP admin operations)
+    - User with user token must obtain group token for admin endpoints
+    - Close integration with user entities, group entities, and forum ACL
+    - Must resolve the JWT vs DB token contradiction from prior research
+    - Must define the authentication flow that was missing (circular deferral
+      between Auth and User research)
+  scope:
+    included:
+      - JWT token structure and claims
+      - Token issuance, validation, refresh, revocation
+      - User token vs group token model
+      - Token elevation flow (user → group token)
+      - ACL/permission resolution from JWT claims
+      - Integration with existing phpbb\auth ACL bitfield system
+      - REST API authentication subscriber chain
+      - Session management without server-side state
+      - CSRF protection for stateless architecture
+      - Login/logout flows
+    excluded:
+      - OAuth2/OpenID Connect provider (future scope)
+      - Social login providers
+      - Two-factor authentication (future scope)
+      - Frontend implementation details
+    constraints:
+      - Must use firebase/php-jwt (already in vendor)
+      - Must work with existing phpbb_acl_* tables
+      - Must support both API and traditional web access
+      - Subscriber priority chain: AuthN at 16, AuthZ at 8
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
+  phase_summaries:
+    phase-1:
+      summary: null
+      steps_completed: [step-1]
