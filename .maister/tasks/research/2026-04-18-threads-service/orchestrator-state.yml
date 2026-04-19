@@ -1,0 +1,81 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-3: 0
+    phase-4: 0
+    phase-5: 0
+    phase-6: 0
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+  created: "2026-04-18T00:00:00Z"
+  updated: "2026-04-18T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-18-threads-service
+
+task:
+  title: "phpbb\\threads Service — Topics & Posts Management"
+  description: |
+    Zaprojektować serwis phpbb\threads odpowiedzialny za:
+    1. CRUD tematów i postów
+    2. Ankiety (polls)
+    3. Drafty (szkice postów)
+    4. Typy tematów (normal/sticky/announcement/global)
+    5. Soft-delete, locking, pinning
+    6. Content pipeline z pluginami (BBCode, markdown, attachmenty)
+    Auth via middleware phpbb\auth. Integracja z phpbb\hierarchy (forum context).
+    Attachmenty, BBCode, markdown i inne formaty jako pluginy (events + decorators).
+  status: in_progress
+  tags: [threads, topics, posts, content, plugins, events, decorators, php82]
+  priority: high
+
+research_context:
+  research_type: "technical"
+  research_question: "Jak zaprojektować phpbb\\threads — tematy i posty z content pipeline pluginowym (BBCode/markdown/attachmenty jako pluginy), event-driven API, auth via middleware?"
+  scope:
+    included:
+      - Legacy posting system (posting.php, functions_posting.php)
+      - Topic/post display (viewtopic.php)
+      - Post submission workflow (submit_post())
+      - Post editing, quoting, deletion
+      - Topic types (normal, sticky, announcement, global)
+      - Topic locking, pinning
+      - Soft-delete (content_visibility)
+      - Polls (poll_options, poll_votes)
+      - Drafts (load_drafts, save_draft)
+      - Post counters and statistics
+      - Text storage format (bbcode_uid, bbcode_bitfield)
+      - Content pipeline architecture (plugin hooks for formatters)
+      - Attachment integration as plugin
+      - BBCode/markdown as content format plugins
+      - Event-driven API (domain events as returns)
+      - Request/response decorator pattern for plugins
+    excluded:
+      - ACL/permissions (phpbb\auth middleware)
+      - Forum hierarchy (phpbb\hierarchy)
+      - User management (phpbb\user)
+      - Search indexing (future service)
+      - Moderation queue (future service)
+      - Notification dispatch (separate concern)
+      - Legacy extension system (dropped)
+    constraints:
+      - PHP 8.2+ strict types
+      - PSR-4 namespace phpbb\threads
+      - Direct PDO (no legacy DBAL)
+      - Symfony DI container
+      - Event-driven API (domain events as method returns)
+      - Plugins via events + request/response decorators
+      - NO service_collection, NO tagged services, NO compiler passes
+      - Attachments = plugin (not core)
+      - BBCode = plugin (not core)
+      - Markdown = plugin (not core)
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: null
