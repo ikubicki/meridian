@@ -74,6 +74,40 @@ info:
       { "error": "You do not have permission to post in this forum.", "status": 403 }
       ```
 
+    ## JWT Claims Reference
+
+    All access tokens are signed JWTs. The payload carries these claims:
+
+    | Claim | Type | Description |
+    |---|---|---|
+    | `sub` | string | User ID (string per RFC 7519) |
+    | `username` | string | Current display username |
+    | `utype` | integer | User type: `0`=Normal, `1`=Inactive, `2`=Bot, `3`=Founder |
+    | `gen` | integer | Token generation — incremented by `POST /auth/logout-all`; tokens with stale gen are rejected |
+    | `pv` | integer | Password version — incremented on password change; tokens with stale pv are rejected |
+    | `flags` | string[] | Elevated scope claims granted at `POST /auth/elevate` (e.g. `["acp"]`, `["mcp"]`) |
+    | `kid` | string | Signing key ID for key rotation support |
+    | `iat` | integer | Issued-at timestamp (Unix) |
+    | `exp` | integer | Expiry timestamp (Unix) — access tokens expire after 15 minutes |
+
+    **Example payload:**
+    ```json
+    {
+      "sub": "42",
+      "username": "alice",
+      "utype": 0,
+      "gen": 3,
+      "pv": 1,
+      "flags": ["acp"],
+      "kid": "key-2026",
+      "iat": 1745000000,
+      "exp": 1745000900
+    }
+    ```
+
+    In middleware/subscribers, retrieve the decoded token from `$request->attributes->get('_api_token')`.
+    Check elevated scope with: `in_array('acp', $token['flags'] ?? [])`.
+
     ## x-permission convention (for tooling)
     Every protected operation carries an `x-permission` vendor extension specifying
     the internal phpBB ACL flag(s) required. Multiple values are AND-joined unless

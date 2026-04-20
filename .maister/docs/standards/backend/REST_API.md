@@ -45,18 +45,21 @@ return new JsonResponse(['error' => 'Not found'], 404);
 ## Response Shape Conventions
 
 ### Success response
-Use a top-level key matching the resource name (plural for collections, singular for single items):
+Always use `data` as the top-level key. Paginated collections include a `meta` object:
 
 ```json
-// Collection:
-{ "forums": [...], "total": 3 }
+// Collection (paginated):
+{ "data": [...], "meta": { "total": 42, "page": 1, "perPage": 25, "lastPage": 2 } }
 
 // Single resource:
-{ "topic": { "id": 1, "title": "..." } }
+{ "data": { "id": 1, "title": "..." } }
 
 // Created resource:
-{ "user": { "id": 100, "username": "alice" }, "token": "eyJ..." }
+{ "data": { "id": 100, "username": "alice" } }
 ```
+
+> **See [openapi.yaml](../../../../.maister/tasks/research/2026-04-20-rest-api-spec/outputs/openapi.yaml)**
+> for the canonical response schema of every endpoint.
 
 ### Error response
 Always use `error` as the key for the human-readable message:
@@ -94,15 +97,32 @@ All other `/api/` routes require a valid token.
 
 ### JWT payload structure
 
+> ⚠️ The canonical JWT claim names are defined in the OpenAPI spec (`TokenPair` schema
+> and the `## Authentication` section of `info.description`). The spec wins on any conflict.
+
 ```json
 {
-    "user_id": 2,
-    "username": "admin",
-    "admin": true,
+    "sub": "2",
+    "username": "alice",
+    "utype": 0,
+    "gen": 1,
+    "pv": 0,
+    "flags": ["acp"],
+    "kid": "key-2026",
     "iat": 1700000000,
-    "exp": 1700003600
+    "exp": 1700000900
 }
 ```
+
+| Claim | Type | Description |
+|---|---|---|
+| `sub` | string | User ID (as string, per JWT spec) |
+| `username` | string | Current display username |
+| `utype` | integer | User type: 0=Normal, 1=Inactive, 2=Bot, 3=Founder |
+| `gen` | integer | Token generation — increment on `POST /auth/logout-all` to invalidate all sessions |
+| `pv` | integer | Password version — increment on password change to invalidate older tokens |
+| `flags` | string[] | Elevated scope claims granted at `/auth/elevate` (e.g. `["acp"]`, `["mcp"]`) |
+| `kid` | string | Signing key ID for rotation support |
 
 ## Validation Pattern
 
@@ -151,8 +171,14 @@ class ForumsController
 
     public function index(Request $request): JsonResponse
     {
-        $forums = $this->forumService->listAll();
-        return new JsonResponse(['forums' => $forums, 'total' => count($forums)]);
+        ['items' => $forums, 'total' => $total] = $this->forumService->listAll(
+            page: (int) $request->query->get('page', 1),
+            perPage: (int) $request->query->get('perPage', 25),
+        );
+        return new JsonResponse([
+            'data' => $forums,
+            'meta' => ['total' => $total, 'page' => 1, 'perPage' => 25, 'lastPage' => (int) ceil($total / 25)],
+        ]);
     }
 
     public function show(int $id): JsonResponse
@@ -161,7 +187,7 @@ class ForumsController
         if ($forum === null) {
             return new JsonResponse(['error' => 'Forum not found', 'status' => 404], 404);
         }
-        return new JsonResponse(['forum' => $forum]);
+        return new JsonResponse(['data' => $forum]);
     }
 }
 ```
