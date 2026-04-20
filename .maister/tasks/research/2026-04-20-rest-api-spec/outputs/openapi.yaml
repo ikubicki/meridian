@@ -1,0 +1,1689 @@
+openapi: 3.1.0
+info:
+  title: phpBB REST API
+  version: 4.0.0
+  description: |
+    REST API contract for phpBB rewrite (Symfony 8.x / PHP 8.2+).
+    All endpoints require Bearer JWT unless marked otherwise.
+    Naming: camelCase for JSON fields and query parameters.
+  contact:
+    name: phpBB Dev Team
+
+servers:
+  - url: /api/v4
+    description: API v4
+
+# ════════════════════════════════════════════════════════════════
+# SECURITY
+# ════════════════════════════════════════════════════════════════
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ──────────────────────────────────────────────────────────────
+  # PAGINATION & COMMON
+  # ──────────────────────────────────────────────────────────────
+  parameters:
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    perPage:
+      name: perPage
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    sort:
+      name: sort
+      in: query
+      schema: { type: string }
+      description: Field name to sort by (service-specific)
+    direction:
+      name: direction
+      in: query
+      schema: { type: string, enum: [asc, desc], default: desc }
+
+  schemas:
+    # ── Pagination envelope ──
+    PaginationMeta:
+      type: object
+      required: [total, page, perPage, lastPage]
+      properties:
+        total: { type: integer }
+        page: { type: integer }
+        perPage: { type: integer }
+        lastPage: { type: integer }
+
+    # ── Error responses ──
+    Error:
+      type: object
+      required: [error, status]
+      properties:
+        error: { type: string }
+        status: { type: integer }
+
+    ValidationError:
+      type: object
+      required: [errors, status]
+      properties:
+        status: { type: integer, example: 422 }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    # ════════════════════════════════════════════════════════════
+    # AUTH SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 255 }
+        password: { type: string, minLength: 6 }
+
+    TokenPair:
+      type: object
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 900 }
+        tokenType: { type: string, example: bearer }
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+
+    ElevateRequest:
+      type: object
+      required: [password, scopes]
+      properties:
+        password: { type: string }
+        scopes: { type: array, items: { type: string, enum: [acp, mcp] } }
+
+    ElevatedTokenResponse:
+      type: object
+      required: [accessToken, elevatedToken, expiresIn]
+      properties:
+        accessToken: { type: string, description: New access token with elevated claims }
+        elevatedToken: { type: string, description: Short-lived elevated scope token }
+        expiresIn: { type: integer, example: 300 }
+
+    # ════════════════════════════════════════════════════════════
+    # FORUM / HIERARCHY SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    Forum:
+      type: object
+      required: [id, name, type, status, parentId]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        descriptionRendered: { type: string, description: HTML rendered }
+        parentId: { type: integer }
+        type: { type: integer, enum: [0, 1, 2], description: "0=Category, 1=Forum, 2=Link" }
+        status: { type: integer, enum: [0, 1], description: "0=Unlocked, 1=Locked" }
+        link: { type: string }
+        image: { type: string }
+        rules: { type: string }
+        rulesRendered: { type: string }
+        rulesLink: { type: string }
+        displayOnIndex: { type: boolean }
+        displaySubforumList: { type: boolean }
+        topicsPerPage: { type: integer }
+        enableIndexing: { type: boolean }
+        enableIcons: { type: boolean }
+        hasPassword: { type: boolean }
+        stats:
+          $ref: '#/components/schemas/ForumStats'
+        lastPost:
+          $ref: '#/components/schemas/ForumLastPost'
+        children:
+          type: array
+          items: { $ref: '#/components/schemas/Forum' }
+          description: Only in tree responses
+
+    ForumStats:
+      type: object
+      properties:
+        postsApproved: { type: integer }
+        postsUnapproved: { type: integer }
+        postsSoftdeleted: { type: integer }
+        topicsApproved: { type: integer }
+        topicsUnapproved: { type: integer }
+        topicsSoftdeleted: { type: integer }
+
+    ForumLastPost:
+      type: object
+      nullable: true
+      properties:
+        postId: { type: integer }
+        posterId: { type: integer }
+        posterName: { type: string }
+        posterColour: { type: string, nullable: true }
+        subject: { type: string }
+        time: { type: integer, description: Unix timestamp }
+
+    CreateForumRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        type: { type: integer, enum: [0, 1, 2] }
+        parentId: { type: integer, default: 0 }
+        description: { type: string, default: "" }
+        link: { type: string }
+        image: { type: string }
+        rules: { type: string }
+        rulesLink: { type: string }
+        password: { type: string }
+        style: { type: integer }
+        topicsPerPage: { type: integer }
+        displayOnIndex: { type: boolean, default: true }
+        displaySubforumList: { type: boolean, default: true }
+        enableIndexing: { type: boolean, default: true }
+        enableIcons: { type: boolean, default: true }
+
+    UpdateForumRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        type: { type: integer, enum: [0, 1, 2] }
+        parentId: { type: integer }
+        description: { type: string }
+        link: { type: string }
+        image: { type: string }
+        rules: { type: string }
+        rulesLink: { type: string }
+        password: { type: string, nullable: true, description: "null = clear password" }
+        style: { type: integer }
+        topicsPerPage: { type: integer }
+        displayOnIndex: { type: boolean }
+        displaySubforumList: { type: boolean }
+        enableIndexing: { type: boolean }
+        enableIcons: { type: boolean }
+
+    MoveForumRequest:
+      type: object
+      required: [newParentId]
+      properties:
+        newParentId: { type: integer }
+        position: { type: string, enum: [first, last, before, after] }
+        siblingId: { type: integer, description: Required if position=before|after }
+
+    # ════════════════════════════════════════════════════════════
+    # THREADS SCHEMAS (TOPICS + POSTS)
+    # ════════════════════════════════════════════════════════════
+    Topic:
+      type: object
+      required: [id, forumId, title, type, status, visibility]
+      properties:
+        id: { type: integer }
+        forumId: { type: integer }
+        title: { type: string }
+        iconId: { type: integer }
+        type: { type: integer, enum: [0, 1, 2, 3], description: "0=Normal, 1=Sticky, 2=Announce, 3=Global" }
+        status: { type: integer, enum: [0, 1, 2], description: "0=Unlocked, 1=Locked, 2=Moved" }
+        visibility: { type: integer, enum: [0, 1, 2, 3], description: "0=Unapproved, 1=Approved, 2=Deleted, 3=Reapprove" }
+        posterId: { type: integer }
+        createdAt: { type: integer }
+        firstPostId: { type: integer }
+        firstPosterName: { type: string }
+        firstPosterColour: { type: string, nullable: true }
+        lastPostId: { type: integer, nullable: true }
+        lastPosterId: { type: integer, nullable: true }
+        lastPosterName: { type: string, nullable: true }
+        lastPosterColour: { type: string, nullable: true }
+        lastPostSubject: { type: string, nullable: true }
+        lastPostTime: { type: integer, nullable: true }
+        postsApproved: { type: integer }
+        postsUnapproved: { type: integer }
+        postsSoftdeleted: { type: integer }
+        views: { type: integer }
+        hasAttachments: { type: boolean }
+        hasReports: { type: boolean }
+
+    Post:
+      type: object
+      required: [id, topicId, forumId, posterId, postedAt, text, visibility]
+      properties:
+        id: { type: integer }
+        topicId: { type: integer }
+        forumId: { type: integer }
+        posterId: { type: integer }
+        posterUsername: { type: string }
+        postedAt: { type: integer }
+        subject: { type: string }
+        text: { type: string, description: Raw s9e XML }
+        textRendered: { type: string, description: HTML rendered }
+        iconId: { type: integer }
+        visibility: { type: integer, enum: [0, 1, 2, 3] }
+        editTime: { type: integer }
+        editUserId: { type: integer, nullable: true }
+        editCount: { type: integer }
+        editReason: { type: string }
+        editLocked: { type: boolean }
+        hasAttachments: { type: boolean }
+        hasReports: { type: boolean }
+        poster:
+          $ref: '#/components/schemas/UserDisplay'
+
+    CreateTopicRequest:
+      type: object
+      required: [title, text]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 255 }
+        text: { type: string, minLength: 1 }
+        iconId: { type: integer, default: 0 }
+        type: { type: integer, enum: [0, 1, 2, 3], default: 0 }
+        timeLimit: { type: integer, default: 0, description: Announce/sticky expiry in days }
+
+    CreatePostRequest:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1 }
+        subject: { type: string, nullable: true }
+        iconId: { type: integer, default: 0 }
+
+    EditPostRequest:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1 }
+        subject: { type: string, nullable: true }
+        editReason: { type: string, default: "" }
+
+    # ════════════════════════════════════════════════════════════
+    # USER SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    User:
+      type: object
+      required: [id, username, type]
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        type: { type: integer, enum: [0, 1, 2, 3], description: "0=Normal, 1=Inactive, 2=Bot, 3=Founder" }
+        colour: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        defaultGroupId: { type: integer }
+        registeredAt: { type: integer }
+        posts: { type: integer }
+        lastPostTime: { type: integer }
+        rank: { type: integer }
+        isNew: { type: boolean }
+
+    UserDisplay:
+      type: object
+      required: [id, username]
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        colour: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            email: { type: string, description: Only visible to self/admin }
+            avatarType: { type: string }
+            avatarWidth: { type: integer }
+            avatarHeight: { type: integer }
+            signature: { type: string }
+            signatureRendered: { type: string }
+            birthday: { type: string }
+            jabber: { type: string }
+            profileFields: { type: object, additionalProperties: true }
+
+    RegisterRequest:
+      type: object
+      required: [username, email, password]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 255 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        language: { type: string, default: en }
+        timezone: { type: string, default: UTC }
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        signature: { type: string }
+        birthday: { type: string }
+        jabber: { type: string }
+        timezone: { type: string }
+        language: { type: string }
+        profileFields: { type: object, additionalProperties: true }
+
+    Group:
+      type: object
+      required: [id, name, type]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        type: { type: integer, enum: [0, 1, 2, 3], description: "0=Open, 1=Closed, 2=Hidden, 3=Special" }
+        colour: { type: string, nullable: true }
+        description: { type: string }
+        memberCount: { type: integer }
+        isDefault: { type: boolean }
+
+    # ════════════════════════════════════════════════════════════
+    # MESSAGING SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    Conversation:
+      type: object
+      required: [id, createdAt, messageCount, participantCount]
+      properties:
+        id: { type: integer }
+        title: { type: string, nullable: true }
+        createdBy: { type: integer }
+        createdAt: { type: integer }
+        lastMessageId: { type: integer, nullable: true }
+        lastMessageAt: { type: integer, nullable: true }
+        messageCount: { type: integer }
+        participantCount: { type: integer }
+        state: { type: string, enum: [active, pinned, archived] }
+        isMuted: { type: boolean }
+        lastReadMessageId: { type: integer, nullable: true }
+        unreadCount: { type: integer }
+        participants:
+          type: array
+          items: { $ref: '#/components/schemas/UserDisplay' }
+
+    Message:
+      type: object
+      required: [id, conversationId, authorId, text, createdAt]
+      properties:
+        id: { type: integer }
+        conversationId: { type: integer }
+        authorId: { type: integer }
+        subject: { type: string, nullable: true }
+        text: { type: string }
+        textRendered: { type: string }
+        createdAt: { type: integer }
+        editedAt: { type: integer, nullable: true }
+        editCount: { type: integer }
+        metadata: { type: object, nullable: true }
+        author:
+          $ref: '#/components/schemas/UserDisplay'
+
+    SendMessageRequest:
+      type: object
+      required: [recipientIds, text]
+      properties:
+        recipientIds: { type: array, items: { type: integer }, minItems: 1 }
+        text: { type: string, minLength: 1 }
+        subject: { type: string, nullable: true }
+
+    ReplyMessageRequest:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1 }
+
+    # ════════════════════════════════════════════════════════════
+    # NOTIFICATION SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    Notification:
+      type: object
+      required: [id, type, itemId, isRead, createdAt]
+      properties:
+        id: { type: integer }
+        type: { type: string }
+        itemId: { type: integer }
+        itemParentId: { type: integer, nullable: true }
+        isRead: { type: boolean }
+        createdAt: { type: integer }
+        display: { type: object, description: Type-specific rendering data }
+        actors:
+          type: array
+          items: { $ref: '#/components/schemas/UserDisplay' }
+        actorCount: { type: integer }
+
+    # ════════════════════════════════════════════════════════════
+    # SEARCH SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    SearchResult:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/Topic'
+              - $ref: '#/components/schemas/Post'
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/PaginationMeta'
+            - type: object
+              properties:
+                executionTimeMs: { type: integer }
+
+    # ════════════════════════════════════════════════════════════
+    # STORAGE SCHEMAS
+    # ════════════════════════════════════════════════════════════
+    StoredFile:
+      type: object
+      required: [id, assetType, originalFilename, mimeType, filesize, url]
+      properties:
+        id: { type: string, format: uuid }
+        assetType: { type: string, enum: [attachment, avatar, export] }
+        visibility: { type: string, enum: [public, private] }
+        originalFilename: { type: string }
+        mimeType: { type: string }
+        filesize: { type: integer }
+        checksum: { type: string }
+        isOrphan: { type: boolean }
+        uploaderId: { type: integer }
+        createdAt: { type: integer }
+        claimedAt: { type: integer, nullable: true }
+        url: { type: string, format: uri }
+        thumbnailUrl: { type: string, format: uri, nullable: true }
+
+# ════════════════════════════════════════════════════════════════
+# PATHS
+# ════════════════════════════════════════════════════════════════
+paths:
+  # ──────────────────────────────────────────────────────────────
+  # AUTH
+  # ──────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403':
+          description: User banned or inactive
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: New token pair
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401':
+          description: Invalid or reused refresh token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke refresh token family
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '204': { description: Logged out }
+
+  /auth/logout-all:
+    post:
+      tags: [Auth]
+      summary: Revoke all sessions (increments token generation)
+      responses:
+        '204': { description: All sessions revoked }
+
+  /auth/elevate:
+    post:
+      tags: [Auth]
+      summary: Get elevated token for admin/mod operations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ElevateRequest' }
+      responses:
+        '200':
+          description: Elevated token issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ElevatedTokenResponse' }
+        '401':
+          description: Invalid password
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  # ──────────────────────────────────────────────────────────────
+  # ME (current user shortcuts)
+  # ──────────────────────────────────────────────────────────────
+  /me:
+    get:
+      tags: [Me]
+      summary: Get current user profile
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/UserProfile' }
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    patch:
+      tags: [Me]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateProfileRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/UserProfile' }
+        '422':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /me/password:
+    put:
+      tags: [Me]
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 6 }
+      responses:
+        '204': { description: Password changed }
+        '401':
+          description: Current password incorrect
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  # ──────────────────────────────────────────────────────────────
+  # FORUMS / HIERARCHY
+  # ──────────────────────────────────────────────────────────────
+  /forums:
+    get:
+      tags: [Forums]
+      summary: Get forum tree
+      parameters:
+        - name: rootId
+          in: query
+          schema: { type: integer }
+          description: Return subtree from this forum ID
+      responses:
+        '200':
+          description: Forum tree
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Forum' }
+    post:
+      tags: [Forums]
+      summary: Create forum
+      description: Requires admin permission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateForumRequest' }
+      responses:
+        '201':
+          description: Forum created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Forum' }
+        '403': { description: Insufficient permissions }
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /forums/{forumId}:
+    parameters:
+      - name: forumId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Forums]
+      summary: Get single forum
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Forum' }
+        '404': { description: Forum not found }
+    patch:
+      tags: [Forums]
+      summary: Update forum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateForumRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Forum' }
+        '403': { description: Insufficient permissions }
+        '404': { description: Forum not found }
+    delete:
+      tags: [Forums]
+      summary: Delete forum
+      parameters:
+        - name: moveContentTo
+          in: query
+          schema: { type: integer }
+          description: Move topics to this forum before deleting
+      responses:
+        '204': { description: Forum deleted }
+        '403': { description: Insufficient permissions }
+        '404': { description: Forum not found }
+
+  /forums/{forumId}/move:
+    parameters:
+      - name: forumId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Forums]
+      summary: Move forum in hierarchy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MoveForumRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Forum' }
+        '403': { description: Insufficient permissions }
+
+  # ──────────────────────────────────────────────────────────────
+  # TOPICS
+  # ──────────────────────────────────────────────────────────────
+  /forums/{forumId}/topics:
+    parameters:
+      - name: forumId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Topics]
+      summary: List topics in forum
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - name: sort
+          in: query
+          schema: { type: string, enum: [lastPostTime, createdAt, views, postsApproved], default: lastPostTime }
+        - $ref: '#/components/parameters/direction'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Topic' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Topics]
+      summary: Create new topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTopicRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: No post permission in this forum }
+        '422':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /topics/{topicId}:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Topics]
+      summary: Get topic details
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '404': { description: Topic not found }
+    patch:
+      tags: [Topics]
+      summary: Update topic (lock, change type, rename)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                type: { type: integer, enum: [0, 1, 2, 3] }
+                status: { type: integer, enum: [0, 1] }
+                iconId: { type: integer }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions }
+    delete:
+      tags: [Topics]
+      summary: Soft-delete topic
+      parameters:
+        - name: reason
+          in: query
+          schema: { type: string }
+      responses:
+        '204': { description: Topic soft-deleted }
+
+  /topics/{topicId}/move:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Topics]
+      summary: Move topic to another forum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [forumId]
+              properties:
+                forumId: { type: integer }
+                leaveShadow: { type: boolean, default: true }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+
+  # ──────────────────────────────────────────────────────────────
+  # POSTS
+  # ──────────────────────────────────────────────────────────────
+  /topics/{topicId}/posts:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Posts]
+      summary: List posts in topic
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - name: sort
+          in: query
+          schema: { type: string, enum: [postedAt], default: postedAt }
+        - $ref: '#/components/parameters/direction'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Post' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Posts]
+      summary: Create reply in topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePostRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Post' }
+        '403': { description: No reply permission }
+        '404': { description: Topic not found }
+        '422':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /posts/{postId}:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Posts]
+      summary: Get single post
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Post' }
+        '404': { description: Post not found }
+    patch:
+      tags: [Posts]
+      summary: Edit post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EditPostRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Post' }
+        '403': { description: Cannot edit this post }
+    delete:
+      tags: [Posts]
+      summary: Soft-delete post
+      parameters:
+        - name: reason
+          in: query
+          schema: { type: string }
+      responses:
+        '204': { description: Post soft-deleted }
+
+  # ──────────────────────────────────────────────────────────────
+  # USERS
+  # ──────────────────────────────────────────────────────────────
+  /users:
+    get:
+      tags: [Users]
+      summary: Search / list users
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - name: sort
+          in: query
+          schema: { type: string, enum: [username, registeredAt, posts, lastPostTime], default: username }
+        - $ref: '#/components/parameters/direction'
+        - name: username
+          in: query
+          schema: { type: string }
+          description: Filter by username (partial match)
+        - name: email
+          in: query
+          schema: { type: string }
+          description: Admin only
+        - name: groupId
+          in: query
+          schema: { type: integer }
+        - name: active
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/User' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Users]
+      summary: Register new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '409':
+          description: Username or email already taken
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Users]
+      summary: Get user profile (public view)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/UserProfile' }
+        '404': { description: User not found }
+
+  /users/check-username:
+    get:
+      tags: [Users]
+      summary: Check username availability
+      security: []
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean }
+
+  /users/check-email:
+    get:
+      tags: [Users]
+      summary: Check email availability
+      security: []
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema: { type: string, format: email }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available: { type: boolean }
+
+  /password-reset:
+    post:
+      tags: [Users]
+      summary: Request password reset email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: Reset email sent (always returns 202) }
+
+  /password-reset/confirm:
+    post:
+      tags: [Users]
+      summary: Execute password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token: { type: string }
+                newPassword: { type: string, minLength: 6 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '400': { description: Invalid or expired token }
+
+  # ──────────────────────────────────────────────────────────────
+  # GROUPS
+  # ──────────────────────────────────────────────────────────────
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups
+      parameters:
+        - name: type
+          in: query
+          schema: { type: integer, enum: [0, 1, 2, 3] }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Group' }
+
+  /groups/{groupId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Groups]
+      summary: Get group details
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Group' }
+
+  /groups/{groupId}/members:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Groups]
+      summary: List group members
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user: { $ref: '#/components/schemas/UserDisplay' }
+                        isLeader: { type: boolean }
+                        isPending: { type: boolean }
+                        joinedAt: { type: integer }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+    post:
+      tags: [Groups]
+      summary: Add user to group / request join
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: integer }
+                isLeader: { type: boolean, default: false }
+      responses:
+        '201': { description: User added }
+        '403': { description: Group is closed/hidden }
+
+  /groups/{groupId}/members/{userId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [Groups]
+      summary: Remove user from group
+      responses:
+        '204': { description: User removed }
+
+  # ──────────────────────────────────────────────────────────────
+  # MESSAGING
+  # ──────────────────────────────────────────────────────────────
+  /conversations:
+    get:
+      tags: [Messaging]
+      summary: List conversations
+      parameters:
+        - $ref: '#/components/parameters/perPage'
+        - name: state
+          in: query
+          schema: { type: string, enum: [active, pinned, archived], default: active }
+        - name: beforeId
+          in: query
+          schema: { type: integer }
+          description: Cursor-based pagination (return items before this ID)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Conversation' }
+                  hasMore: { type: boolean }
+    post:
+      tags: [Messaging]
+      summary: Send new message (creates conversation if needed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendMessageRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Message' }
+                  conversation: { $ref: '#/components/schemas/Conversation' }
+        '403': { description: Cannot message these recipients }
+
+  /conversations/{conversationId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Messaging]
+      summary: Get conversation details
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Conversation' }
+    delete:
+      tags: [Messaging]
+      summary: Leave conversation
+      responses:
+        '204': { description: Left conversation }
+
+  /conversations/{conversationId}/messages:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Messaging]
+      summary: List messages in conversation
+      parameters:
+        - $ref: '#/components/parameters/perPage'
+        - name: beforeId
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Message' }
+                  hasMore: { type: boolean }
+    post:
+      tags: [Messaging]
+      summary: Reply to conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplyMessageRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Message' }
+
+  /conversations/{conversationId}/read:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Messaging]
+      summary: Mark conversation as read
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                upToMessageId: { type: integer, description: Mark read up to this message }
+      responses:
+        '204': { description: Marked as read }
+
+  /conversations/{conversationId}/pin:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Messaging]
+      summary: Pin conversation
+      responses:
+        '204': { description: Pinned }
+    delete:
+      tags: [Messaging]
+      summary: Unpin conversation
+      responses:
+        '204': { description: Unpinned }
+
+  /conversations/{conversationId}/archive:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Messaging]
+      summary: Archive conversation
+      responses:
+        '204': { description: Archived }
+    delete:
+      tags: [Messaging]
+      summary: Unarchive conversation
+      responses:
+        '204': { description: Unarchived }
+
+  /conversations/{conversationId}/mute:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Messaging]
+      summary: Mute conversation
+      responses:
+        '204': { description: Muted }
+    delete:
+      tags: [Messaging]
+      summary: Unmute conversation
+      responses:
+        '204': { description: Unmuted }
+
+  /messaging/unread:
+    get:
+      tags: [Messaging]
+      summary: Get unread counts
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unreadConversations: { type: integer }
+                  unreadMessages: { type: integer }
+
+  # ──────────────────────────────────────────────────────────────
+  # NOTIFICATIONS
+  # ──────────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          headers:
+            Last-Modified:
+              schema: { type: string }
+            X-Poll-Interval:
+              schema: { type: integer, example: 30 }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Notification' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+                  unreadCount: { type: integer }
+
+  /notifications/count:
+    get:
+      tags: [Notifications]
+      summary: Get unread count (polling endpoint)
+      parameters:
+        - name: If-Modified-Since
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unreadCount: { type: integer }
+        '304': { description: Not modified since last check }
+
+  /notifications/{notificationId}/read:
+    parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Notifications]
+      summary: Mark notification as read
+      responses:
+        '204': { description: Marked as read }
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '204': { description: All marked as read }
+
+  # ──────────────────────────────────────────────────────────────
+  # SEARCH
+  # ──────────────────────────────────────────────────────────────
+  /search:
+    get:
+      tags: [Search]
+      summary: Search posts or topics
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 3 }
+        - name: type
+          in: query
+          schema: { type: string, enum: [posts, topics], default: posts }
+        - name: forumId
+          in: query
+          schema: { type: integer }
+          description: Limit to specific forum
+        - name: authorId
+          in: query
+          schema: { type: integer }
+          description: Limit to specific author
+        - name: sort
+          in: query
+          schema: { type: string, enum: [relevance, postedAt, author], default: relevance }
+        - $ref: '#/components/parameters/direction'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+        - name: after
+          in: query
+          schema: { type: integer }
+          description: Unix timestamp - only results after this date
+        - name: before
+          in: query
+          schema: { type: integer }
+          description: Unix timestamp - only results before this date
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SearchResult' }
+        '422': { description: Invalid search query }
+
+  # ──────────────────────────────────────────────────────────────
+  # STORAGE / FILES
+  # ──────────────────────────────────────────────────────────────
+  /files:
+    post:
+      tags: [Storage]
+      summary: Upload file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, assetType]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                assetType:
+                  type: string
+                  enum: [attachment, avatar, export]
+                forumId:
+                  type: integer
+                visibility:
+                  type: string
+                  enum: [public, private]
+                  default: public
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StoredFile' }
+        '413': { description: File too large }
+        '415': { description: Unsupported media type }
+        '507': { description: Quota exceeded }
+
+  /files/{fileId}:
+    parameters:
+      - name: fileId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Storage]
+      summary: Get file metadata
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StoredFile' }
+        '404': { description: File not found }
+    delete:
+      tags: [Storage]
+      summary: Delete file
+      responses:
+        '204': { description: File deleted }
+        '403': { description: Not file owner }
+
+  /files/{fileId}/download:
+    parameters:
+      - name: fileId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: variant
+        in: query
+        schema: { type: string, enum: [original, thumbnail, webp, medium] }
+    get:
+      tags: [Storage]
+      summary: Download file content
+      responses:
+        '200':
+          description: File binary
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404': { description: File not found }
+
+  # ──────────────────────────────────────────────────────────────
+  # HEALTH
+  # ──────────────────────────────────────────────────────────────
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  version: { type: string }
