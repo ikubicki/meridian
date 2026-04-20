@@ -31,7 +31,7 @@ function Header() {
             <a href="#" title="Board index">
               <img
                 className="site-logo"
-                src="/src/assets/site_logo.svg"
+                src="/site_logo.svg"
                 alt="phpBB"
               />
             </a>
@@ -102,7 +102,7 @@ function StickyHeader() {
         <div className="sticky-left">
           <a href="#" className="sticky-logo" title="Board index">
             <img src="/favicon.ico" alt="phpBB" className="sticky-ico" />
-            <img src="/src/assets/site_logo.svg" alt="phpBB" className="sticky-svg" />
+            <img src="/site_logo.svg" alt="phpBB" className="sticky-svg" />
           </a>
           <ul className="breadcrumbs">
             <li className="crumb"><a href="#">Board index</a></li>

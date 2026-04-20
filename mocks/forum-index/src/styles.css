@@ -14,9 +14,17 @@ body {
   line-height: normal;
   color: #536482;
   background-color: #F5F7FA;
-  background: #F5F7FA linear-gradient(to bottom, #0076B1 0, #12A3EB 100px, #F5F7FA 300px, #F5F7FA 100%) no-repeat;
+  background: #f5f7fa linear-gradient(to bottom, #0076B1 0px, #12A3EB 15%, #F5F7FA 40%, #F5F7FA 100%) no-repeat;
+  background-size: 100% 200%;
+  background-position: 0 0;
   margin: 0;
   padding: 12px 0;
+  animation: gradient-flow 8s ease-in-out infinite alternate;
+}
+
+@keyframes gradient-flow {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 -300px; }
 }
 
 a { color: #105289; text-decoration: none; }

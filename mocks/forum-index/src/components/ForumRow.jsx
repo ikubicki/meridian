@@ -1,5 +1,4 @@
 import { FORUM_TYPE_LINK } from '../data.js';
-import forumReadIcon from '../assets/images/forum_read.gif';
 
 /**
  * Single forum row – mirrors the <!-- IF not forumrow.S_IS_CAT --> block
@@ -103,7 +102,7 @@ function ForumIcon({ isLink, unread }) {
   return (
     <img
       className={`forum-icon ${unread ? 'forum-icon-unread' : 'forum-icon-read'}`}
-      src={forumReadIcon}
+      src="/images/forum_read.gif"
       alt={unread ? 'Unread posts' : 'No unread posts'}
       title={unread ? 'Unread posts' : 'No unread posts'}
     />
