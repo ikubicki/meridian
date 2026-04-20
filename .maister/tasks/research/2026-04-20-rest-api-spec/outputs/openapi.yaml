@@ -58,6 +58,7 @@ info:
     | `a_board` | Administrators | Change board-wide configuration |
     | `a_search` | Administrators | Rebuild the full-text search index |
     | `a_announce` | Administrators | Post global announcements |
+    | `a_manage_files` | Administrators | Access and delete any uploaded file regardless of ownership |
 
     ### User preferences (global, granted to all registered users by default)
     | Permission | Who can use it | Description |
@@ -86,6 +87,7 @@ info:
     | `gen` | integer | Token generation — incremented by `POST /auth/logout-all`; tokens with stale gen are rejected |
     | `pv` | integer | Password version — incremented on password change; tokens with stale pv are rejected |
     | `flags` | string[] | Elevated scope claims granted at `POST /auth/elevate` (e.g. `["acp"]`, `["mcp"]`) |
+    | `jti` | string | JWT ID (UUID) — stored in deny-list on `POST /auth/logout`; used to reject revoked access tokens within the 15-min window |
     | `kid` | string | Signing key ID for key rotation support |
     | `iat` | integer | Issued-at timestamp (Unix) |
     | `exp` | integer | Expiry timestamp (Unix) — access tokens expire after 15 minutes |
@@ -99,6 +101,7 @@ info:
       "gen": 3,
       "pv": 1,
       "flags": ["acp"],
+      "jti": "018f1a2b-3c4d-7e8f-9a0b-1c2d3e4f5a6b",
       "kid": "key-2026",
       "iat": 1745000000,
       "exp": 1745000900
@@ -801,6 +804,11 @@ paths:
     post:
       tags: [Auth]
       summary: Revoke refresh token family
+      description: >
+        Revokes the refresh token family identified by `refreshToken`.
+        The current access token's `jti` is added to a short-lived deny-list (TTL = token's remaining
+        lifetime) so that it is rejected immediately even before expiry.
+        Clients must discard both tokens after calling this endpoint.
       requestBody:
         required: true
         content:
@@ -1224,6 +1232,17 @@ paths:
       tags: [Topics]
       summary: List topics in forum
       x-permission: f_read
+      description: >
+        **Visibility filtering rules (applied server-side, not configurable by client):**
+
+        - Regular users (`!m_approve`): only `visibility=1` (Approved) topics are returned.
+
+        - Moderators with `m_approve`: `visibility=0` (Unapproved) and `visibility=3` (Reapprove) topics
+          are included and marked accordingly.
+
+        - Moderators with `m_delete`: `visibility=2` (Soft-deleted) topics are included.
+
+        Callers must never rely on client-side filtering — the server enforces these rules.
       parameters:
         - name: X-Forum-Password
           in: header
@@ -1494,6 +1513,18 @@ paths:
       tags: [Posts]
       summary: List posts in topic
       x-permission: f_read
+      description: >
+        **Visibility filtering rules (applied server-side):**
+
+        - Regular users (`!m_approve`): only `visibility=1` (Approved) posts are returned.
+
+        - Moderators with `m_approve`: `visibility=0` (Unapproved) and `visibility=3` (Reapprove)
+          posts are included.
+
+        - Moderators with `m_delete`: `visibility=2` (Soft-deleted) posts are included.
+
+        The first post of a topic is always returned regardless of visibility so the topic header
+        is always present.
       parameters:
         - name: X-Forum-Password
           in: header
@@ -2401,8 +2432,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  data: { $ref: '#/components/schemas/Message' }
-                  conversation: { $ref: '#/components/schemas/Conversation' }
+                  data:
+                    type: object
+                    description: Created message and its parent conversation
+                    properties:
+                      message: { $ref: '#/components/schemas/Message' }
+                      conversation: { $ref: '#/components/schemas/Conversation' }
         '403': { description: Cannot message these recipients (blocked, PM disabled) }
 
   /conversations/{conversationId}:
@@ -2834,6 +2869,12 @@ paths:
     get:
       tags: [Storage]
       summary: Get file metadata
+      x-permission: authenticated
+      description: >
+        Returns metadata for any file the caller is allowed to see.
+        Public files (`visibility=public`) are accessible to any authenticated user.
+        Private files (`visibility=private`) require the caller to be the uploader
+        or have `a_manage_files` permission.
       responses:
         '200':
           description: File metadata
@@ -2843,6 +2884,7 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/StoredFile' }
+        '403': { description: Private file — caller is not the uploader and lacks a_manage_files }
         '404': { description: File not found }
     delete:
       tags: [Storage]
