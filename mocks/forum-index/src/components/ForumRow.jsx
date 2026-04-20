@@ -25,7 +25,7 @@ export default function ForumRow({ forum }) {
             >
               {forum.forum_name}
             </a>
-            {isLink && <span className="link-indicator" title="External link"> ↗</span>}
+            {isLink && <span className="link-indicator" title="External link"> <span className="material-symbols-outlined" style={{fontSize: '0.9em', verticalAlign: 'middle'}}>open_in_new</span></span>}
             {forum.forum_desc && <br />}
             {forum.forum_desc && <span className="forum-desc">{forum.forum_desc}</span>}
 
@@ -56,7 +56,7 @@ export default function ForumRow({ forum }) {
                       title={sf.unread ? 'Unread posts' : 'No unread posts'}
                     >
                       <span className={`subforum-icon ${sf.unread ? 'icon-unread' : 'icon-read'}`}>
-                        {sf.is_link ? '↗' : '📄'}
+                        <span className="material-symbols-outlined">{sf.is_link ? 'open_in_new' : 'forum'}</span>
                       </span>
                       {sf.forum_name}
                     </a>
@@ -94,7 +94,11 @@ export default function ForumRow({ forum }) {
 /* ── Forum status icon ─────────────────────────────────── */
 function ForumIcon({ isLink, unread }) {
   if (isLink) {
-    return <span className="forum-icon forum-icon-link" title="Forum link" aria-hidden="true">🔗</span>;
+    return (
+      <span className="forum-icon forum-icon-link" title="Forum link" aria-hidden="true">
+        <span className="material-symbols-outlined">link</span>
+      </span>
+    );
   }
   return (
     <img
@@ -127,7 +131,7 @@ function LastPostInfo({ forum }) {
       <a href={`#user-${forum.forum_last_poster_name}`} className="username" style={posterStyle}>
         {forum.forum_last_poster_name}
       </a>{' '}
-      <a href={`#post-${forum.forum_last_post_id}`} title="View latest post" className="last-post-link">↗</a>
+      <a href={`#post-${forum.forum_last_post_id}`} title="View latest post" className="last-post-link"><span className="material-symbols-outlined">chevron_right</span></a>
       <br />
       <time dateTime={new Date(ts * 1000).toISOString()}>{date}</time>
     </span>

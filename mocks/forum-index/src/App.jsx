@@ -49,7 +49,7 @@ function Header() {
                   placeholder="Search…"
                 />
                 <button className="button button-search" type="submit" title="Search">
-                  🔍
+                  <span className="material-symbols-outlined">search</span>
                 </button>
               </fieldset>
             </form>
@@ -67,18 +67,18 @@ function Header() {
 function HamburgerMenu() {
   return (
     <div className="header-hamburger">
-      <button className="hamburger-btn" aria-label="Menu">☰</button>
+      <button className="hamburger-btn" aria-label="Menu"><span className="material-symbols-outlined">menu</span></button>
       <div className="dropdown dropdown-right">
         <ul className="dropdown-contents" role="menu">
-          <li><a href="#" role="menuitem">❓ FAQ</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">help</span> FAQ</a></li>
           <li className="separator" />
-          <li><a href="#" role="menuitem">Unanswered topics</a></li>
-          <li><a href="#" role="menuitem">Active topics</a></li>
-          <li><a href="#" role="menuitem">The team</a></li>
-          <li><a href="#" role="menuitem">Members</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">mark_chat_unread</span> Unanswered topics</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">local_fire_department</span> Active topics</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">groups</span> The team</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">people</span> Members</a></li>
           <li className="separator" />
-          <li><a href="#" role="menuitem">✏ Register</a></li>
-          <li><a href="#" role="menuitem">⏻ Login</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">person_add</span> Register</a></li>
+          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">login</span> Login</a></li>
         </ul>
       </div>
     </div>
@@ -115,7 +115,7 @@ function StickyHeader() {
             onClick={() => setSearchOpen((v) => !v)}
             title="Search"
           >
-            🔍
+            <span className="material-symbols-outlined">search</span>
           </button>
           <HamburgerMenu />
         </div>
