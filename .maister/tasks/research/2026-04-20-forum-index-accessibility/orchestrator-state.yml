@@ -1,0 +1,39 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+  options:
+    brainstorming_enabled: false
+    design_enabled: false
+  created: "2026-04-20T00:00:00Z"
+  updated: "2026-04-20T00:00:00Z"
+  task_path: .maister/tasks/research/2026-04-20-forum-index-accessibility
+
+task:
+  title: "Forum Index Mock — Accessibility Audit"
+  description: "Assess the existing forum-index React SPA mock for accessibility (a11y) conformance against WCAG 2.1 AA, identify gaps, and provide actionable recommendations."
+  status: in_progress
+  tags: [accessibility, frontend, react, mock]
+  priority: medium
+
+research_context:
+  research_type: "technical"
+  research_question: "How does the forum-index mock score on accessibility (WCAG 2.1 AA) and what needs to be fixed?"
+  scope:
+    included:
+      - "mocks/forum-index/ React SPA source code"
+      - "HTML semantics, ARIA, keyboard nav, color contrast, focus management"
+    excluded:
+      - "Backend API accessibility"
+      - "Other mocks or future pages"
+    constraints:
+      - "Evaluate current code only, not planned features"
+  methodology: ["static code analysis", "manual review against WCAG 2.1 AA"]
+  sources: ["codebase"]
+  confidence_level: null
+  gathering_strategy:
+    categories: ["codebase"]
+    count: 1
+    source: "direct"

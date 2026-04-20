@@ -6,6 +6,7 @@ import StatBlocks from './components/StatBlocks.jsx';
 export default function App() {
   return (
     <div id="wrap" className="wrap">
+      <a href="#page-body" className="skip-link">Skip to content</a>
       <Header />
       <StickyHeader />
       <main id="page-body">
@@ -47,6 +48,7 @@ function Header() {
                   maxLength={128}
                   className="inputbox search"
                   placeholder="Search…"
+                  aria-label="Search the forum"
                 />
                 <button className="button button-search" type="submit" title="Search">
                   <span className="material-symbols-outlined">search</span>
@@ -63,20 +65,46 @@ function Header() {
   );
 }
 
-/* ── Hamburger menu (CSS-only hover) ────────────────────── */
+/* ── Hamburger menu (keyboard-accessible) ───────────────── */
 function HamburgerMenu() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
+
   return (
-    <div className="header-hamburger">
-      <button className="hamburger-btn" aria-label="Menu"><span className="material-symbols-outlined">menu</span></button>
-      <div className="dropdown dropdown-right">
+    <div className="header-hamburger" ref={menuRef}>
+      <button
+        className="hamburger-btn"
+        aria-label="Menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+      <div className={`dropdown dropdown-right${open ? ' dropdown-open' : ''}`}>
         <ul className="dropdown-contents" role="menu">
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">help</span> FAQ</a></li>
-          <li className="separator" />
+          <li role="separator" aria-hidden="true" className="separator" />
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">mark_chat_unread</span> Unanswered topics</a></li>
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">local_fire_department</span> Active topics</a></li>
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">groups</span> The team</a></li>
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">people</span> Members</a></li>
-          <li className="separator" />
+          <li role="separator" aria-hidden="true" className="separator" />
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">person_add</span> Register</a></li>
           <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">login</span> Login</a></li>
         </ul>
@@ -113,7 +141,7 @@ function StickyHeader() {
           <button
             className="sticky-search-btn"
             onClick={() => setSearchOpen((v) => !v)}
-            title="Search"
+            aria-label="Search"
           >
             <span className="material-symbols-outlined">search</span>
           </button>
@@ -130,6 +158,7 @@ function StickyHeader() {
               maxLength={128}
               className="inputbox search"
               placeholder="Search…"
+              aria-label="Search the forum"
               autoFocus
             />
           </form>

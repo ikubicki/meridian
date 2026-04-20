@@ -45,6 +45,42 @@ body::before {
 a { color: #105289; text-decoration: none; }
 a:hover { color: #D31141; text-decoration: underline; }
 
+/* ── Focus visible (V-03 fix) ───────────────────────── */
+:focus-visible {
+  outline: 2px solid #105289;
+  outline-offset: 2px;
+}
+input:focus-visible, .inputbox:focus-visible {
+  outline: 2px solid #105289;
+  outline-offset: 0;
+}
+
+/* ── Skip link (V-04 fix) ─────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #105289;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+}
+
 .username { font-weight: bold; }
 
 /* ── Page wrapper ──────────────────────────────────────── */
@@ -72,7 +108,8 @@ a:hover { color: #D31141; text-decoration: underline; }
   transition: top 0.25s ease;
   pointer-events: none;
 }
-.sticky-header.sticky-visible {
+.sticky-header.sticky-visible,
+.sticky-header:focus-within {
   top: 0;
   pointer-events: auto;
 }
@@ -168,7 +205,6 @@ a:hover { color: #D31141; text-decoration: underline; }
   padding: 4px 10px;
   font-size: 1.3em;
   font-family: Verdana, Helvetica, Arial, sans-serif;
-  outline: none;
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
@@ -237,9 +273,9 @@ a:hover { color: #D31141; text-decoration: underline; }
   padding: 8px 40px 8px 8px;
   font-size: 1.2em;
   font-family: Verdana, Helvetica, Arial, sans-serif;
-  outline: none;
   background: #fff3;
   color: #fff;
+  outline: none;
 }
 .header-search .inputbox:focus {
   background: #fffe;
@@ -264,6 +300,11 @@ a:hover { color: #D31141; text-decoration: underline; }
   top: 0px
 }
 .header-search .button-search:hover {
+  background: #fff;
+  color: #333;
+}
+.header-search .button-search:focus-visible {
+  outline: none;
   background: #fff;
   color: #333;
 }
@@ -310,7 +351,8 @@ a:hover { color: #D31141; text-decoration: underline; }
   visibility: hidden;
   transition: opacity 0.15s, visibility 0.15s;
 }
-.header-hamburger:hover > .dropdown {
+.header-hamburger:hover > .dropdown,
+.dropdown.dropdown-open {
   opacity: 1;
   visibility: visible;
 }
