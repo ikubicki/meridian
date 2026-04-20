@@ -6,6 +6,11 @@ info:
     REST API contract for phpBB rewrite (Symfony 8.x / PHP 8.2+).
     All endpoints require Bearer JWT unless marked otherwise.
     Naming: camelCase for JSON fields and query parameters.
+
+    ## x-permission convention
+    Every protected operation carries an `x-permission` vendor extension specifying
+    the phpBB ACL flag(s) required. Multiple values are AND-joined unless prefixed `OR:`.
+    Example: `x-permission: f_post` — caller must have f_post in the target forum.
   contact:
     name: phpBB Dev Team
 
@@ -27,7 +32,7 @@ components:
       bearerFormat: JWT
 
   # ──────────────────────────────────────────────────────────────
-  # PAGINATION & COMMON
+  # PARAMETERS
   # ──────────────────────────────────────────────────────────────
   parameters:
     page:
@@ -49,7 +54,7 @@ components:
       schema: { type: string, enum: [asc, desc], default: desc }
 
   schemas:
-    # ── Pagination envelope ──
+    # ── Pagination ──
     PaginationMeta:
       type: object
       required: [total, page, perPage, lastPage]
@@ -59,7 +64,7 @@ components:
         perPage: { type: integer }
         lastPage: { type: integer }
 
-    # ── Error responses ──
+    # ── Errors ──
     Error:
       type: object
       required: [error, status]
@@ -83,7 +88,7 @@ components:
               message: { type: string }
 
     # ════════════════════════════════════════════════════════════
-    # AUTH SCHEMAS
+    # AUTH
     # ════════════════════════════════════════════════════════════
     LoginRequest:
       type: object
@@ -122,9 +127,12 @@ components:
             password: { type: string }
           required: [password]
         - title: SsoElevation
+          description: >
+            User obtains a fresh authorization code via GET /auth/sso/{provider}/authorize
+            (using a popup — iframes are not supported by providers), then passes it here.
           properties:
             provider: { type: string, enum: [google, github, facebook, apple] }
-            code: { type: string, description: Fresh OAuth authorization code from re-auth prompt }
+            code: { type: string, description: Fresh OAuth authorization code from re-auth popup }
             redirectUri: { type: string, format: uri }
           required: [provider, code, redirectUri]
 
@@ -139,7 +147,7 @@ components:
           examples: [300]
 
     # ════════════════════════════════════════════════════════════
-    # FORUM / HIERARCHY SCHEMAS
+    # FORUM / HIERARCHY
     # ════════════════════════════════════════════════════════════
     Forum:
       type: object
@@ -170,7 +178,7 @@ components:
         children:
           type: array
           items: { $ref: '#/components/schemas/Forum' }
-          description: Only in tree responses
+          description: Only present in tree responses
 
     ForumStats:
       type: object
@@ -191,6 +199,19 @@ components:
         posterColour: { type: [string, "null"] }
         subject: { type: string }
         time: { type: integer, description: Unix timestamp }
+
+    ForumPermission:
+      type: object
+      required: [groupId, permissions]
+      properties:
+        groupId: { type: integer }
+        groupName: { type: string }
+        permissions:
+          type: object
+          description: Map of permission name to value (0=Never, 1=Allow, 2=Inherit)
+          additionalProperties:
+            type: integer
+            enum: [0, 1, 2]
 
     CreateForumRequest:
       type: object
@@ -240,7 +261,7 @@ components:
         siblingId: { type: integer, description: Required if position=before|after }
 
     # ════════════════════════════════════════════════════════════
-    # THREADS SCHEMAS (TOPICS + POSTS)
+    # TOPICS + POSTS
     # ════════════════════════════════════════════════════════════
     Topic:
       type: object
@@ -322,8 +343,57 @@ components:
         subject: { type: [string, "null"] }
         editReason: { type: string, default: "" }
 
+    SplitTopicRequest:
+      type: object
+      required: [postIds, newTitle]
+      properties:
+        postIds:
+          type: array
+          items: { type: integer }
+          minItems: 1
+          description: Posts to move into the new topic
+        newTitle: { type: string, minLength: 1, maxLength: 255 }
+        targetForumId: { type: integer, description: Forum for the new topic; defaults to same forum }
+
+    MergeTopicsRequest:
+      type: object
+      required: [targetTopicId]
+      properties:
+        targetTopicId: { type: integer, description: Topic to merge into (receives all posts) }
+
+    ReportRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 2000 }
+
     # ════════════════════════════════════════════════════════════
-    # USER SCHEMAS
+    # DRAFTS
+    # ════════════════════════════════════════════════════════════
+    Draft:
+      type: object
+      required: [id, type, text, updatedAt]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [topic, reply], description: "topic=new topic draft, reply=reply draft" }
+        forumId: { type: integer }
+        topicId: { type: [integer, "null"], description: Only for reply drafts }
+        title: { type: [string, "null"], description: Only for topic drafts }
+        text: { type: string }
+        updatedAt: { type: integer }
+
+    SaveDraftRequest:
+      type: object
+      required: [type, text]
+      properties:
+        type: { type: string, enum: [topic, reply] }
+        forumId: { type: integer }
+        topicId: { type: [integer, "null"] }
+        title: { type: [string, "null"] }
+        text: { type: string, minLength: 1 }
+
+    # ════════════════════════════════════════════════════════════
+    # USERS
     # ════════════════════════════════════════════════════════════
     User:
       type: object
@@ -385,6 +455,31 @@ components:
         language: { type: string }
         profileFields: { type: object, additionalProperties: true }
 
+    BanEntry:
+      type: object
+      required: [id, type, value, issuedBy, issuedAt, isActive]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [user, ip, email], description: What is banned }
+        value: { type: string, description: "userId, IP address, or email address/pattern" }
+        reason: { type: string }
+        issuedBy: { type: integer, description: Admin userId who issued the ban }
+        issuedAt: { type: integer }
+        expiresAt: { type: [integer, "null"], description: null = permanent }
+        isActive: { type: boolean }
+
+    CreateBanRequest:
+      type: object
+      required: [type, value]
+      properties:
+        type: { type: string, enum: [user, ip, email] }
+        value: { type: string }
+        reason: { type: string, default: "" }
+        expiresAt: { type: [integer, "null"], description: null = permanent }
+
+    # ════════════════════════════════════════════════════════════
+    # GROUPS
+    # ════════════════════════════════════════════════════════════
     Group:
       type: object
       required: [id, name, type]
@@ -398,7 +493,7 @@ components:
         isDefault: { type: boolean }
 
     # ════════════════════════════════════════════════════════════
-    # MESSAGING SCHEMAS
+    # MESSAGING
     # ════════════════════════════════════════════════════════════
     Conversation:
       type: object
@@ -451,8 +546,14 @@ components:
       properties:
         text: { type: string, minLength: 1 }
 
+    EditMessageRequest:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1 }
+
     # ════════════════════════════════════════════════════════════
-    # NOTIFICATION SCHEMAS
+    # NOTIFICATIONS
     # ════════════════════════════════════════════════════════════
     Notification:
       type: object
@@ -471,7 +572,7 @@ components:
         actorCount: { type: integer }
 
     # ════════════════════════════════════════════════════════════
-    # SEARCH SCHEMAS
+    # SEARCH
     # ════════════════════════════════════════════════════════════
     SearchResult:
       type: object
@@ -483,6 +584,11 @@ components:
             oneOf:
               - $ref: '#/components/schemas/Topic'
               - $ref: '#/components/schemas/Post'
+            discriminator:
+              propertyName: _type
+              mapping:
+                topic: '#/components/schemas/Topic'
+                post: '#/components/schemas/Post'
         meta:
           allOf:
             - $ref: '#/components/schemas/PaginationMeta'
@@ -491,7 +597,7 @@ components:
                 executionTimeMs: { type: integer }
 
     # ════════════════════════════════════════════════════════════
-    # STORAGE SCHEMAS
+    # STORAGE
     # ════════════════════════════════════════════════════════════
     StoredFile:
       type: object
@@ -511,10 +617,20 @@ components:
         url: { type: string, format: uri }
         thumbnailUrl: { type: [string, "null"], format: uri }
 
+    # ════════════════════════════════════════════════════════════
+    # CONFIG
+    # ════════════════════════════════════════════════════════════
+    BoardConfig:
+      type: object
+      description: Board configuration key-value map. Keys match phpbb_config.config_name.
+      additionalProperties:
+        type: string
+
 # ════════════════════════════════════════════════════════════════
 # PATHS
 # ════════════════════════════════════════════════════════════════
 paths:
+
   # ──────────────────────────────────────────────────────────────
   # AUTH
   # ──────────────────────────────────────────────────────────────
@@ -611,7 +727,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ElevatedTokenResponse' }
         '401':
-          description: Invalid password
+          description: Invalid password or SSO code
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
@@ -624,15 +740,17 @@ paths:
         schema: { type: string, enum: [google, github, facebook, apple] }
     get:
       tags: [Auth]
-      summary: Get OAuth authorization URL for SSO provider
-      description: Returns the URL to redirect the user to for OAuth consent. Uses PKCE code_challenge internally.
+      summary: Get OAuth authorization URL
+      description: >
+        Returns the URL to redirect (or open in a popup) for OAuth consent.
+        Backend generates PKCE code_challenge and stores state in cache (10-min TTL).
       security: []
       parameters:
         - name: redirectUri
           in: query
           required: true
           schema: { type: string, format: uri }
-          description: Frontend callback URL where provider will redirect after consent
+          description: Frontend callback URL; must be on the allowlist
       responses:
         '200':
           description: Authorization URL generated
@@ -642,10 +760,10 @@ paths:
                 type: object
                 required: [authorizeUrl, state]
                 properties:
-                  authorizeUrl: { type: string, format: uri, description: Redirect user to this URL }
-                  state: { type: string, description: CSRF state parameter to verify on callback }
+                  authorizeUrl: { type: string, format: uri }
+                  state: { type: string, description: CSRF state to pass back in callback }
         '422':
-          description: Invalid provider or redirect URI
+          description: Unknown provider or invalid redirectUri
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ValidationError' }
@@ -658,8 +776,7 @@ paths:
         schema: { type: string, enum: [google, github, facebook, apple] }
     post:
       tags: [Auth]
-      summary: Exchange OAuth authorization code for JWT tokens
-      description: Frontend sends the code received from provider redirect. Backend exchanges it for provider token, verifies identity, and returns phpBB JWT.
+      summary: Exchange OAuth code for JWT
       security: []
       requestBody:
         required: true
@@ -669,10 +786,10 @@ paths:
               type: object
               required: [code, state, redirectUri]
               properties:
-                code: { type: string, description: Authorization code from provider callback }
-                state: { type: string, description: State parameter for CSRF verification }
-                redirectUri: { type: string, format: uri, description: Must match the redirectUri used in authorize }
-                createAccount: { type: boolean, default: true, description: Auto-register if no linked account exists }
+                code: { type: string }
+                state: { type: string }
+                redirectUri: { type: string, format: uri }
+                createAccount: { type: boolean, default: true }
       responses:
         '200':
           description: SSO login successful
@@ -706,7 +823,7 @@ paths:
               schema: { $ref: '#/components/schemas/ValidationError' }
 
   # ──────────────────────────────────────────────────────────────
-  # ME (current user shortcuts)
+  # ME
   # ──────────────────────────────────────────────────────────────
   /me:
     get:
@@ -777,20 +894,24 @@ paths:
               schema: { $ref: '#/components/schemas/ValidationError' }
 
   # ──────────────────────────────────────────────────────────────
-  # FORUMS / HIERARCHY
+  # FORUMS
   # ──────────────────────────────────────────────────────────────
   /forums:
     get:
       tags: [Forums]
       summary: Get forum tree
+      x-permission: f_list
+      description: >
+        Returns forum tree filtered by f_list ACL.
+        Password-protected forums require X-Forum-Password header when accessing their topics.
       parameters:
         - name: rootId
           in: query
           schema: { type: integer }
-          description: Return subtree from this forum ID
+          description: Return subtree rooted at this forum ID
       responses:
         '200':
-          description: Forum tree
+          description: Forum tree (ACL-filtered)
           content:
             application/json:
               schema:
@@ -802,7 +923,8 @@ paths:
     post:
       tags: [Forums]
       summary: Create forum
-      description: Requires admin permission
+      x-permission: a_forum
+      description: Requires elevated token with acp scope.
       requestBody:
         required: true
         content:
@@ -817,7 +939,7 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Forum' }
-        '403': { description: Insufficient permissions }
+        '403': { description: Insufficient permissions (a_forum required) }
         '422':
           description: Validation error
           content:
@@ -833,6 +955,12 @@ paths:
     get:
       tags: [Forums]
       summary: Get single forum
+      x-permission: f_list
+      parameters:
+        - name: X-Forum-Password
+          in: header
+          schema: { type: string }
+          description: Required if forum.hasPassword=true; grants access to forum content
       responses:
         '200':
           description: Forum details
@@ -842,10 +970,16 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Forum' }
+        '401':
+          description: Forum password required or incorrect
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
         '404': { description: Forum not found }
     patch:
       tags: [Forums]
       summary: Update forum
+      x-permission: a_forum
       requestBody:
         required: true
         content:
@@ -860,19 +994,23 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Forum' }
-        '403': { description: Insufficient permissions }
+        '403': { description: Insufficient permissions (a_forum required) }
         '404': { description: Forum not found }
     delete:
       tags: [Forums]
       summary: Delete forum
+      x-permission: a_forum
+      description: >
+        If moveContentTo is provided, all topics are moved there before deletion.
+        If omitted, topics and subforums are deleted recursively.
       parameters:
         - name: moveContentTo
           in: query
           schema: { type: integer }
-          description: Move topics to this forum before deleting
+          description: Move topics to this forumId before deleting
       responses:
         '204': { description: Forum deleted }
-        '403': { description: Insufficient permissions }
+        '403': { description: Insufficient permissions (a_forum required) }
         '404': { description: Forum not found }
 
   /forums/{forumId}/move:
@@ -884,6 +1022,7 @@ paths:
     post:
       tags: [Forums]
       summary: Move forum in hierarchy
+      x-permission: a_forum
       requestBody:
         required: true
         content:
@@ -898,7 +1037,70 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Forum' }
-        '403': { description: Insufficient permissions }
+        '403': { description: Insufficient permissions (a_forum required) }
+
+  /forums/{forumId}/permissions/{groupId}:
+    parameters:
+      - name: forumId
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: groupId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Forums]
+      summary: Get group permissions for forum
+      x-permission: a_forum
+      responses:
+        '200':
+          description: Forum permission entry for group
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ForumPermission' }
+        '404': { description: Forum or group not found }
+    post:
+      tags: [Forums]
+      summary: Set/update group permissions for forum
+      x-permission: a_forum
+      description: >
+        Full replacement of the permission set for the group in this forum.
+        Omitted permissions default to Inherit (2).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [permissions]
+              properties:
+                permissions:
+                  type: object
+                  description: Map of permission name to value (0=Never, 1=Allow, 2=Inherit)
+                  additionalProperties:
+                    type: integer
+                    enum: [0, 1, 2]
+      responses:
+        '200':
+          description: Permissions updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ForumPermission' }
+        '403': { description: Insufficient permissions (a_forum required) }
+    delete:
+      tags: [Forums]
+      summary: Reset group permissions to inherited defaults
+      x-permission: a_forum
+      responses:
+        '204': { description: Permissions reset }
+        '403': { description: Insufficient permissions (a_forum required) }
 
   # ──────────────────────────────────────────────────────────────
   # TOPICS
@@ -912,7 +1114,12 @@ paths:
     get:
       tags: [Topics]
       summary: List topics in forum
+      x-permission: f_read
       parameters:
+        - name: X-Forum-Password
+          in: header
+          schema: { type: string }
+          description: Required if forum.hasPassword=true
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/perPage'
         - name: sort
@@ -931,9 +1138,21 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Topic' }
                   meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401':
+          description: Forum password required or incorrect
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '403': { description: No f_read permission in this forum }
     post:
       tags: [Topics]
       summary: Create new topic
+      x-permission: f_post
+      description: >
+        Requires f_post. Topic starts as Approved (visibility=1) if caller has f_noapprove,
+        otherwise as Unapproved (visibility=0) pending moderation.
+        For sticky (type=1) requires f_sticky; for announce (type=2) m_announce;
+        for global announce (type=3) a_announce.
       requestBody:
         required: true
         content:
@@ -948,7 +1167,7 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Topic' }
-        '403': { description: No post permission in this forum }
+        '403': { description: No f_post permission in this forum }
         '422':
           description: Validation failed
           content:
@@ -964,6 +1183,7 @@ paths:
     get:
       tags: [Topics]
       summary: Get topic details
+      x-permission: f_read
       responses:
         '200':
           description: Topic details
@@ -977,6 +1197,10 @@ paths:
     patch:
       tags: [Topics]
       summary: Update topic (lock, change type, rename)
+      x-permission: OR:m_edit,f_sticky
+      description: >
+        Lock/unlock requires m_lock. Title change requires m_edit or post ownership.
+        Type change to sticky requires f_sticky; announce requires m_announce; global announce requires a_announce.
       requestBody:
         required: true
         content:
@@ -1000,13 +1224,15 @@ paths:
         '403': { description: Insufficient permissions }
     delete:
       tags: [Topics]
-      summary: Soft-delete topic
+      summary: Soft-delete topic (sets visibility=2)
+      x-permission: m_delete
       parameters:
         - name: reason
           in: query
           schema: { type: string }
       responses:
         '204': { description: Topic soft-deleted }
+        '403': { description: Insufficient permissions (m_delete required) }
 
   /topics/{topicId}/move:
     parameters:
@@ -1017,6 +1243,7 @@ paths:
     post:
       tags: [Topics]
       summary: Move topic to another forum
+      x-permission: m_move
       requestBody:
         required: true
         content:
@@ -1036,6 +1263,114 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions (m_move required) }
+
+  /topics/{topicId}/approve:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Topics]
+      summary: Approve unapproved/reapprove topic (sets visibility=1)
+      x-permission: m_approve
+      responses:
+        '200':
+          description: Topic approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions (m_approve required) }
+        '409': { description: Topic is not in an approvable state }
+
+  /topics/{topicId}/restore:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Topics]
+      summary: Restore soft-deleted topic (sets visibility=1)
+      x-permission: m_delete
+      responses:
+        '200':
+          description: Topic restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions (m_delete required) }
+        '409': { description: Topic is not soft-deleted }
+
+  /topics/{topicId}/split:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Topics]
+      summary: Split selected posts into a new topic
+      x-permission: m_split
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SplitTopicRequest' }
+      responses:
+        '201':
+          description: New topic created with selected posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sourceTopic: { $ref: '#/components/schemas/Topic' }
+                  newTopic: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions (m_split required) }
+        '422':
+          description: Invalid post IDs or title
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /topics/{topicId}/merge:
+    parameters:
+      - name: topicId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Topics]
+      summary: Merge this topic into another topic
+      x-permission: m_merge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MergeTopicsRequest' }
+      responses:
+        '200':
+          description: Topics merged; returns the surviving topic
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Topic' }
+        '403': { description: Insufficient permissions (m_merge required) }
+        '422':
+          description: Target topic not found or same-topic merge
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
 
   # ──────────────────────────────────────────────────────────────
   # POSTS
@@ -1049,7 +1384,12 @@ paths:
     get:
       tags: [Posts]
       summary: List posts in topic
+      x-permission: f_read
       parameters:
+        - name: X-Forum-Password
+          in: header
+          schema: { type: string }
+          description: Required if parent forum.hasPassword=true
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/perPage'
         - name: sort
@@ -1068,9 +1408,13 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Post' }
                   meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '403': { description: No f_read permission }
     post:
       tags: [Posts]
       summary: Create reply in topic
+      x-permission: f_reply
+      description: >
+        Requires f_reply. Reply starts as Approved if caller has f_noapprove, else Unapproved.
       requestBody:
         required: true
         content:
@@ -1085,7 +1429,7 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Post' }
-        '403': { description: No reply permission }
+        '403': { description: No f_reply permission }
         '404': { description: Topic not found }
         '422':
           description: Validation failed
@@ -1102,6 +1446,7 @@ paths:
     get:
       tags: [Posts]
       summary: Get single post
+      x-permission: f_read
       responses:
         '200':
           description: Post details
@@ -1115,6 +1460,10 @@ paths:
     patch:
       tags: [Posts]
       summary: Edit post
+      x-permission: OR:f_edit,m_edit
+      description: >
+        Post author may edit their own post if f_edit is set (subject to f_edit_time limit).
+        Moderators with m_edit may edit any post without time restriction.
       requestBody:
         required: true
         content:
@@ -1129,16 +1478,296 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Post' }
-        '403': { description: Cannot edit this post }
+        '403': { description: Cannot edit this post (no permission or time limit exceeded) }
     delete:
       tags: [Posts]
-      summary: Soft-delete post
+      summary: Soft-delete post (sets visibility=2)
+      x-permission: m_delete
       parameters:
         - name: reason
           in: query
           schema: { type: string }
       responses:
         '204': { description: Post soft-deleted }
+        '403': { description: Insufficient permissions (m_delete required) }
+
+  /posts/{postId}/approve:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Posts]
+      summary: Approve unapproved/reapprove post (sets visibility=1)
+      x-permission: m_approve
+      responses:
+        '200':
+          description: Post approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Post' }
+        '403': { description: Insufficient permissions (m_approve required) }
+        '409': { description: Post is not in an approvable state }
+
+  /posts/{postId}/restore:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Posts]
+      summary: Restore soft-deleted post (sets visibility=1)
+      x-permission: m_delete
+      responses:
+        '200':
+          description: Post restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Post' }
+        '403': { description: Insufficient permissions (m_delete required) }
+        '409': { description: Post is not soft-deleted }
+
+  /posts/{postId}/report:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Posts]
+      summary: Report post to moderators
+      x-permission: f_report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReportRequest' }
+      responses:
+        '201': { description: Report submitted }
+        '403': { description: No f_report permission or post already reported by this user }
+
+  # ──────────────────────────────────────────────────────────────
+  # DRAFTS
+  # ──────────────────────────────────────────────────────────────
+  /drafts:
+    get:
+      tags: [Drafts]
+      summary: List current user's drafts
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string, enum: [topic, reply] }
+        - name: forumId
+          in: query
+          schema: { type: integer }
+        - name: topicId
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Draft list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Draft' }
+    post:
+      tags: [Drafts]
+      summary: Save new draft
+      x-permission: OR:f_post,f_reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveDraftRequest' }
+      responses:
+        '201':
+          description: Draft saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Draft' }
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /drafts/{draftId}:
+    parameters:
+      - name: draftId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Drafts]
+      summary: Get draft
+      description: Only owner can access their draft.
+      responses:
+        '200':
+          description: Draft details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Draft' }
+        '404': { description: Draft not found or belongs to another user }
+    patch:
+      tags: [Drafts]
+      summary: Update draft content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveDraftRequest' }
+      responses:
+        '200':
+          description: Draft updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Draft' }
+        '404': { description: Draft not found }
+    delete:
+      tags: [Drafts]
+      summary: Delete draft
+      responses:
+        '204': { description: Draft deleted }
+        '404': { description: Draft not found }
+
+  # ──────────────────────────────────────────────────────────────
+  # BANS
+  # ──────────────────────────────────────────────────────────────
+  /bans:
+    get:
+      tags: [Bans]
+      summary: List all active bans
+      x-permission: a_ban
+      description: >
+        Returns all ban entries across all types (user, ip, email).
+        Use type/active filters to narrow results.
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string, enum: [user, ip, email] }
+          description: Filter by ban type
+        - name: active
+          in: query
+          schema: { type: boolean, default: true }
+          description: "true = only active bans, false = expired/revoked only, omit = all"
+        - name: userId
+          in: query
+          schema: { type: integer }
+          description: Filter bans issued against this user
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200':
+          description: Paginated ban list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/BanEntry' }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '403': { description: Insufficient permissions (a_ban required) }
+    post:
+      tags: [Bans]
+      summary: Create ban (user, IP, or email)
+      x-permission: a_ban
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBanRequest' }
+      responses:
+        '201':
+          description: Ban created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BanEntry' }
+        '403': { description: Insufficient permissions (a_ban required) }
+        '422':
+          description: Validation failed (e.g. invalid IP pattern or email format)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+
+  /bans/{banId}:
+    parameters:
+      - name: banId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Bans]
+      summary: Get ban entry
+      x-permission: a_ban
+      responses:
+        '200':
+          description: Ban entry
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BanEntry' }
+        '403': { description: Insufficient permissions (a_ban required) }
+        '404': { description: Ban not found }
+    patch:
+      tags: [Bans]
+      summary: Update ban (change reason or expiry)
+      x-permission: a_ban
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+                expiresAt: { type: [integer, "null"], description: null = permanent }
+      responses:
+        '200':
+          description: Ban updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BanEntry' }
+        '403': { description: Insufficient permissions (a_ban required) }
+        '404': { description: Ban not found }
+    delete:
+      tags: [Bans]
+      summary: Remove ban (lift)
+      x-permission: a_ban
+      responses:
+        '204': { description: Ban lifted }
+        '403': { description: Insufficient permissions (a_ban required) }
+        '404': { description: Ban not found }
 
   # ──────────────────────────────────────────────────────────────
   # USERS
@@ -1147,6 +1776,8 @@ paths:
     get:
       tags: [Users]
       summary: Search / list users
+      x-permission: u_viewprofile
+      description: email filter parameter requires a_viewprofile permission; returns 403 for non-admins.
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/perPage'
@@ -1157,11 +1788,11 @@ paths:
         - name: username
           in: query
           schema: { type: string }
-          description: Filter by username (partial match)
+          description: Partial match
         - name: email
           in: query
           schema: { type: string }
-          description: Admin only
+          description: Exact match — requires a_viewprofile; returns 403 otherwise
         - name: groupId
           in: query
           schema: { type: integer }
@@ -1180,6 +1811,7 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/User' }
                   meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '403': { description: Insufficient permissions (email filter requires a_viewprofile) }
     post:
       tags: [Users]
       summary: Register new user
@@ -1218,6 +1850,7 @@ paths:
     get:
       tags: [Users]
       summary: Get user profile (public view)
+      x-permission: u_viewprofile
       responses:
         '200':
           description: User public profile
@@ -1228,6 +1861,143 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/UserProfile' }
         '404': { description: User not found }
+
+  /users/{userId}/bans:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Users]
+      summary: List ban history for user
+      x-permission: a_ban
+      responses:
+        '200':
+          description: Ban history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/BanEntry' }
+        '403': { description: Insufficient permissions (a_ban required) }
+    post:
+      tags: [Users]
+      summary: Ban user (and optionally their IP / email)
+      x-permission: a_ban
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateBanRequest' }
+      responses:
+        '201':
+          description: Ban created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BanEntry' }
+        '403': { description: Insufficient permissions (a_ban required) }
+
+  /users/{userId}/bans/{banId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: banId
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [Users]
+      summary: Remove ban
+      x-permission: a_ban
+      responses:
+        '204': { description: Ban removed }
+        '403': { description: Insufficient permissions (a_ban required) }
+        '404': { description: Ban not found }
+
+  /users/{userId}/type:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Users]
+      summary: Get user type
+      x-permission: a_user
+      responses:
+        '200':
+          description: Current user type
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type: { type: integer, enum: [0, 1, 2, 3] }
+        '403': { description: Insufficient permissions (a_user required) }
+    post:
+      tags: [Users]
+      summary: Change user type (activate, deactivate, promote to founder, set as bot)
+      x-permission: a_user
+      description: >
+        type=0 Normal, type=1 Inactive, type=2 Bot, type=3 Founder.
+        Setting type=3 (Founder) requires the caller to already be type=3.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: integer, enum: [0, 1, 2, 3] }
+                reason: { type: string }
+      responses:
+        '200':
+          description: User type changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '403': { description: Insufficient permissions (a_user required) }
+
+  /users/{userId}/delete:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Users]
+      summary: Delete user account
+      x-permission: a_user
+      description: >
+        mode=retain — keeps posts, replaces username with "Guest".
+        mode=remove — hard-deletes posts, topics, PMs attributed to user.
+        mode=soft — marks user inactive, all content preserved unchanged.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode: { type: string, enum: [retain, remove, soft] }
+      responses:
+        '204': { description: User deleted }
+        '403': { description: Insufficient permissions (a_user required) }
+        '409': { description: Cannot delete last founder account }
 
   /users/check-username:
     get:
@@ -1284,7 +2054,7 @@ paths:
               properties:
                 email: { type: string, format: email }
       responses:
-        '202': { description: Reset email sent (always returns 202) }
+        '202': { description: Reset email sent (always 202 to prevent enumeration) }
 
   /password-reset/confirm:
     post:
@@ -1315,7 +2085,7 @@ paths:
   /groups:
     get:
       tags: [Groups]
-      summary: List groups
+      summary: List groups (hidden groups require a_group to see)
       parameters:
         - name: type
           in: query
@@ -1331,6 +2101,32 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Group' }
+    post:
+      tags: [Groups]
+      summary: Create group
+      x-permission: a_group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 255 }
+                type: { type: integer, enum: [0, 1, 2] }
+                colour: { type: [string, "null"] }
+                description: { type: string }
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Group' }
+        '403': { description: Insufficient permissions (a_group required) }
 
   /groups/{groupId}:
     parameters:
@@ -1350,6 +2146,38 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Group' }
+    patch:
+      tags: [Groups]
+      summary: Update group
+      x-permission: OR:a_group,a_group_leader
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                colour: { type: [string, "null"] }
+                description: { type: string }
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Group' }
+        '403': { description: Insufficient permissions }
+    delete:
+      tags: [Groups]
+      summary: Delete group
+      x-permission: a_group
+      responses:
+        '204': { description: Group deleted }
+        '403': { description: Insufficient permissions (a_group required) }
+        '409': { description: Cannot delete special system group }
 
   /groups/{groupId}/members:
     parameters:
@@ -1384,6 +2212,7 @@ paths:
     post:
       tags: [Groups]
       summary: Add user to group / request join
+      x-permission: OR:a_group,a_group_leader
       requestBody:
         required: true
         content:
@@ -1396,7 +2225,7 @@ paths:
                 isLeader: { type: boolean, default: false }
       responses:
         '201': { description: User added }
-        '403': { description: Group is closed/hidden }
+        '403': { description: Group is closed/hidden or insufficient permissions }
 
   /groups/{groupId}/members/{userId}:
     parameters:
@@ -1411,8 +2240,10 @@ paths:
     delete:
       tags: [Groups]
       summary: Remove user from group
+      x-permission: OR:a_group,a_group_leader
       responses:
         '204': { description: User removed }
+        '403': { description: Insufficient permissions }
 
   # ──────────────────────────────────────────────────────────────
   # MESSAGING
@@ -1421,6 +2252,7 @@ paths:
     get:
       tags: [Messaging]
       summary: List conversations
+      x-permission: u_sendpm
       parameters:
         - $ref: '#/components/parameters/perPage'
         - name: state
@@ -1429,7 +2261,7 @@ paths:
         - name: beforeId
           in: query
           schema: { type: integer }
-          description: Cursor-based pagination (return items before this ID)
+          description: Cursor-based pagination
       responses:
         '200':
           description: Conversation list
@@ -1442,9 +2274,11 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Conversation' }
                   hasMore: { type: boolean }
+        '403': { description: PM feature disabled (u_sendpm required) }
     post:
       tags: [Messaging]
-      summary: Send new message (creates conversation if needed)
+      summary: Send new message / start conversation
+      x-permission: u_sendpm
       requestBody:
         required: true
         content:
@@ -1460,7 +2294,7 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/Message' }
                   conversation: { $ref: '#/components/schemas/Conversation' }
-        '403': { description: Cannot message these recipients }
+        '403': { description: Cannot message these recipients (blocked, PM disabled) }
 
   /conversations/{conversationId}:
     parameters:
@@ -1471,6 +2305,7 @@ paths:
     get:
       tags: [Messaging]
       summary: Get conversation details
+      x-permission: u_sendpm
       responses:
         '200':
           description: Conversation details
@@ -1480,11 +2315,57 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/Conversation' }
+        '404': { description: Conversation not found or caller is not a participant }
     delete:
       tags: [Messaging]
       summary: Leave conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Left conversation }
+
+  /conversations/{conversationId}/participants:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+    post:
+      tags: [Messaging]
+      summary: Add participant to conversation
+      x-permission: u_sendpm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: integer }
+      responses:
+        '201': { description: Participant added }
+        '403': { description: Only conversation creator or admin may add participants }
+        '409': { description: User is already a participant }
+
+  /conversations/{conversationId}/participants/{userId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [Messaging]
+      summary: Remove participant from conversation
+      x-permission: u_sendpm
+      description: User may remove themselves; admin/creator may remove others.
+      responses:
+        '204': { description: Participant removed }
+        '403': { description: Insufficient permissions to remove this participant }
+        '404': { description: Participant not found }
 
   /conversations/{conversationId}/messages:
     parameters:
@@ -1495,6 +2376,7 @@ paths:
     get:
       tags: [Messaging]
       summary: List messages in conversation
+      x-permission: u_sendpm
       parameters:
         - $ref: '#/components/parameters/perPage'
         - name: beforeId
@@ -1515,6 +2397,7 @@ paths:
     post:
       tags: [Messaging]
       summary: Reply to conversation
+      x-permission: u_sendpm
       requestBody:
         required: true
         content:
@@ -1530,6 +2413,46 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/Message' }
 
+  /conversations/{conversationId}/messages/{messageId}:
+    parameters:
+      - name: conversationId
+        in: path
+        required: true
+        schema: { type: integer }
+      - name: messageId
+        in: path
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [Messaging]
+      summary: Edit message
+      x-permission: u_sendpm
+      description: >
+        Only the message author may edit, within the configurable time window
+        (pm_edit_time board config; 0 = unlimited).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EditMessageRequest' }
+      responses:
+        '200':
+          description: Message updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Message' }
+        '403': { description: Not message author or edit window expired }
+    delete:
+      tags: [Messaging]
+      summary: Delete message (removes for caller only; deleted for all if last author)
+      x-permission: u_sendpm
+      responses:
+        '204': { description: Message deleted }
+        '403': { description: Not message author }
+
   /conversations/{conversationId}/read:
     parameters:
       - name: conversationId
@@ -1539,13 +2462,14 @@ paths:
     post:
       tags: [Messaging]
       summary: Mark conversation as read
+      x-permission: u_sendpm
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                upToMessageId: { type: integer, description: Mark read up to this message }
+                upToMessageId: { type: integer }
       responses:
         '204': { description: Marked as read }
 
@@ -1558,11 +2482,13 @@ paths:
     post:
       tags: [Messaging]
       summary: Pin conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Pinned }
     delete:
       tags: [Messaging]
       summary: Unpin conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Unpinned }
 
@@ -1575,11 +2501,13 @@ paths:
     post:
       tags: [Messaging]
       summary: Archive conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Archived }
     delete:
       tags: [Messaging]
       summary: Unarchive conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Unarchived }
 
@@ -1592,18 +2520,21 @@ paths:
     post:
       tags: [Messaging]
       summary: Mute conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Muted }
     delete:
       tags: [Messaging]
       summary: Unmute conversation
+      x-permission: u_sendpm
       responses:
         '204': { description: Unmuted }
 
   /messaging/unread:
     get:
       tags: [Messaging]
-      summary: Get unread counts
+      summary: Get unread PM counts
+      x-permission: u_sendpm
       responses:
         '200':
           description: Unread counts
@@ -1691,6 +2622,10 @@ paths:
     get:
       tags: [Search]
       summary: Search posts or topics
+      x-permission: f_search
+      description: >
+        Results are automatically ACL-filtered (only forums where caller has f_read are included).
+        Specifying forumId for a forum the caller cannot f_read returns 403.
       parameters:
         - name: q
           in: query
@@ -1702,11 +2637,9 @@ paths:
         - name: forumId
           in: query
           schema: { type: integer }
-          description: Limit to specific forum
         - name: authorId
           in: query
           schema: { type: integer }
-          description: Limit to specific author
         - name: sort
           in: query
           schema: { type: string, enum: [relevance, postedAt, author], default: relevance }
@@ -1716,26 +2649,40 @@ paths:
         - name: after
           in: query
           schema: { type: integer }
-          description: Unix timestamp - only results after this date
+          description: Unix timestamp — results after this date
         - name: before
           in: query
           schema: { type: integer }
-          description: Unix timestamp - only results before this date
+          description: Unix timestamp — results before this date
       responses:
         '200':
           description: Search results
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SearchResult' }
+        '403': { description: forumId specified but no f_read permission }
         '422': { description: Invalid search query }
 
+  /search/rebuild:
+    post:
+      tags: [Search]
+      summary: Trigger full search index rebuild
+      x-permission: a_search
+      description: >
+        Dispatches an async IndexAdminInterface::rebuild() job.
+        Returns 202 immediately; progress can be polled via X-Job-Id header if supported.
+      responses:
+        '202': { description: Rebuild job queued }
+        '403': { description: Insufficient permissions (a_search required) }
+
   # ──────────────────────────────────────────────────────────────
-  # STORAGE / FILES
+  # STORAGE
   # ──────────────────────────────────────────────────────────────
   /files:
     post:
       tags: [Storage]
       summary: Upload file
+      x-permission: u_attach
       requestBody:
         required: true
         content:
@@ -1758,7 +2705,7 @@ paths:
                   default: public
       responses:
         '201':
-          description: File uploaded
+          description: File uploaded; associate it with a post/topic to prevent orphan cleanup
           content:
             application/json:
               schema:
@@ -1766,8 +2713,8 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/StoredFile' }
         '413': { description: File too large }
-        '415': { description: Unsupported media type }
-        '507': { description: Quota exceeded }
+        '415': { description: Unsupported MIME type for this assetType }
+        '507': { description: Storage quota exceeded }
 
   /files/{fileId}:
     parameters:
@@ -1791,9 +2738,10 @@ paths:
     delete:
       tags: [Storage]
       summary: Delete file
+      x-permission: u_attach
       responses:
         '204': { description: File deleted }
-        '403': { description: Not file owner }
+        '403': { description: Not file owner (admins with a_manage_files may override) }
 
   /files/{fileId}/download:
     parameters:
@@ -1807,6 +2755,9 @@ paths:
     get:
       tags: [Storage]
       summary: Download file content
+      description: >
+        Private files require the caller to be the uploader or have a_manage_files.
+        For public files, security: [] (anonymous access allowed).
       responses:
         '200':
           description: File binary
@@ -1815,7 +2766,55 @@ paths:
               schema:
                 type: string
                 format: binary
+        '403': { description: Private file — insufficient permissions }
         '404': { description: File not found }
+
+  # ──────────────────────────────────────────────────────────────
+  # CONFIG
+  # ──────────────────────────────────────────────────────────────
+  /config:
+    get:
+      tags: [Config]
+      summary: Get board configuration
+      x-permission: a_board
+      description: >
+        Returns full phpbb_config map. Sensitive keys (e.g. smtp_password) are redacted.
+        Non-admin callers receive 403.
+      responses:
+        '200':
+          description: Board configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BoardConfig' }
+        '403': { description: Insufficient permissions (a_board required) }
+    post:
+      tags: [Config]
+      summary: Update board configuration values
+      x-permission: a_board
+      description: Partial update — only provided keys are changed. Unknown keys return 422.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BoardConfig' }
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BoardConfig' }
+        '403': { description: Insufficient permissions (a_board required) }
+        '422':
+          description: Unknown config key or invalid value
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
 
   # ──────────────────────────────────────────────────────────────
   # HEALTH
