@@ -471,7 +471,7 @@ interface ContentPluginInterface
 - **Option A**: Threads service directly updates forum counters (cross-service DB write).
 - **Option B**: Threads service emits events, hierarchy service listens and updates its own counters.
 - **Option C**: Threads service calls a `phpbb\hierarchy` method to update counters.
-- **Recommendation**: Option C. `HierarchyService` exposes `updateForumStats()` and `updateForumLastPost()`. Threads calls these within its transaction.
+- **Recommendation**: ~~Option C~~ **Superseded by D8**: Event-driven counter updates. Threads emits `TopicCreatedEvent`, `PostCreatedEvent`, `VisibilityChangedEvent` etc. Hierarchy's `ForumStatsSubscriber` listens and updates forum counters. Threads has no direct dependency on Hierarchy.
 
 ### D4: User Post Count — Threads Service vs. User Service
 - Legacy `submit_post()` directly updates `user_posts` and `user_lastpost_time`.

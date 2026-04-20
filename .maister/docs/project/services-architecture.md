@@ -38,7 +38,7 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 | [Cache Service](../../tasks/research/2026-04-19-cache-service/) | Complete | PSR-16 tag-aware caching | TagAwareCacheInterface, filesystem-first, pool isolation |
 | [Auth Unified Service](../../tasks/research/2026-04-19-auth-unified-service/) | Complete | AuthN + AuthZ (JWT, ACL engine) | Unified auth — login, tokens, 5-layer permission resolver, bitfield cache. **Supersedes** `2026-04-18-auth-service/`. |
 | [Hierarchy Service](../../tasks/research/2026-04-18-hierarchy-service/) | Complete | Forums, categories, subforums | 5-service decomposition, nested set, events+decorators |
-| [Threads Service](../../tasks/research/2026-04-18-threads-service/) | Complete | Topics, posts, content pipeline | Lean core + plugins, raw text storage, hybrid counters |
+| [Threads Service](../../tasks/research/2026-04-18-threads-service/) | Complete | Topics, posts, content pipeline | Lean core + plugins, s9e XML default + encoding_engine, hybrid counters |
 | [Messaging Service](../../tasks/research/2026-04-19-messaging-service/) | Complete | Private messages | Thread-per-participant-set, pinned+archive, no folders |
 | [Notifications Service](../../tasks/research/2026-04-19-notifications-service/) | Complete | Notifications, email, REST polling | Full rewrite, HTTP polling 30s, tag-aware cache, React frontend |
 | [Storage Service](../../tasks/research/2026-04-19-storage-service/) | Complete | File/attachment storage | Flysystem, UUID v7, single `stored_files` table |

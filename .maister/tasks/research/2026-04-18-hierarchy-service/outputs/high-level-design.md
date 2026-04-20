@@ -109,9 +109,9 @@
 
 | Container | Tech | Responsibility |
 |-----------|------|----------------|
-| HierarchyService | PHP 8.2 class | Facade — orchestrates operations, runs decorator pipeline, dispatches events, returns domain events |
+| HierarchyService | PHP 8.2 class | Facade — orchestrates operations, runs decorator pipeline, dispatches events, returns domain events | ForumRepository, TreeService, TrackingService, SubscriptionService, DecoratorPipeline, EventDispatcher, TagAwareCacheInterface (`cache.hierarchy` pool) |
 | ForumRepository | PHP 8.2 + PDO | CRUD operations on `phpbb_forums`, entity hydration, data validation |
-| TreeService | PHP 8.2 + PDO | Nested set operations: insert/remove/move/reorder nodes, tree traversal, advisory locking |
+| TreeService | PHP 8.2 + PDO | Nested set operations: insert/remove/move/reorder nodes, tree traversal, advisory locking, cache invalidation | PDO, TagAwareCacheInterface (`cache.hierarchy` pool) |
 | TrackingService | PHP 8.2 + PDO + cookies | Per-user read status: mark read, check unread, dual DB/cookie strategy |
 | SubscriptionService | PHP 8.2 + PDO | Forum watch: subscribe/unsubscribe, eligible subscriber queries, notify status |
 | ForumTypeRegistry | PHP 8.2 | Maps `ForumType` → `ForumTypeBehaviorInterface`; plugins register custom types |
@@ -797,17 +797,17 @@ interface HierarchyServiceInterface
     /** @return int[] IDs of direct children */
     public function getChildIds(int $parentId): array;
 
-    // ── Tracking (return domain events) ──
+    // ── Tracking (return DomainEventCollection) ──
 
     /**
-     * @return ForumMarkedReadEvent
+     * @return DomainEventCollection Contains ForumMarkedReadEvent
      */
-    public function markForumRead(int $userId, int $forumId, int $markTime): ForumMarkedReadEvent;
+    public function markForumRead(int $userId, int $forumId, int $markTime): DomainEventCollection;
 
     /**
-     * @return AllForumsMarkedReadEvent
+     * @return DomainEventCollection Contains AllForumsMarkedReadEvent
      */
-    public function markAllRead(int $userId, int $markTime): AllForumsMarkedReadEvent;
+    public function markAllRead(int $userId, int $markTime): DomainEventCollection;
 
     /**
      * Check if forum is unread. Pure query — no event returned.
@@ -820,11 +820,11 @@ interface HierarchyServiceInterface
      */
     public function getUnreadStatus(int $userId, array $forumIds): array;
 
-    // ── Subscriptions (return domain events) ──
+    // ── Subscriptions (return DomainEventCollection) ──
 
-    public function subscribe(int $userId, int $forumId): ForumSubscribedEvent;
+    public function subscribe(int $userId, int $forumId): DomainEventCollection;
 
-    public function unsubscribe(int $userId, int $forumId): ForumUnsubscribedEvent;
+    public function unsubscribe(int $userId, int $forumId): DomainEventCollection;
 
     /**
      * Pure query — no event.

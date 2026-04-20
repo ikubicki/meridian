@@ -398,11 +398,9 @@ final class StorageQuota
 namespace phpbb\storage\contract;
 
 use phpbb\storage\dto\StoreFileRequest;
-use phpbb\storage\dto\FileStoredResponse;
 use phpbb\storage\dto\ClaimContext;
-use phpbb\storage\dto\FileClaimedResponse;
-use phpbb\storage\dto\FileDeletedResponse;
 use phpbb\storage\entity\StoredFile;
+use phpbb\common\Event\DomainEventCollection;
 
 interface StorageServiceInterface
 {
@@ -411,11 +409,12 @@ interface StorageServiceInterface
      * Validates extension/MIME/size, checks quota, writes via Flysystem,
      * inserts DB row with is_orphan=true, dispatches FileStoredEvent.
      *
+     * @return DomainEventCollection Contains FileStoredEvent
      * @throws \phpbb\storage\exception\UploadValidationException
      * @throws \phpbb\storage\exception\QuotaExceededException
      * @throws \phpbb\storage\exception\StorageWriteException
      */
-    public function store(StoreFileRequest $request): FileStoredResponse;
+    public function store(StoreFileRequest $request): DomainEventCollection;
 
     /**
      * Retrieve file metadata by ID.
@@ -428,18 +427,20 @@ interface StorageServiceInterface
      * Delete a file and all its variants. Decrements quota.
      * Dispatches FileDeletedEvent.
      *
+     * @return DomainEventCollection Contains FileDeletedEvent
      * @throws \phpbb\storage\exception\FileNotFoundException
      */
-    public function delete(string $fileId): FileDeletedResponse;
+    public function delete(string $fileId): DomainEventCollection;
 
     /**
      * Claim an orphan file — sets is_orphan=false, claimed_at=NOW().
      * Dispatches FileClaimedEvent.
      *
+     * @return DomainEventCollection Contains FileClaimedEvent
      * @throws \phpbb\storage\exception\FileNotFoundException
      * @throws \phpbb\storage\exception\OrphanClaimException
      */
-    public function claim(string $fileId, ClaimContext $context): FileClaimedResponse;
+    public function claim(string $fileId, ClaimContext $context): DomainEventCollection;
 
     /**
      * Get the serving URL for a file.

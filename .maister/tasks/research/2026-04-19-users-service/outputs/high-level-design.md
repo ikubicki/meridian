@@ -98,9 +98,13 @@
 │     │        │         │         │                                         │
 │     └────────┴────┬────┴─────────┘                                         │
 │                   │                                                         │
-│            ┌──────▼──────┐                                                  │
-│            │     PDO     │                                                  │
-│            └─────────────┘                                                  │
+│            ┌──────▼──────┐  ┌──────────────────────┐                        │
+│            │     PDO     │  │ TagAwareCacheInterface│                        │
+│            └─────────────┘  │ pool: cache.user      │                        │
+│                             │ (user display batch,  │                        │
+│                             │  ban check, member    │                        │
+│                             │  lookups)             │                        │
+│                             └──────────────────────┘                        │
 │                                                                              │
 │  ┌──────────────────────┐  ┌──────────────────────────────┐                 │
 │  │ DecoratorPipeline    │  │ EventDispatcher               │                 │
@@ -190,7 +194,21 @@ phpbb\user\
 │   ├── ResponseDecoratorInterface
 │   └── DecoratorPipeline
 ├── Event\                      # 20+ domain events (see catalog)
-├── Exception\                  # 14+ typed exceptions with HTTP codes
+├── Exception\                  # 14+ typed exceptions with HTTP codes:
+│   ├── UserNotFoundException            (extends \RuntimeException, HTTP 404)
+│   ├── UsernameNotAvailableException    (extends \DomainException, HTTP 409)
+│   ├── EmailNotAvailableException       (extends \DomainException, HTTP 409)
+│   ├── InvalidPasswordException         (extends \DomainException, HTTP 422)
+│   ├── PasswordResetTokenExpiredException (extends \DomainException, HTTP 410)
+│   ├── PasswordResetTokenInvalidException (extends \DomainException, HTTP 400)
+│   ├── UserBannedException              (extends \DomainException, HTTP 403)
+│   ├── UserInactiveException            (extends \DomainException, HTTP 403)
+│   ├── GroupNotFoundException           (extends \RuntimeException, HTTP 404)
+│   ├── GroupMembershipExistsException   (extends \DomainException, HTTP 409)
+│   ├── GroupMembershipNotFoundException (extends \RuntimeException, HTTP 404)
+│   ├── CannotLeaveDefaultGroupException (extends \DomainException, HTTP 422)
+│   ├── ShadowBanNotFoundException       (extends \RuntimeException, HTTP 404)
+│   └── BanNotFoundException             (extends \RuntimeException, HTTP 404)
 ├── Security\
 │   └── Argon2PasswordHasher
 └── Repository\                 # PDO implementations of contracts
@@ -228,14 +246,14 @@ phpbb\user\
 | | `requestJoin(int $groupId, int $userId): DomainEventCollection` | User requests to join (creates pending) |
 | | `leave(int $groupId, int $userId): DomainEventCollection` | User leaves group voluntarily |
 | **BanService** | `ban(CreateBanDTO): Ban` | Create ban (user/IP/email), force logout |
-| | `unban(int $banId): void` | Remove ban by ID |
+| | `unban(int $banId): DomainEventCollection` | Remove ban by ID, dispatch BanRemovedEvent |
 | | `isUserBanned(int $userId): bool` | Check active bans (respects exclude) |
 | | `isIpBanned(string $ip): bool` | Check IP against ban list |
 | | `isEmailBanned(string $email): bool` | Check email against ban patterns |
 | | `assertNotBanned(int $userId, string $ip, string $email): void` | Combined check, throws on ban |
 | | `getActiveBans(?BanType $filter): PaginatedResult<Ban>` | List active bans |
 | **ShadowBanService** | `apply(ShadowBanDTO): ShadowBan` | Apply shadow ban |
-| | `remove(int $shadowBanId): void` | Remove shadow ban |
+| | `remove(int $shadowBanId): DomainEventCollection` | Remove shadow ban, dispatch ShadowBanRemovedEvent |
 | | `isShadowBanned(int $userId): bool` | Quick boolean check (used by Threads decorator) |
 | | `getShadowBan(int $userId): ?ShadowBan` | Full shadow ban record |
 | | `listActive(): PaginatedResult<ShadowBan>` | Admin listing |
@@ -245,10 +263,10 @@ phpbb\user\
 | | `findByEmail(string): ?User` | By email |
 | | `getTeamMembers(): User[]` | Admins + global mods |
 | **UserDisplayService** | `findDisplayByIds(int[] $ids): UserDisplayDTO[]` | Batch display (keyed by user_id) |
-| **AdminUserService** | `delete(DeleteUserDTO): void` | Three-mode delete + dispatch events |
-| | `deactivate(int $userId, InactiveReason): void` | Set inactive + dispatch event |
-| | `activate(int $userId): void` | Set active + dispatch event |
-| | `changeType(int $userId, UserType): void` | Change user type |
+| **AdminUserService** | `delete(DeleteUserDTO): DomainEventCollection` | Three-mode delete + dispatch events |
+| | `deactivate(int $userId, InactiveReason): DomainEventCollection` | Set inactive + dispatch event |
+| | `activate(int $userId): DomainEventCollection` | Set active + dispatch event |
+| | `changeType(int $userId, UserType): DomainEventCollection` | Change user type + dispatch event |
 | **UserCounterService** | _(event subscriber — no public API)_ | Listens to Threads events, updates user_posts / user_lastpost_time |
 
 ---

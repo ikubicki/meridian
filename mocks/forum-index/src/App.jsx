@@ -102,7 +102,7 @@ function StickyHeader() {
         <div className="sticky-left">
           <a href="#" className="sticky-logo" title="Board index">
             <img src="/favicon.ico" alt="phpBB" className="sticky-ico" />
-            <img src="/site_logo.svg" alt="phpBB" className="sticky-svg" />
+            <img src="./site_logo.svg" alt="phpBB" className="sticky-svg" />
           </a>
           <ul className="breadcrumbs">
             <li className="crumb"><a href="#">Board index</a></li>
@@ -157,7 +157,7 @@ function Footer() {
     <footer id="page-footer">
       <div className="footer-info">
         <span>Powered by <a href="#">phpBB</a>® Forum Software © phpBB Limited</span>
-        <span className="footer-right">Style by Irekk</span>
+        <span className="footer-right">Skysilver style by Irekk</span>
       </div>
     </footer>
   );

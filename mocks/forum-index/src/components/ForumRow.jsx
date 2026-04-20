@@ -102,7 +102,7 @@ function ForumIcon({ isLink, unread }) {
   return (
     <img
       className={`forum-icon ${unread ? 'forum-icon-unread' : 'forum-icon-read'}`}
-      src="/images/forum_read.gif"
+      src="./images/forum_read.gif"
       alt={unread ? 'Unread posts' : 'No unread posts'}
       title={unread ? 'Unread posts' : 'No unread posts'}
     />

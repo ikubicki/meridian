@@ -403,10 +403,11 @@ final class Post
         public readonly string $posterUsername,
         public readonly int $postedAt,
 
-        // Content — RAW TEXT ONLY
+        // Content — s9e XML default (see encoding_engine)
         public readonly string $postText,
         public readonly string $subject,
         public readonly int $iconId,
+        public readonly string $encodingEngine, // 's9e' (default), 'markdown', etc.
 
         // State
         public readonly Visibility $visibility,
@@ -493,37 +494,37 @@ use phpbb\threads\event\DraftDeletedEvent;
 
 interface ThreadsServiceInterface
 {
-    // ── Write Operations (return domain events) ──
+    // ── Write Operations (return DomainEventCollection) ──
 
-    public function createTopic(CreateTopicRequest $request): TopicCreatedEvent;
+    public function createTopic(CreateTopicRequest $request): DomainEventCollection;
 
-    public function createReply(CreateReplyRequest $request): PostCreatedEvent;
+    public function createReply(CreateReplyRequest $request): DomainEventCollection;
 
-    public function editPost(EditPostRequest $request): PostEditedEvent;
+    public function editPost(EditPostRequest $request): DomainEventCollection;
 
-    public function softDeletePost(SoftDeleteRequest $request): VisibilityChangedEvent;
+    public function softDeletePost(SoftDeleteRequest $request): DomainEventCollection;
 
-    public function restorePost(RestoreRequest $request): VisibilityChangedEvent;
+    public function restorePost(RestoreRequest $request): DomainEventCollection;
 
-    public function hardDeletePost(HardDeleteRequest $request): PostHardDeletedEvent;
+    public function hardDeletePost(HardDeleteRequest $request): DomainEventCollection;
 
-    public function softDeleteTopic(SoftDeleteRequest $request): VisibilityChangedEvent;
+    public function softDeleteTopic(SoftDeleteRequest $request): DomainEventCollection;
 
-    public function restoreTopic(RestoreRequest $request): VisibilityChangedEvent;
+    public function restoreTopic(RestoreRequest $request): DomainEventCollection;
 
-    public function hardDeleteTopic(HardDeleteRequest $request): TopicDeletedEvent;
+    public function hardDeleteTopic(HardDeleteRequest $request): DomainEventCollection;
 
-    public function approvePost(int $postId, int $moderatorId): VisibilityChangedEvent;
+    public function approvePost(int $postId, int $moderatorId): DomainEventCollection;
 
-    public function approveTopic(int $topicId, int $moderatorId): VisibilityChangedEvent;
+    public function approveTopic(int $topicId, int $moderatorId): DomainEventCollection;
 
-    public function bumpTopic(BumpTopicRequest $request): TopicLockedEvent;
+    public function bumpTopic(BumpTopicRequest $request): DomainEventCollection;
 
-    public function lockTopic(LockTopicRequest $request): TopicLockedEvent;
+    public function lockTopic(LockTopicRequest $request): DomainEventCollection;
 
-    public function moveTopic(MoveTopicRequest $request): TopicMovedEvent;
+    public function moveTopic(MoveTopicRequest $request): DomainEventCollection;
 
-    public function changeTopicType(ChangeTopicTypeRequest $request): TopicTypeChangedEvent;
+    public function changeTopicType(ChangeTopicTypeRequest $request): DomainEventCollection;
 
     // ── Query Operations (return DTOs, no events — reads are side-effect-free) ──
 
@@ -537,14 +538,14 @@ interface ThreadsServiceInterface
 
     // ── Draft Operations ──
 
-    public function saveDraft(SaveDraftRequest $request): DraftSavedEvent;
+    public function saveDraft(SaveDraftRequest $request): DomainEventCollection;
 
     public function loadDraft(int $draftId, int $userId): ?DraftResponse;
 
     /** @return DraftResponse[] */
     public function getUserDrafts(int $userId, ?int $forumId = null): array;
 
-    public function deleteDraft(int $draftId, int $userId): DraftDeletedEvent;
+    public function deleteDraft(int $draftId, int $userId): DomainEventCollection;
 }
 ```
 
@@ -646,32 +647,6 @@ interface CounterServiceInterface
      */
     public function transferPostCounters(
         int $topicId,
-        int $forumId,
-        Visibility $fromVisibility,
-        Visibility $toVisibility,
-    ): void;
-
-    /**
-     * Increment topic counters on forum.
-     */
-    public function incrementTopicCounters(
-        int $forumId,
-        Visibility $visibility,
-    ): void;
-
-    /**
-     * Decrement topic counters on forum.
-     */
-    public function decrementTopicCounters(
-        int $forumId,
-        Visibility $visibility,
-    ): void;
-
-    /**
-     * Transfer topic counters when topic visibility changes.
-     */
-    public function transferTopicCounters(
-        int $forumId,
         Visibility $fromVisibility,
         Visibility $toVisibility,
     ): void;
@@ -681,10 +656,10 @@ interface CounterServiceInterface
      */
     public function syncTopicCounters(int $topicId): void;
 
-    /**
-     * Full resync: recalculate forum counters from topics/posts tables.
-     */
-    public function syncForumCounters(int $forumId): void;
+    // NOTE: Forum-level counter methods (incrementTopicCounters, decrementTopicCounters,
+    // transferTopicCounters, syncForumCounters) have been removed per D8.
+    // Forum counters are managed by Hierarchy Service via event subscribers
+    // listening to Threads domain events.
 }
 ```
 
@@ -729,19 +704,18 @@ namespace phpbb\threads\contract;
 
 use phpbb\threads\dto\request\SaveDraftRequest;
 use phpbb\threads\dto\response\DraftResponse;
-use phpbb\threads\event\DraftSavedEvent;
-use phpbb\threads\event\DraftDeletedEvent;
+use phpbb\common\Event\DomainEventCollection;
 
 interface DraftServiceInterface
 {
-    public function save(SaveDraftRequest $request): DraftSavedEvent;
+    public function save(SaveDraftRequest $request): DomainEventCollection;
 
     public function load(int $draftId, int $userId): ?DraftResponse;
 
     /** @return DraftResponse[] */
     public function loadForUser(int $userId, ?int $forumId = null): array;
 
-    public function delete(int $draftId, int $userId): DraftDeletedEvent;
+    public function delete(int $draftId, int $userId): DomainEventCollection;
 }
 ```
 
@@ -1842,10 +1816,11 @@ CREATE TABLE phpbb_posts (
     post_username       varchar(255) NOT NULL DEFAULT '',     -- Guest name
     post_time           int unsigned NOT NULL DEFAULT 0,
 
-    -- Content — RAW TEXT ONLY
-    post_text           mediumtext NOT NULL,                   -- User's original text
+    -- Content — s9e XML default (encoding_engine selects renderer)
+    post_text           mediumtext NOT NULL,                   -- Stored content (s9e XML, markdown, etc.)
     post_subject        varchar(255) NOT NULL DEFAULT '',
     icon_id             int unsigned NOT NULL DEFAULT 0,
+    encoding_engine     varchar(20) NOT NULL DEFAULT 's9e',    -- Renderer selector
 
     -- State
     post_visibility     tinyint NOT NULL DEFAULT 0,           -- Visibility enum

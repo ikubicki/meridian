@@ -131,8 +131,8 @@ Interactions:
 | `NotificationService` | `phpbb\notifications\Service` | Main facade — orchestrates reads, writes, cache, events, type/method dispatch | Repository, Cache, TypeRegistry, MethodManager, EventDispatcher |
 | `NotificationRepository` | `phpbb\notifications\Repository` | PDO data access — CRUD, count, list, mark-read, bulk operations | `\PDO` (database_connection) |
 | `NotificationsController` | `phpbb\api\v1\controller` | REST API — 4 endpoints, HTTP headers, JSON responses | NotificationService, Request |
-| `NotificationTypeRegistry` | `phpbb\notifications\Type` | Extensible type registration via `RegisterNotificationTypesEvent`, type lookup, validation | EventDispatcher |
-| `NotificationMethodManager` | `phpbb\notifications\Method` | Delivery method orchestration — dispatches to board, email, etc. | EventDispatcher (`RegisterDeliveryMethodsEvent`) |
+| `NotificationTypeRegistry` | `phpbb\notifications\Type` | Extensible type registration via `RegisterNotificationTypesEvent` (event-based discovery), type lookup, validation | EventDispatcher |
+| `NotificationMethodManager` | `phpbb\notifications\Method` | Delivery method orchestration — dispatches to board, email, etc. (event-based discovery via `RegisterDeliveryMethodsEvent`) | EventDispatcher |
 | `NotificationTypeInterface` | `phpbb\notifications\Type` | Contract for notification types — recipient finding, display, email | — |
 | `NotificationMethodInterface` | `phpbb\notifications\Method` | Contract for delivery methods — notify, mark-read, preferences | — |
 | `CacheInvalidationSubscriber` | `phpbb\notifications\Listener` | Symfony event subscriber — invalidates user cache tags on changes | TagAwareCacheInterface |
@@ -202,21 +202,25 @@ class NotificationService
 
     /**
      * Mark a single notification as read.
-     * Returns updated unread count.
+     *
+     * @return DomainEventCollection Contains NotificationsMarkedReadEvent
      */
-    public function markRead(int $userId, int $notificationId): int;
+    public function markRead(int $userId, int $notificationId): DomainEventCollection;
 
     /**
      * Mark all notifications as read for a user.
-     * Returns 0 (new unread count).
+     *
+     * @return DomainEventCollection Contains NotificationsMarkedReadEvent (all)
      */
-    public function markAllRead(int $userId): int;
+    public function markAllRead(int $userId): DomainEventCollection;
 
     /**
      * Delete notifications by type and item.
      * Called when the source item is deleted (e.g. post deleted).
+     *
+     * @return DomainEventCollection Contains NotificationsDeletedEvent
      */
-    public function deleteNotifications(string $typeName, int $itemId, ?int $parentId = null): void;
+    public function deleteNotifications(string $typeName, int $itemId, ?int $parentId = null): DomainEventCollection;
 }
 ```
 
@@ -1039,33 +1043,49 @@ Extensions can subscribe to these events to:
 - **External integrations** — forward notifications to Slack, Discord, etc.
 - **Custom cache strategies** — additional invalidation logic
 
-### Creating Notifications from Forum Actions
+### Creating Notifications from Domain Events (Subscriber Pattern)
 
-Forum code (post creation, PM sending, etc.) calls `NotificationService::createNotification()`:
+Notifications are triggered by **domain events from other services** — not by direct calls from forum code. Each service emits `DomainEventCollection` from mutation methods; Notification subscribers listen and create notifications:
 
 ```php
-// Example: After a new post is created
-$this->notificationService->createNotification(
-    'notification.type.post',
-    [
-        'post_id'      => $post_id,
-        'topic_id'     => $topic_id,
-        'poster_id'    => $poster_id,
-        'post_subject' => $subject,
-        'topic_title'  => $topic_title,
-        'forum_id'     => $forum_id,
-        'forum_name'   => $forum_name,
-    ]
-);
+// PostCreatedNotificationSubscriber — listens to Threads domain events
+class PostCreatedNotificationSubscriber implements EventSubscriberInterface
+{
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
+    public static function getSubscribedEvents(): array
+    {
+        return [PostCreatedEvent::class => 'onPostCreated'];
+    }
+
+    public function onPostCreated(PostCreatedEvent $event): void
+    {
+        $this->notificationService->createNotification(
+            'notification.type.post',
+            [
+                'post_id'      => $event->postId,
+                'topic_id'     => $event->topicId,
+                'poster_id'    => $event->posterId,
+                'post_subject' => $event->subject,
+                'topic_title'  => $event->topicTitle,
+                'forum_id'     => $event->forumId,
+            ]
+        );
+    }
+}
 ```
 
-The `NotificationService` then:
+The `NotificationService::createNotification()` then:
 1. Resolves the type via `TypeRegistry`
 2. Calls `type->findUsersForNotification()` to determine recipients
 3. Checks for existing unread notifications (dedup via `coalesceResponder()`)
 4. Inserts new rows via `Repository::insertBatch()`
 5. Dispatches to delivery methods via `MethodManager::dispatch()`
 6. Fires `NotificationCreatedEvent`
+
+**Key principle**: Forum services (Threads, Messaging, etc.) never import `NotificationService`. They emit domain events; notification subscribers react.
 
 ---
 

@@ -21,7 +21,7 @@ This collection of researches represents a **technically sophisticated and well-
 | 3 | REST API | 2026-04-16 | HLD + decisions + exploration | ✅ Complete | Composition over inheritance, session→token auth, YAML routes |
 | 4 | Auth Service | 2026-04-18 | HLD + decisions | ✅ Complete | AuthZ only, preserve bitfield cache, route defaults for permissions |
 | 5 | Hierarchy Service | 2026-04-18 | HLD + decisions + exploration | ✅ Complete | 5-service decomposition, nested set port, events+decorators |
-| 6 | Threads Service | 2026-04-18 | HLD + decisions + exploration | ✅ Complete | Lean core + plugins, raw text storage, hybrid counters |
+| 6 | Threads Service | 2026-04-18 | HLD + decisions + exploration | ✅ Complete | Lean core + plugins, s9e XML default + encoding_engine, hybrid counters |
 | 7 | Cache Service | 2026-04-19 | HLD + decisions + exploration | ✅ Complete | PSR-16 + TagAwareCacheInterface, filesystem-first, pool isolation |
 | 8 | Messaging Service | 2026-04-19 | HLD + decisions + exploration | ✅ Complete | Thread-per-participant-set, pinned+archive, no folders |
 | 9 | Notifications Service | 2026-04-19 | HLD + decisions + exploration | ✅ Complete | Full rewrite, HTTP polling 30s, React frontend, tagged DI types |
@@ -109,7 +109,7 @@ graph TD
 **No circular dependencies detected.** ✅
 
 **One-way dependencies verified:**
-- Threads → Hierarchy (sync calls to `updateForumStats`, `updateForumLastPost`) — clean
+- Threads → Hierarchy (event-driven: Threads emits domain events, Hierarchy's `ForumStatsSubscriber` listens and updates forum counters per D8) — clean
 - Threads → User (via events) — clean
 - Notifications → Cache (via `TagAwareCacheInterface`) — clean
 - Auth → User Entity (import) — **blocked by missing User Service**
