@@ -334,6 +334,10 @@ components:
       type: object
       required: [id, forumId, title, type, status, visibility]
       properties:
+        _type:
+          type: string
+          const: topic
+          description: Discriminator field for SearchResult deserialization
         id: { type: integer }
         forumId: { type: integer }
         title: { type: string }
@@ -363,6 +367,10 @@ components:
       type: object
       required: [id, topicId, forumId, posterId, postedAt, text, visibility]
       properties:
+        _type:
+          type: string
+          const: post
+          description: Discriminator field for SearchResult deserialization
         id: { type: integer }
         topicId: { type: integer }
         forumId: { type: integer }
@@ -2822,9 +2830,11 @@ paths:
     get:
       tags: [Storage]
       summary: Download file content
+      x-permission: authenticated
       description: >
+        All file downloads require a valid JWT (authenticated user).
+        Public files (visibility=public) are accessible to any logged-in user.
         Private files require the caller to be the uploader or have a_manage_files.
-        For public files, security: [] (anonymous access allowed).
       responses:
         '200':
           description: File binary

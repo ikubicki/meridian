@@ -2,6 +2,14 @@
 
 Conventions for the `src/phpbb/api/` layer (phpBB Vibed REST API, PHP 8.3).
 
+> **⚠️ Authoritative contract**
+> The OpenAPI specification at
+> `.maister/tasks/research/2026-04-20-rest-api-spec/outputs/openapi.yaml`
+> is the **single source of truth** for all endpoint contracts (request/response shapes,
+> status codes, auth requirements, permission annotations).
+> In case of any conflict between this document and the OpenAPI spec, **the spec wins**.
+> Update the spec first, then update this document to match.
+
 ## Routing
 
 - Routes are defined in `config/default/container/routing/api.yml`
