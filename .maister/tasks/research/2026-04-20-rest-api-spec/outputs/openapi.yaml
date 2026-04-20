@@ -1,22 +1,89 @@
 openapi: 3.1.0
 info:
   title: phpBB REST API
-  version: 1.0.0
+  version: 4.0.0
   description: |
     REST API contract for phpBB rewrite (Symfony 8.x / PHP 8.2+).
     All endpoints require Bearer JWT unless marked otherwise.
     Naming: camelCase for JSON fields and query parameters.
 
-    ## x-permission convention
+    ## Authentication
+
+    Most endpoints require a valid Bearer JWT (`Authorization: Bearer <accessToken>`).
+    Obtain tokens via `POST /auth/login` or `POST /auth/sso/{provider}/callback`.
+    Tokens expire after 15 minutes — use `POST /auth/refresh` with your `refreshToken` to renew.
+
+    Some admin and moderator operations additionally require an **elevated token**
+    (obtained via `POST /auth/elevate`). These endpoints are marked with
+    `x-permission: a_*` or `m_*` and typically need the `acp` or `mcp` scope.
+
+    Endpoints marked `security: []` are public and do not require authentication.
+
+    ## Access Control
+
+    Each protected endpoint carries an `x-permission` annotation indicating the
+    required permission. Permissions are grouped by role:
+
+    ### Forum permissions (per-forum, set by admin)
+    | Permission | Who can use it | Description |
+    |---|---|---|
+    | `f_list` | Registered users | See the forum in listings |
+    | `f_read` | Registered users | Read topics and posts |
+    | `f_post` | Registered users | Start new topics |
+    | `f_reply` | Registered users | Reply to existing topics |
+    | `f_edit` | Registered users | Edit own posts (time-limited) |
+    | `f_search` | Registered users | Search within forums |
+    | `f_report` | Registered users | Report posts to moderators |
+    | `f_sticky` | Trusted users | Post sticky topics |
+
+    ### Moderator permissions (per-forum, assigned to users/groups)
+    | Permission | Who can use it | Description |
+    |---|---|---|
+    | `m_edit` | Moderators | Edit any post in the forum |
+    | `m_delete` | Moderators | Soft-delete posts and topics |
+    | `m_approve` | Moderators | Approve posts/topics waiting for review |
+    | `m_move` | Moderators | Move topics to another forum |
+    | `m_split` | Moderators | Split a topic into two |
+    | `m_merge` | Moderators | Merge two topics together |
+    | `m_lock` | Moderators | Lock/unlock topics |
+    | `m_announce` | Moderators | Post announcements |
+
+    ### Admin permissions (global, requires elevated token with `acp` scope)
+    | Permission | Who can use it | Description |
+    |---|---|---|
+    | `a_forum` | Administrators | Create, edit, delete forums and their settings |
+    | `a_ban` | Administrators | Issue and manage bans |
+    | `a_user` | Administrators | Manage user accounts (activate, delete, change type) |
+    | `a_group` | Administrators | Create and manage user groups |
+    | `a_board` | Administrators | Change board-wide configuration |
+    | `a_search` | Administrators | Rebuild the full-text search index |
+    | `a_announce` | Administrators | Post global announcements |
+
+    ### User preferences (global, granted to all registered users by default)
+    | Permission | Who can use it | Description |
+    |---|---|---|
+    | `u_sendpm` | Registered users | Send and receive private messages |
+    | `u_attach` | Registered users | Upload file attachments |
+    | `u_viewprofile` | Registered users | View other users' profiles |
+
+    ### How the API signals permission errors
+    - **401 Unauthorized** — missing or expired JWT; re-authenticate.
+    - **403 Forbidden** — authenticated but lacking the required permission.
+      The response body includes the human-readable reason, e.g.:
+      ```json
+      { "error": "You do not have permission to post in this forum.", "status": 403 }
+      ```
+
+    ## x-permission convention (for tooling)
     Every protected operation carries an `x-permission` vendor extension specifying
-    the phpBB ACL flag(s) required. Multiple values are AND-joined unless prefixed `OR:`.
-    Example: `x-permission: f_post` — caller must have f_post in the target forum.
+    the internal phpBB ACL flag(s) required. Multiple values are AND-joined unless
+    prefixed `OR:`. Example: `x-permission: f_post`.
   contact:
     name: phpBB Dev Team
 
 servers:
-  - url: /api/v1
-    description: API v1
+  - url: /api/v4
+    description: API v4
 
 # ════════════════════════════════════════════════════════════════
 # SECURITY
