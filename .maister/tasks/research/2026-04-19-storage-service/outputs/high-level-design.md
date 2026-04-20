@@ -186,11 +186,11 @@ src/phpbb/storage/
 │   └── OrphanCleanupEvent.php
 │
 ├── exception/
-│   ├── FileNotFoundException.php
-│   ├── QuotaExceededException.php
-│   ├── UploadValidationException.php
-│   ├── OrphanClaimException.php
-│   └── StorageWriteException.php
+│   ├── FileNotFoundException.php           # extends phpbb\common\Exception\NotFoundException
+│   ├── QuotaExceededException.php          # extends phpbb\common\Exception\ValidationException
+│   ├── UploadValidationException.php       # extends phpbb\common\Exception\ValidationException
+│   ├── OrphanClaimException.php            # extends phpbb\common\Exception\ConflictException
+│   └── StorageWriteException.php           # extends phpbb\common\Exception\PhpbbException
 │
 ├── adapter/
 │   └── StorageAdapterFactory.php
@@ -221,7 +221,7 @@ src/phpbb/storage/
 
 | Component | Purpose | Responsibilities | Key Interfaces | Dependencies |
 |-----------|---------|------------------|----------------|--------------|
-| StorageService | Central facade for all file operations | store(), retrieve(), delete(), claim(), getUrl(), exists() | `StorageServiceInterface` | QuotaService, OrphanService, UrlGenerator, StoredFileRepository, StorageAdapterFactory, EventDispatcher |
+| StorageService | Central facade for all file operations | store(), retrieve(), delete(), claim(), getUrl(), exists() | `StorageServiceInterface` | QuotaService, OrphanService, UrlGenerator, StoredFileRepository, StorageAdapterFactory, EventDispatcher, TagAwareCacheInterface (`cache.storage`) |
 | QuotaService | Multi-level quota enforcement | checkQuota(), incrementUsage(), decrementUsage(), reconcile() | `QuotaServiceInterface` | StorageQuotaRepository, PDO |
 | OrphanService | Orphan lifecycle management | markOrphan(), claim(), cleanupExpired() | `OrphanServiceInterface` | StoredFileRepository, StorageAdapterFactory, EventDispatcher |
 | UrlGenerator | URL production per visibility | generateUrl() — direct for public, proxy for private | `UrlGeneratorInterface` | Config (base URLs, X-Accel prefix) |

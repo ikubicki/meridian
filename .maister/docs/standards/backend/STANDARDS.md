@@ -288,3 +288,120 @@ The `includes/` layer contains procedural code that predates the OOP refactor. W
 
 - Table name constants: `USERS_TABLE`, `POSTS_TABLE`, `FORUMS_TABLE`, etc.
 - Always reference tables via constants, never hardcode table names with prefix
+
+---
+
+## Schema Compatibility & Code Isolation
+
+**Core principle**: Maximum compatibility with the phpBB 3.3 database schema, zero references to legacy code.
+
+### Schema: Reuse Everything
+
+- New services operate on the **existing phpBB3 tables** (`phpbb_users`, `phpbb_forums`, `phpbb_topics`, `phpbb_posts`, `phpbb_acl_*`, etc.) without renaming, dropping, or restructuring them.
+- **Column names stay unchanged** — even if naming is inconsistent (`user_id` vs `poster_id` vs `topic_poster`), mirror the original column names in queries.
+- **Add columns** when needed (`ALTER TABLE ... ADD COLUMN`). Never drop or rename existing columns.
+- **New tables** only for genuinely new features that have no legacy equivalent (e.g., `phpbb_messaging_conversations`, `phpbb_stored_files`).
+- Table prefix (`phpbb_`) is configurable via `$table_prefix`. Use constants or config — never hardcode.
+
+```php
+// Correct — query uses original phpBB3 column names exactly:
+$stmt = $this->db->prepare(
+	'SELECT topic_id, topic_title, topic_poster, topic_time, topic_views
+	 FROM ' . $this->topicsTable . '
+	 WHERE forum_id = :forum_id AND topic_visibility = :visibility
+	 ORDER BY topic_last_post_time DESC'
+);
+
+// Wrong — renaming columns to "clean up":
+// SELECT topic_id AS id, topic_title AS title ...  ← do not alias for cosmetic reasons
+```
+
+### Code: Zero Legacy References
+
+New code under `src/phpbb/` MUST NOT import, reference, instantiate, or call any legacy code:
+
+| Forbidden | Replacement |
+|-----------|-------------|
+| `global $db, $user, $auth, $config, $cache, $request` | Constructor DI via Symfony container |
+| `$db->sql_query()`, `$db->sql_escape()`, DBAL methods | PDO prepared statements with named parameters |
+| `$request->variable()`, `request_var()` | Symfony `Request` object (`$request->query->get(...)`, `$request->request->get(...)`) |
+| `$user->lang()`, `$user->lang['KEY']` | Language service via DI (TBD) |
+| `$auth->acl_get()`, `$auth->acl_gets()` | `phpbb\auth\AuthorizationServiceInterface` |
+| `$cache->get()`, `$cache->put()` | `TagAwareCacheInterface` from cache service |
+| `$template->assign_vars()` | JSON responses via REST API controllers |
+| `trigger_error()` with `E_USER_*` | Throw `phpbb\common\Exception\*` typed exceptions |
+| `add_form_key()` / `check_form_key()` | JWT token validation (stateless) |
+| `$phpbb_root_path`, `$phpEx` | `__DIR__`-based paths, `PHPBB_FILESYSTEM_ROOT` constant |
+| `includes/*.php` require/include | PSR-4 autoloading only |
+| `phpbb\db\driver\driver_interface` | `\PDO` injected via DI |
+
+### What This Means in Practice
+
+```php
+// ✅ New service — uses phpBB3 schema, zero legacy code:
+namespace phpbb\threads;
+
+final class TopicRepository
+{
+	public function __construct(
+		private readonly \PDO $db,
+		private readonly string $topicsTable,
+		private readonly string $forumsTable,
+	) {}
+
+	public function findByForum(int $forumId, int $limit, int $offset): array
+	{
+		$stmt = $this->db->prepare(
+			'SELECT topic_id, topic_title, topic_poster, topic_time,
+			        topic_first_post_id, topic_last_post_id,
+			        topic_replies_real, topic_views, topic_status
+			 FROM ' . $this->topicsTable . '
+			 WHERE forum_id = :forum_id
+			   AND topic_visibility = :visibility
+			 ORDER BY topic_type DESC, topic_last_post_time DESC
+			 LIMIT :limit OFFSET :offset'
+		);
+		$stmt->execute([
+			'forum_id' => $forumId,
+			'visibility' => 1,
+			'limit' => $limit,
+			'offset' => $offset,
+		]);
+		return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+	}
+}
+```
+
+```php
+// ❌ Wrong — mixes legacy DBAL with new code:
+class TopicRepository
+{
+	public function findByForum(int $forumId): array
+	{
+		global $db;  // ← FORBIDDEN
+		$sql = 'SELECT * FROM ' . TOPICS_TABLE . '
+			WHERE forum_id = ' . (int) $forumId;  // ← legacy pattern
+		$result = $db->sql_query($sql);  // ← legacy DBAL
+	}
+}
+```
+
+### Table Name Injection
+
+Table names are injected via DI (YAML config), not via PHP constants:
+
+```yaml
+# services.yml
+phpbb.threads.topic_repository:
+    class: phpbb\threads\TopicRepository
+    arguments:
+        $db: '@database_connection'
+        $topicsTable: '%tables.topics%'
+        $forumsTable: '%tables.forums%'
+
+# parameters.yml
+parameters:
+    tables.topics: '%table_prefix%topics'
+    tables.forums: '%table_prefix%forums'
+    table_prefix: 'phpbb_'
+```

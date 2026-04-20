@@ -1077,41 +1077,42 @@ interface ThreadsServiceInterface
 
 **Purpose**: Forum context for topics, forum counter/last-post updates.
 
-**Integration pattern**: Direct method calls within the same transaction.
+**Integration pattern**: Event-driven via domain events. Threads emits `ForumCountersChangedEvent` and `TopicCreatedEvent`/`PostCreatedEvent`; Hierarchy's `ForumStatsSubscriber` consumes them post-commit.
 
 ```php
 // Inside ThreadsService::createTopic()
 $this->db->beginTransaction();
 
 // ... create topic and first post ...
-
-// Update forum counters via hierarchy
-$this->hierarchyService->updateForumStats($forumId, new ForumStatsDelta(
-    topicsApproved: $visibility === Visibility::Approved ? 1 : 0,
-    topicsUnapproved: $visibility !== Visibility::Approved ? 1 : 0,
-    postsApproved: $visibility === Visibility::Approved ? 1 : 0,
-    postsUnapproved: $visibility !== Visibility::Approved ? 1 : 0,
-));
-
-// Update forum last post info
-if ($visibility === Visibility::Approved) {
-    $this->hierarchyService->updateForumLastPost($forumId, new ForumLastPostInfo(
-        postId: $postId,
-        posterId: $request->posterId,
-        subject: $request->subject,
-        time: $currentTime,
-        posterName: $posterName,
-        posterColour: $posterColour,
-    ));
-}
+// ... update topic-level counters (own tables) ...
 
 $this->db->commit();
+
+// Build DomainEventCollection (returned to controller)
+$events = new DomainEventCollection([
+    new TopicCreatedEvent($topicId, $forumId, $request->posterId),
+    new ForumCountersChangedEvent(
+        entityId: $forumId,
+        actorId: $request->posterId,
+        delta: new ForumStatsDelta(
+            topicsApproved: $visibility === Visibility::Approved ? 1 : 0,
+            topicsUnapproved: $visibility !== Visibility::Approved ? 1 : 0,
+            postsApproved: $visibility === Visibility::Approved ? 1 : 0,
+            postsUnapproved: $visibility !== Visibility::Approved ? 1 : 0,
+        ),
+    ),
+]);
+
+return $events;
+// Controller dispatches → Hierarchy's ForumStatsSubscriber picks up events
 ```
 
-**Methods needed on HierarchyServiceInterface** (additions):
-- `updateForumStats(int $forumId, ForumStatsDelta $delta): void`
-- `updateForumLastPost(int $forumId, ForumLastPostInfo $info): void`
-- `recalculateForumLastPost(int $forumId): void` — for deletion scenarios
+**Hierarchy's ForumStatsSubscriber** (owned by Hierarchy, not Threads) listens for:
+- `ForumCountersChangedEvent` — applies counter delta to `phpbb_forums`
+- `TopicCreatedEvent` / `PostCreatedEvent` — updates last post info
+- `TopicDeletedEvent` — recalculates last post
+
+Threads has **zero imports** from `phpbb\hierarchy`. See cross-cutting-decisions-plan.md D8.
 
 ### 11.2 Integration with phpbb\auth
 
@@ -1199,14 +1200,16 @@ class PostCountListener
 ┌──────────────────────────────────────────────────────────────────────┐
 │                     phpbb\threads                                     │
 │                                                                      │
-│  ┌─ Sync (in-transaction) ─┐    ┌─ Async (post-commit events) ──┐  │
+│  ┌─ Sync (in-transaction) ─┐    ┌─ Post-commit events ──────────┐  │
 │  │                          │    │                                 │  │
-│  │  phpbb\hierarchy         │    │  phpbb\user (post count)       │  │
-│  │  → updateForumStats()    │    │  Search plugin (index)         │  │
-│  │  → updateForumLastPost() │    │  Notification plugin (email)   │  │
+│  │  Own DB tables           │    │  phpbb\hierarchy               │  │
+│  │  → topics, posts         │    │    ForumStatsSubscriber        │  │
+│  │  → topic-level counters  │    │  phpbb\user (post count)       │  │
+│  │                          │    │  Search plugin (index)         │  │
+│  │                          │    │  Notification plugin (email)   │  │
 │  │                          │    │  Attachment plugin (adopt)      │  │
-│  │  Own DB tables           │    │  Cache invalidation            │  │
-│  │  → topics, posts, etc.   │    │  Read tracking                 │  │
+│  │                          │    │  Cache invalidation            │  │
+│  │                          │    │  Read tracking                 │  │
 │  └──────────────────────────┘    └────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -1354,26 +1357,23 @@ Fetch IDs (paginated) then fetch full data. With reverse optimization for late p
 
 **Recommendation**: Preserve this pattern in `PostRepository::findPaginated()` and `TopicRepository::findByForum()`. Performance is validated by years of production use.
 
-### Finding 7: Forum Counter Updates Need Cross-Service Coordination
+### Finding 7: Forum Counter Updates — Event-Driven
 **Confidence**: HIGH  
 **Impact**: HIGH  
 
-Threads creates content IN forums. Forum statistics are owned by `phpbb\hierarchy`. These updates must be in the same transaction.
+Threads creates content IN forums. Forum statistics are owned by `phpbb\hierarchy`. Per cross-cutting decision D8: Threads emits domain events (`ForumCountersChangedEvent`, `TopicCreatedEvent`, etc.), Hierarchy's `ForumStatsSubscriber` consumes them. Threads has zero awareness of Hierarchy.
 
-**Recommendation**: `phpbb\hierarchy` exposes `updateForumStats()` and `updateForumLastPost()` methods. Threads calls these within its transaction. This is a synchronous cross-service call, not an event.
+**Recommendation**: Threads returns `ForumCountersChangedEvent` in `DomainEventCollection`. Hierarchy owns `ForumStatsSubscriber` that listens and updates `phpbb_forums` counter columns. Eventual consistency accepted. Self-healing via `recalculateForumStats()` cron. See COUNTER_PATTERN.md.
 
 ---
 
 ## 14. Open Design Questions
 
-### Q1: Storage Format Migration Strategy [HIGH PRIORITY]
-How to handle the transition from s9e XML to raw text + JSON metadata for existing content? Options:
-- A) Add columns, backfill via reparser (batch migration)
-- B) Dual-format support indefinitely (complexity cost)
-- C) Immediate full migration on first edit (lazy migration)
+### Q1: Storage Format Migration Strategy [RESOLVED]
+✅ Decided: Keep s9e XML as default. Add `encoding_engine VARCHAR(16) DEFAULT 's9e'` column. ContentPipeline dispatches to renderer based on engine value. No bulk migration. See cross-cutting-decisions-plan.md D7.
 
-### Q2: Forum Counter Update Ownership [HIGH PRIORITY]
-Should `phpbb\threads` directly update forum counter columns (cross-service DB write) or call hierarchy methods? The answer affects transaction boundaries and service coupling.
+### Q2: Forum Counter Update Ownership [RESOLVED]
+✅ Decided: Event-driven. Threads emits `ForumCountersChangedEvent`; Hierarchy's `ForumStatsSubscriber` consumes it. Threads has zero imports from Hierarchy. See cross-cutting-decisions-plan.md D8.
 
 ### Q3: Optimistic Concurrency for Post Edits [MEDIUM PRIORITY]
 Legacy uses MD5 checksum to detect concurrent edit conflicts. Should the new design use:

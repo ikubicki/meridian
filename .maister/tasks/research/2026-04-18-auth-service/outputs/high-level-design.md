@@ -1232,15 +1232,15 @@ The following operations call `clearPrefetch()`:
 
 ```
 phpbb\auth\Exception\
-├── AccessDeniedException          extends \RuntimeException
+├── AccessDeniedException          extends phpbb\common\Exception\AccessDeniedException
 │   Properties: permission (string), forumId (?int), userId (int)
 │   Thrown by: AuthorizationSubscriber (route-level), controllers (fine-grained)
 │   HTTP mapping: 403 Forbidden
 │
-└── PermissionNotFoundException    extends \InvalidArgumentException
+└── PermissionNotFoundException    extends phpbb\common\Exception\NotFoundException
     Properties: permissionName (string)
     Thrown by: AuthorizationService (unknown option name), PermissionService
-    HTTP mapping: 500 (programming error, not user-facing)
+    HTTP mapping: 404 (unknown permission option)
 ```
 
 ### When Each Is Thrown

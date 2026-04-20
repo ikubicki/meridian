@@ -4,7 +4,7 @@
 
 **Business context**: phpBB's forum needs real-time user notifications (Facebook-style bell badge + dropdown) delivered via REST API. The existing legacy notification system is server-side rendered with no API, no polling, and updates only on page reload. Users expect instant awareness of replies, mentions, and messages without refreshing.
 
-**Chosen approach**: **Full rewrite** as a standalone `phpbb\notifications` service under PSR-4 namespace, bypassing the legacy `notification_manager` entirely. The service uses a **Repository → Service → Controller** layered architecture with an **extensible type/method registry** (tagged DI services), **tag-aware cache** (30s TTL aligned with polling), and **HTTP polling with `Last-Modified`/`304`** optimization. The frontend is a **React component** (`<NotificationBell>`) with a custom `useNotifications` hook managing polling via the Visibility API.
+**Chosen approach**: **Full rewrite** as a standalone `phpbb\notifications` service under PSR-4 namespace, bypassing the legacy `notification_manager` entirely. The service uses a **Repository → Service → Controller** layered architecture with an **extensible type/method registry** (event-based plugin registration), **tag-aware cache** (30s TTL aligned with polling), and **HTTP polling with `Last-Modified`/`304`** optimization. The frontend is a **React component** (`<NotificationBell>`) with a custom `useNotifications` hook managing polling via the Visibility API.
 
 **Key decisions:**
 - **Full rewrite over facade** — standalone service owns reads AND writes; no dependency on legacy `notification_manager` (ADR-004)
@@ -12,7 +12,7 @@
 - **Write-time responder aggregation** — leverages existing DB structure for "John and 3 others replied" grouping (ADR-002)
 - **Tag-aware cache pool** with event-driven invalidation — 90%+ cache hit rate on polling endpoint (ADR-003)
 - **React frontend** with `useNotifications` hook and Visibility API — pauses polling on inactive tabs (ADR-006)
-- **Extensibility-first** — new notification types and delivery methods added via tagged DI services + interfaces (ADR-007)
+- **Extensibility-first** — new notification types and delivery methods added via event-based plugin registration (`RegisterNotificationTypesEvent`, `RegisterDeliveryMethodsEvent`) (ADR-007)
 
 ---
 
@@ -90,7 +90,7 @@ Interactions:
 │     ▼              ▼                  ▼              ▼               │
 │  ┌──────────┐ ┌────────────────┐ ┌─────────────┐ ┌──────────────┐  │
 │  │ Cache    │ │ Notification   │ │ TypeRegistry │ │ MethodManager│  │
-│  │ Pool     │ │ Repository     │ │ (tagged DI)  │ │ (board,email)│  │
+│  │ Pool     │ │ Repository     │ │ (event-based)│ │ (board,email)│  │
 │  │ (tags,   │ │ (PDO, CRUD,   │ │              │ │              │  │
 │  │  30s TTL)│ │  count, list)  │ │              │ │              │  │
 │  └──────────┘ └───────┬────────┘ └──────────────┘ └──────────────┘  │
@@ -131,8 +131,8 @@ Interactions:
 | `NotificationService` | `phpbb\notifications\Service` | Main facade — orchestrates reads, writes, cache, events, type/method dispatch | Repository, Cache, TypeRegistry, MethodManager, EventDispatcher |
 | `NotificationRepository` | `phpbb\notifications\Repository` | PDO data access — CRUD, count, list, mark-read, bulk operations | `\PDO` (database_connection) |
 | `NotificationsController` | `phpbb\api\v1\controller` | REST API — 4 endpoints, HTTP headers, JSON responses | NotificationService, Request |
-| `NotificationTypeRegistry` | `phpbb\notifications\Type` | Extensible type registration via tagged DI services, type lookup, validation | Tagged `notification.type` services |
-| `NotificationMethodManager` | `phpbb\notifications\Method` | Delivery method orchestration — dispatches to board, email, etc. | Tagged `notification.method` services |
+| `NotificationTypeRegistry` | `phpbb\notifications\Type` | Extensible type registration via `RegisterNotificationTypesEvent`, type lookup, validation | EventDispatcher |
+| `NotificationMethodManager` | `phpbb\notifications\Method` | Delivery method orchestration — dispatches to board, email, etc. | EventDispatcher (`RegisterDeliveryMethodsEvent`) |
 | `NotificationTypeInterface` | `phpbb\notifications\Type` | Contract for notification types — recipient finding, display, email | — |
 | `NotificationMethodInterface` | `phpbb\notifications\Method` | Contract for delivery methods — notify, mark-read, preferences | — |
 | `CacheInvalidationSubscriber` | `phpbb\notifications\Listener` | Symfony event subscriber — invalidates user cache tags on changes | TagAwareCacheInterface |
@@ -198,7 +198,7 @@ class NotificationService
      * @param array  $data       Type-specific data (post_id, topic_id, etc.)
      * @param array  $options    Optional overrides (ignore_users, etc.)
      */
-    public function createNotification(string $typeName, array $data, array $options = []): void;
+    public function createNotification(string $typeName, array $data, array $options = []): DomainEventCollection;
 
     /**
      * Mark a single notification as read.
@@ -374,10 +374,13 @@ class notifications
 ### 4. NotificationTypeRegistry
 
 **Class**: `phpbb\notifications\Type\NotificationTypeRegistry`
-**Responsibility**: Manages notification type registration via tagged DI services. Provides type lookup, validation, and enumeration.
+**Responsibility**: Manages notification type registration via event-based plugin model. Provides type lookup, validation, and enumeration. Types register themselves by listening to `RegisterNotificationTypesEvent`.
 
 ```php
 namespace phpbb\notifications\Type;
+
+use phpbb\notifications\event\RegisterNotificationTypesEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class NotificationTypeRegistry
 {
@@ -385,11 +388,14 @@ class NotificationTypeRegistry
     private array $types = [];
 
     /**
-     * @param iterable<NotificationTypeInterface> $taggedTypes  Injected via DI tagged services
+     * Types are collected via RegisterNotificationTypesEvent dispatched at boot.
+     * Plugins add types by subscribing to this event.
      */
-    public function __construct(iterable $taggedTypes)
+    public function __construct(private readonly EventDispatcherInterface $dispatcher)
     {
-        foreach ($taggedTypes as $type) {
+        $event = new RegisterNotificationTypesEvent();
+        $this->dispatcher->dispatch($event);
+        foreach ($event->getTypes() as $type) {
             $this->types[$type->getTypeName()] = $type;
         }
     }
@@ -411,7 +417,7 @@ class NotificationTypeRegistry
 }
 ```
 
-**Extension Point**: Register new notification type by creating a class implementing `NotificationTypeInterface` and tagging it `notification.type` in DI YAML. No code changes to `NotificationTypeRegistry` needed.
+**Extension Point**: Register new notification type by subscribing to `RegisterNotificationTypesEvent` and calling `$event->addType(new MyCustomType())`. No code changes to `NotificationTypeRegistry` needed.
 
 ---
 
@@ -429,11 +435,14 @@ class NotificationMethodManager
     private array $methods = [];
 
     /**
-     * @param iterable<NotificationMethodInterface> $taggedMethods  Injected via DI tagged services
+     * Methods are collected via RegisterDeliveryMethodsEvent dispatched at boot.
+     * Plugins add delivery methods by subscribing to this event.
      */
-    public function __construct(iterable $taggedMethods)
+    public function __construct(private readonly EventDispatcherInterface $dispatcher)
     {
-        foreach ($taggedMethods as $method) {
+        $event = new RegisterDeliveryMethodsEvent();
+        $this->dispatcher->dispatch($event);
+        foreach ($event->getMethods() as $method) {
             $this->methods[$method->getMethodName()] = $method;
         }
     }
@@ -462,7 +471,7 @@ class NotificationMethodManager
 }
 ```
 
-**Extension Point**: Register new delivery method by implementing `NotificationMethodInterface` and tagging `notification.method`.
+**Extension Point**: Register new delivery method by subscribing to `RegisterDeliveryMethodsEvent` and calling `$event->addMethod(new MyDeliveryMethod())`. No YAML changes needed.
 
 ---
 
@@ -1067,33 +1076,19 @@ The `NotificationService` then:
 
 services:
 
-    # ─── Type Registry (collects tagged types) ────────────────────────────
-
-    phpbb.notifications.type_collection:
-        class: phpbb\di\service_collection
-        arguments:
-            - '@service_container'
-        tags:
-            - { name: service_collection, tag: notification.type }
+    # ─── Type Registry (event-based registration) ─────────────────────────
 
     phpbb.notifications.type_registry:
         class: phpbb\notifications\Type\NotificationTypeRegistry
         arguments:
-            - '@phpbb.notifications.type_collection'
+            - '@event_dispatcher'
 
-    # ─── Method Manager (collects tagged methods) ────────────────────────
-
-    phpbb.notifications.method_collection:
-        class: phpbb\di\service_collection
-        arguments:
-            - '@service_container'
-        tags:
-            - { name: service_collection, tag: notification.method }
+    # ─── Method Manager (event-based registration) ────────────────────────
 
     phpbb.notifications.method_manager:
         class: phpbb\notifications\Method\NotificationMethodManager
         arguments:
-            - '@phpbb.notifications.method_collection'
+            - '@event_dispatcher'
 
     # ─── Repository ──────────────────────────────────────────────────────
 
@@ -1147,64 +1142,61 @@ services:
 
     # ─── Built-in Notification Types ─────────────────────────────────────
 
-    # Each type is registered as a prototype (shared: false) and tagged.
-    # Types inherit from AbstractNotificationType for common boilerplate.
+    # Types register themselves via RegisterNotificationTypesEvent subscriber.
+    # No tagging needed — types are event listeners.
 
-    notification.type.post:
+    phpbb.notifications.type.post:
         class: phpbb\notifications\Type\PostNotification
-        shared: false
         arguments:
             - '@database_connection'
             - '@phpbb.auth.service.authorization'
         tags:
-            - { name: notification.type }
+            - { name: kernel.event_subscriber }
 
-    notification.type.topic:
+    phpbb.notifications.type.topic:
         class: phpbb\notifications\Type\TopicNotification
-        shared: false
         arguments:
             - '@database_connection'
             - '@phpbb.auth.service.authorization'
         tags:
-            - { name: notification.type }
+            - { name: kernel.event_subscriber }
 
-    notification.type.pm:
+    phpbb.notifications.type.pm:
         class: phpbb\notifications\Type\PrivateMessageNotification
-        shared: false
         tags:
-            - { name: notification.type }
+            - { name: kernel.event_subscriber }
 
-    notification.type.quote:
+    phpbb.notifications.type.quote:
         class: phpbb\notifications\Type\QuoteNotification
-        shared: false
         arguments:
             - '@database_connection'
             - '@phpbb.auth.service.authorization'
         tags:
-            - { name: notification.type }
+            - { name: kernel.event_subscriber }
 
-    notification.type.bookmark:
+    phpbb.notifications.type.bookmark:
         class: phpbb\notifications\Type\BookmarkNotification
-        shared: false
         arguments:
             - '@database_connection'
             - '@phpbb.auth.service.authorization'
         tags:
-            - { name: notification.type }
+            - { name: kernel.event_subscriber }
 
     # ─── Built-in Delivery Methods ───────────────────────────────────────
 
-    notification.method.board:
+    # Methods register via RegisterDeliveryMethodsEvent subscriber.
+
+    phpbb.notifications.method.board:
         class: phpbb\notifications\Method\BoardMethod
         tags:
-            - { name: notification.method }
+            - { name: kernel.event_subscriber }
 
-    notification.method.email:
+    phpbb.notifications.method.email:
         class: phpbb\notifications\Method\EmailMethod
         arguments:
             - '@phpbb.messenger'
         tags:
-            - { name: notification.method }
+            - { name: kernel.event_subscriber }
 ```
 
 ---

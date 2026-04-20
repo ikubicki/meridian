@@ -83,7 +83,7 @@ External Dependencies:
 
 | Service | Responsibility |
 |---------|---------------|
-| `MessagingService` | Public facade. Orchestrates all operations. Single entry point. |
+| `MessagingService` | Public facade. Orchestrates all operations. Single entry point. Depends on TagAwareCacheInterface (`cache.messaging`) for conversation/counter caching. |
 | `ConversationService` | Conversation lifecycle: find-or-create, archive, pin, participant set lookup |
 | `MessageService` | Message CRUD: send, edit (within window), delete (per-participant) |
 | `ParticipantService` | Participant management: add/remove, roles, visibility, blocking |
@@ -306,7 +306,7 @@ class MessagingService
      * Send a message. Auto-creates or finds existing conversation
      * for the given participant set.
      *
-     * @return MessageSentResult {conversation_id, message_id, events[]}
+     * @return DomainEventCollection Contains MessageSentEvent, ConversationCreatedEvent (if new)
      */
     public function sendMessage(
         int $senderId,
@@ -315,39 +315,41 @@ class MessagingService
         ?string $subject = null,
         array $metadata = [],
         array $hiddenRecipientIds = []
-    ): MessageSentResult;
+    ): DomainEventCollection;
 
     /**
      * Reply to existing conversation.
      *
-     * @return MessageSentResult {message_id, events[]}
+     * @return DomainEventCollection Contains MessageSentEvent
      */
     public function replyToConversation(
         int $conversationId,
         int $senderId,
         string $text,
         array $metadata = []
-    ): MessageSentResult;
+    ): DomainEventCollection;
 
     /**
      * Edit a message (within edit window).
      *
-     * @return MessageEditedResult {message_id, events[]}
+     * @return DomainEventCollection Contains MessageEditedEvent
      * @throws EditWindowExpiredException
      */
     public function editMessage(
         int $messageId,
         int $editorId,
         string $newText
-    ): MessageEditedResult;
+    ): DomainEventCollection;
 
     /**
      * Delete message for the calling user (soft delete from their view).
+     *
+     * @return DomainEventCollection Contains MessageDeletedEvent
      */
     public function deleteMessageForUser(
         int $messageId,
         int $userId
-    ): MessageDeletedResult;
+    ): DomainEventCollection;
 
     // === Conversation Management ===
 
@@ -377,49 +379,53 @@ class MessagingService
 
     /**
      * Mark conversation as read (advance cursor).
+     *
+     * @return DomainEventCollection Contains ConversationReadEvent
      */
     public function markAsRead(
         int $conversationId,
         int $userId,
         ?int $upToMessageId = null
-    ): MarkReadResult;
+    ): DomainEventCollection;
 
     /**
      * Mark conversation as unread (sparse override).
+     *
+     * @return DomainEventCollection Contains ConversationUnreadEvent
      */
     public function markAsUnread(
         int $conversationId,
         int $userId
-    ): MarkUnreadResult;
+    ): DomainEventCollection;
 
     // === Organization ===
 
-    public function pinConversation(int $conversationId, int $userId): StateChangedResult;
-    public function unpinConversation(int $conversationId, int $userId): StateChangedResult;
-    public function archiveConversation(int $conversationId, int $userId): StateChangedResult;
-    public function unarchiveConversation(int $conversationId, int $userId): StateChangedResult;
+    public function pinConversation(int $conversationId, int $userId): DomainEventCollection;
+    public function unpinConversation(int $conversationId, int $userId): DomainEventCollection;
+    public function archiveConversation(int $conversationId, int $userId): DomainEventCollection;
+    public function unarchiveConversation(int $conversationId, int $userId): DomainEventCollection;
 
     // === Participants ===
 
-    public function addParticipant(int $conversationId, int $actorId, int $userId, string $role = 'member'): ParticipantAddedResult;
-    public function removeParticipant(int $conversationId, int $actorId, int $userId): ParticipantRemovedResult;
-    public function leaveConversation(int $conversationId, int $userId): ParticipantLeftResult;
-    public function muteConversation(int $conversationId, int $userId): MuteResult;
-    public function unmuteConversation(int $conversationId, int $userId): MuteResult;
+    public function addParticipant(int $conversationId, int $actorId, int $userId, string $role = 'member'): DomainEventCollection;
+    public function removeParticipant(int $conversationId, int $actorId, int $userId): DomainEventCollection;
+    public function leaveConversation(int $conversationId, int $userId): DomainEventCollection;
+    public function muteConversation(int $conversationId, int $userId): DomainEventCollection;
+    public function unmuteConversation(int $conversationId, int $userId): DomainEventCollection;
 
     // === Drafts ===
 
-    public function saveDraft(int $userId, ?int $conversationId, string $text, ?string $subject = null, ?array $recipientIds = null, array $metadata = []): DraftSavedResult;
+    public function saveDraft(int $userId, ?int $conversationId, string $text, ?string $subject = null, ?array $recipientIds = null, array $metadata = []): DomainEventCollection;
     public function getDrafts(int $userId): DraftList;
-    public function deleteDraft(int $draftId, int $userId): DraftDeletedResult;
+    public function deleteDraft(int $draftId, int $userId): DomainEventCollection;
 
     // === Rules ===
 
     public function getRules(int $userId): RuleList;
-    public function addRule(int $userId, array $ruleData): RuleAddedResult;
-    public function updateRule(int $ruleId, int $userId, array $ruleData): RuleUpdatedResult;
-    public function deleteRule(int $ruleId, int $userId): RuleDeletedResult;
-    public function reorderRules(int $userId, array $ruleIds): RulesReorderedResult;
+    public function addRule(int $userId, array $ruleData): DomainEventCollection;
+    public function updateRule(int $ruleId, int $userId, array $ruleData): DomainEventCollection;
+    public function deleteRule(int $ruleId, int $userId): DomainEventCollection;
+    public function reorderRules(int $userId, array $ruleIds): DomainEventCollection;
 
     // === Counters ===
 
@@ -427,123 +433,125 @@ class MessagingService
 }
 ```
 
-### 4.2 Result Objects (Domain Events)
+### 4.2 DomainEventCollection (replaces Result Objects)
+
+All mutation methods return `DomainEventCollection` per [DOMAIN_EVENTS.md](../../../../docs/standards/backend/DOMAIN_EVENTS.md). Controllers dispatch events after success. Data needed for the HTTP response (e.g., `conversationId`, `messageId`) is carried on the event payloads.
 
 ```php
-namespace phpbb\messaging\result;
+// Controller example:
+$events = $this->messagingService->sendMessage($senderId, $recipientIds, $text);
+$this->dispatcher->dispatch($events);
 
-class MessageSentResult
-{
-    public function __construct(
-        public readonly int $conversationId,
-        public readonly int $messageId,
-        public readonly bool $conversationCreated,
-        public readonly array $events  // Domain events to dispatch
-    ) {}
-}
-
-// Events emitted:
-// - ConversationCreated (if new)
-// - MessageDelivered (always, per recipient)
-// - MessageSent (for sender confirmation)
+// Extract response data from event payload:
+$sent = $events->firstOfType(MessageSentEvent::class);
+return new JsonResponse(['conversation_id' => $sent->conversationId, 'message_id' => $sent->entityId], 201);
 ```
 
 ### 4.3 Domain Events
 
+All events extend `phpbb\common\Event\DomainEvent` (base fields: `entityId`, `actorId`, `occurredAt`).
+
 ```php
-namespace phpbb\messaging\event;
+namespace phpbb\messaging\Event;
 
-class ConversationCreated
+use phpbb\common\Event\DomainEvent;
+
+final readonly class ConversationCreatedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $creatorId,
-        public readonly array $participantIds,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // conversation_id
+        int $actorId,               // creator_id
+        public array $participantIds,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class MessageDelivered
+final readonly class MessageSentEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $messageId,
-        public readonly int $authorId,
-        public readonly int $recipientId,      // per-recipient event
-        public readonly string $messageText,
-        public readonly ?string $subject,
-        public readonly array $metadata,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // message_id
+        int $actorId,               // sender_id
+        public int $conversationId,
+        public array $recipientIds,
+        public ?string $subject,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class MessageRead
+final readonly class MessageReadEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $userId,
-        public readonly int $lastReadMessageId,
-        public readonly int $messagesRead,     // count of newly read messages
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // conversation_id
+        int $actorId,               // reader user_id
+        public int $lastReadMessageId,
+        public int $messagesRead,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class MessageEdited
+final readonly class MessageEditedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $messageId,
-        public readonly int $editorId,
-        public readonly string $oldText,
-        public readonly string $newText,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // message_id
+        int $actorId,               // editor_id
+        public int $conversationId,
+        public string $oldText,
+        public string $newText,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class MessageReported
+final readonly class MessageReportedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $messageId,
-        public readonly int $reporterId,
-        public readonly int $authorId,
-        public readonly string $reason,
-        public readonly string $messageSnapshot, // content at report time
-        public readonly array $metadata,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // message_id
+        int $actorId,               // reporter_id
+        public int $conversationId,
+        public int $authorId,
+        public string $reason,
+        public string $messageSnapshot,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class ParticipantAdded
+final readonly class ParticipantAddedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $userId,
-        public readonly string $role,
-        public readonly int $addedBy,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // conversation_id
+        int $actorId,               // added_by
+        public int $userId,
+        public string $role,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class ParticipantRemoved
+final readonly class ParticipantRemovedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $userId,
-        public readonly int $removedBy,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // conversation_id
+        int $actorId,               // removed_by
+        public int $userId,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 
-class ConversationStateChanged
+final readonly class ConversationStateChangedEvent extends DomainEvent
 {
     public function __construct(
-        public readonly int $conversationId,
-        public readonly int $userId,
-        public readonly string $oldState,
-        public readonly string $newState,
-        public readonly int $timestamp
-    ) {}
+        int $entityId,              // conversation_id
+        int $actorId,               // user_id
+        public string $oldState,
+        public string $newState,
+    ) {
+        parent::__construct($entityId, $actorId);
+    }
 }
 ```
 
@@ -583,7 +591,7 @@ MessagingService::sendMessage(senderId, recipientIds, text, ...)
 ├── 7. Advance sender's read cursor to new message
 │       UPDATE messaging_participants SET last_read_message_id = :msgId WHERE user_id = :sender
 │
-└── 8. Return MessageSentResult {conversation_id, message_id, events[]}
+└── 8. Return DomainEventCollection [ConversationCreatedEvent?, MessageSentEvent]
 ```
 
 ### 5.2 Reply to Conversation
@@ -596,7 +604,7 @@ MessagingService::replyToConversation(conversationId, senderId, text, ...)
 ├── 3. Emit MessageDelivered × active participants (excluding sender)
 ├── 4. Advance sender's cursor
 ├── 5. If any participant has state='archived' → auto-unarchive (set state='active')
-└── 6. Return MessageSentResult
+└── 6. Return DomainEventCollection [MessageSentEvent]
 ```
 
 ### 5.3 Get Conversations (Inbox)
@@ -781,13 +789,14 @@ class AttachmentDecorator implements MessageSendDecorator
     /**
      * Decorates the send response to confirm attachment linking.
      */
-    public function afterSend(SendMessageRequest $request, MessageSentResult $result): MessageSentResult
+    public function afterSend(SendMessageRequest $request, DomainEventCollection $events): DomainEventCollection
     {
+        $sent = $events->firstOfType(MessageSentEvent::class);
         $attachmentIds = $request->metadata['attachment_ids'] ?? [];
         foreach ($attachmentIds as $id) {
-            $this->storageService->linkToEntity($id, 'message', $result->messageId);
+            $this->storageService->linkToEntity($id, 'message', $sent->entityId);
         }
-        return $result;
+        return $events;
     }
 }
 ```
@@ -988,36 +997,20 @@ src/phpbb/messaging/
 │   ├── RuleRepository.php            # Rule queries
 │   ├── CounterRepository.php         # Counter read/write
 │   └── DraftRepository.php           # Draft queries
-├── event/
-│   ├── ConversationCreated.php
-│   ├── MessageDelivered.php
-│   ├── MessageRead.php
-│   ├── MessageEdited.php
-│   ├── MessageReported.php
-│   ├── ParticipantAdded.php
-│   ├── ParticipantRemoved.php
-│   └── ConversationStateChanged.php
-├── result/
-│   ├── MessageSentResult.php
-│   ├── MessageEditedResult.php
-│   ├── MessageDeletedResult.php
+├── Event/
+│   ├── ConversationCreatedEvent.php      # extends DomainEvent
+│   ├── MessageSentEvent.php              # extends DomainEvent
+│   ├── MessageReadEvent.php              # extends DomainEvent
+│   ├── MessageEditedEvent.php            # extends DomainEvent
+│   ├── MessageReportedEvent.php          # extends DomainEvent
+│   ├── ParticipantAddedEvent.php         # extends DomainEvent
+│   ├── ParticipantRemovedEvent.php       # extends DomainEvent
+│   └── ConversationStateChangedEvent.php # extends DomainEvent
+├── dto/
 │   ├── ConversationList.php
 │   ├── MessageList.php
-│   ├── MarkReadResult.php
-│   ├── MarkUnreadResult.php
-│   ├── StateChangedResult.php
-│   ├── ParticipantAddedResult.php
-│   ├── ParticipantRemovedResult.php
-│   ├── ParticipantLeftResult.php
-│   ├── MuteResult.php
-│   ├── DraftSavedResult.php
 │   ├── DraftList.php
-│   ├── DraftDeletedResult.php
 │   ├── RuleList.php
-│   ├── RuleAddedResult.php
-│   ├── RuleUpdatedResult.php
-│   ├── RuleDeletedResult.php
-│   ├── RulesReorderedResult.php
 │   └── UnreadCounts.php
 ├── decorator/
 │   ├── MessageSendDecorator.php      # Interface
@@ -1027,11 +1020,11 @@ src/phpbb/messaging/
 │   ├── CounterUpdateListener.php     # CounterService on various events
 │   └── ConversationActivationListener.php  # Unarchive on new message
 ├── exception/
-│   ├── EditWindowExpiredException.php
-│   ├── NotParticipantException.php
-│   ├── ConversationNotFoundException.php
-│   ├── MessageNotFoundException.php
-│   └── MaxRecipientsExceededException.php
+│   ├── EditWindowExpiredException.php       # extends phpbb\common\Exception\ConflictException
+│   ├── NotParticipantException.php          # extends phpbb\common\Exception\AccessDeniedException
+│   ├── ConversationNotFoundException.php    # extends phpbb\common\Exception\NotFoundException
+│   ├── MessageNotFoundException.php         # extends phpbb\common\Exception\NotFoundException
+│   └── MaxRecipientsExceededException.php   # extends phpbb\common\Exception\ValidationException
 └── migration/
     └── LegacyMigrationService.php    # privmsgs → messaging migration
 ```

@@ -2,7 +2,7 @@
 
 **Source**: Cross-cutting assessment §7.4
 **Priority**: ⚠️ High — must be resolved before Threads service implementation
-**Status**: 🔜 Needs dedicated research
+**Status**: ✅ RESOLVED — See `cross-cutting-decisions-plan.md` D7
 
 ## Problem
 
@@ -20,7 +20,7 @@ But the existing `phpbb_posts.post_text` column contains **s9e XML** (pre-parsed
 
 ## Acceptance Criteria
 
-- [ ] Research report with recommended approach
-- [ ] Decision record (ADR) documenting the chosen strategy
-- [ ] If migration chosen: estimated effort, rollback plan, data integrity verification approach
-- [ ] If dual-format chosen: ContentPipeline design for format detection
+- [x] Research report with recommended approach → Keep s9e XML, add `encoding_engine` field
+- [x] Decision record (ADR) documenting the chosen strategy → See decisions plan D7
+- [ ] If migration chosen: estimated effort, rollback plan, data integrity verification approach → N/A (no migration)
+- [x] If dual-format chosen: ContentPipeline design for format detection → `match` on `encoding_engine` column

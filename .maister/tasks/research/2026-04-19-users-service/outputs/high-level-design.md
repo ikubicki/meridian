@@ -200,33 +200,33 @@ phpbb\user\
 
 | Service | Method | Description |
 |---------|--------|-------------|
-| **RegistrationService** | `register(CreateUserDTO): User` | Create user, add to groups, dispatch event |
-| | `activateByKey(string $key): User` | Activate user by activation key |
+| **RegistrationService** | `register(CreateUserDTO): DomainEventCollection` | Create user, add to groups, dispatch event |
+| | `activateByKey(string $key): DomainEventCollection` | Activate user by activation key |
 | | `usernameAvailable(string): bool` | Check username uniqueness (+ disallowed patterns) |
 | | `emailAvailable(string): bool` | Check email uniqueness (+ banned emails) |
 | **PasswordService** | `hashPassword(string): string` | Hash with Argon2id |
 | | `verifyPassword(string $plain, string $hash): bool` | Constant-time verify (Auth calls this) |
 | | `needsRehash(string $hash): bool` | Check if hash needs upgrade |
-| | `requestReset(PasswordResetRequestDTO): void` | Generate reset token, dispatch event |
-| | `executeReset(PasswordResetExecuteDTO): void` | Validate token, update hash, dispatch event |
-| | `changePassword(ChangePasswordDTO): void` | Verify old, set new, dispatch event |
+| | `requestReset(PasswordResetRequestDTO): DomainEventCollection` | Generate reset token, dispatch event |
+| | `executeReset(PasswordResetExecuteDTO): DomainEventCollection` | Validate token, update hash, dispatch event |
+| | `changePassword(ChangePasswordDTO): DomainEventCollection` | Verify old, set new, dispatch event |
 | **ProfileService** | `getProfile(int $userId): UserProfile` | Load profile + JSON fields (decorated) |
-| | `updateProfile(int $userId, UpdateProfileDTO): UserProfile` | Update profile + JSON fields |
-| | `changeUsername(int $userId, string $new): void` | Validate + update + dispatch event |
-| | `changeEmail(int $userId, string $new): void` | Validate + update |
-| | `removeAvatar(int $userId): void` | Clear avatar fields |
+| | `updateProfile(int $userId, UpdateProfileDTO): DomainEventCollection` | Update profile + JSON fields |
+| | `changeUsername(int $userId, string $new): DomainEventCollection` | Validate + update + dispatch event |
+| | `changeEmail(int $userId, string $new): DomainEventCollection` | Validate + update |
+| | `removeAvatar(int $userId): DomainEventCollection` | Clear avatar fields |
 | **PreferencesService** | `getPreferences(int $userId): UserPreferences` | Load + parse JSON prefs |
-| | `updatePreferences(int $userId, UpdatePreferencesDTO): UserPreferences` | Merge + save JSON prefs |
+| | `updatePreferences(int $userId, UpdatePreferencesDTO): DomainEventCollection` | Merge + save JSON prefs |
 | **GroupService** | `listGroups(?GroupType $filter): Group[]` | List groups optionally filtered by type |
 | | `getGroup(int $groupId): Group` | Single group lookup |
 | | `getGroupsForUser(int $userId): Group[]` | User's active memberships |
 | | `getMembers(int $groupId, PaginationDTO): PaginatedResult<GroupMembership>` | Paginated members |
-| | `addToGroup(int $groupId, int $userId, bool $leader, bool $pending): void` | Add membership |
-| | `removeFromGroup(int $groupId, int $userId): void` | Remove + cascade default group |
-| | `setDefaultGroup(int $userId, int $groupId): void` | Set default + cascade properties |
-| | `approveMember(int $groupId, int $userId): void` | Approve pending membership |
-| | `requestJoin(int $groupId, int $userId): void` | User requests to join (creates pending) |
-| | `leave(int $groupId, int $userId): void` | User leaves group voluntarily |
+| | `addToGroup(int $groupId, int $userId, bool $leader, bool $pending): DomainEventCollection` | Add membership |
+| | `removeFromGroup(int $groupId, int $userId): DomainEventCollection` | Remove + cascade default group |
+| | `setDefaultGroup(int $userId, int $groupId): DomainEventCollection` | Set default + cascade properties |
+| | `approveMember(int $groupId, int $userId): DomainEventCollection` | Approve pending membership |
+| | `requestJoin(int $groupId, int $userId): DomainEventCollection` | User requests to join (creates pending) |
+| | `leave(int $groupId, int $userId): DomainEventCollection` | User leaves group voluntarily |
 | **BanService** | `ban(CreateBanDTO): Ban` | Create ban (user/IP/email), force logout |
 | | `unban(int $banId): void` | Remove ban by ID |
 | | `isUserBanned(int $userId): bool` | Check active bans (respects exclude) |

@@ -4,30 +4,33 @@
 
 | ADR | Decision | Status |
 |-----|----------|--------|
-| ADR-001 | Raw text only storage — no metadata bag, no cached HTML | Accepted |
+| ADR-001 | s9e XML default + encoding_engine column — preserve existing format, format-aware pipeline | Amended |
 | ADR-002 | Hybrid content pipeline — middleware chain + events | Accepted |
 | ADR-003 | Lean core + plugin extensions — Polls, ReadTracking, Subscriptions, Attachments as plugins | Accepted |
-| ADR-004 | Hybrid tiered counter management — sync for forum, events for user, reconciliation for safety | Accepted |
+| ADR-004 | Event-driven counter propagation — topic-level sync, forum counters via events to Hierarchy, reconciliation for safety | Amended |
 | ADR-005 | Dedicated VisibilityService — centralized 4-state machine | Accepted |
 | ADR-006 | Auth-unaware service — API middleware enforces ACL externally | Accepted |
 | ADR-007 | DraftService in core threads namespace | Accepted |
 
 ---
 
-## ADR-001: Raw Text Only Storage
+## ADR-001: s9e XML Default + Encoding Engine
 
 ### Status
-Accepted
+Amended (2026-04-20) — supersedes original "Raw text only storage" decision. See cross-cutting-decisions-plan.md D7.
 
 ### Context
 The legacy system stores s9e XML — an intermediate parsed format tightly coupled to the s9e PHP library. The new design mandates that ALL content formatting (BBCode, markdown, smilies, attachments, magic URLs) be plugins, not core concerns. The core must store content in a format that preserves the original user input for editing, doesn't assume any specific formatting plugin exists, and supports migration from legacy s9e XML.
 
 Four alternatives were evaluated: raw text only, raw text + cached HTML (dual storage), raw text + plugin-agnostic AST, and raw text + plugin metadata bag (JSON).
 
+**Amendment rationale**: The cross-cutting assessment (D7) determined that bulk migration of existing s9e XML posts is unnecessary and risky. Instead, an `encoding_engine` column enables format-aware rendering without data migration.
+
 ### Decision Drivers
 - Simplicity of storage model — minimize columns and schema complexity
 - Plugin changes should take effect immediately on existing content
-- Future render caching will be a separate concern (Redis/file cache layer)
+- **No bulk data migration** — existing s9e XML posts must remain valid without conversion
+- Maximum backward compatibility with phpBB3 schema (per backend STANDARDS.md)
 - Per-user rendering preferences (viewSmilies, viewCensored) require render-time variation anyway
 
 ### Considered Options
@@ -35,23 +38,33 @@ Four alternatives were evaluated: raw text only, raw text + cached HTML (dual st
 2. **Raw text + cached HTML** — dual columns, pre-rendered at save time
 3. **Raw text + plugin-agnostic AST** — structured JSON document tree
 4. **Raw text + plugin metadata bag** — raw text + JSON metadata per plugin
+5. **s9e XML default + encoding_engine** — preserve existing format, add column for future format support
 
 ### Decision Outcome
-Chosen option: **Raw text only**, because it is the simplest storage model, allows plugin changes to take effect immediately without reparse/rerender jobs, has the smallest storage footprint, and defers the caching concern to a separate, future layer. Since per-user rendering preferences (censoring, smiley display, image display) require render-time variation regardless, even the metadata bag approach would still need a render step — making stored cache only a partial optimization.
+Chosen option: **s9e XML default + encoding_engine** (option 5, amended from original option 1). The existing `post_text` column is preserved unchanged. A new `encoding_engine VARCHAR(16) NOT NULL DEFAULT 's9e'` column is added to `phpbb_posts`. The `ContentPipeline` uses `encoding_engine` to dispatch to the correct renderer:
+
+```php
+match ($post->encodingEngine) {
+    's9e' => $this->s9eRenderer->render($post->postText),
+    'raw' => $this->bbcodeParser->parse($post->postText),
+    // Future formats added here
+};
+```
 
 ### Consequences
 
 #### Good
-- Single column of plain text — simplest possible schema
-- Zero migration complexity for storage format changes
-- Plugin configuration changes (new BBCode, smiley packs) take effect immediately
-- No stale cache invalidation concerns in core
+- Zero migration — all existing s9e XML posts work immediately
+- s9e rendering is battle-tested; no new parser bugs
+- Future format support (raw, Markdown) is per-post via `encoding_engine`
+- Schema change is additive (`ADD COLUMN`) — backward compatible
+- Plugin configuration changes still take effect on re-render
 
 #### Bad
-- Every page view re-parses and re-renders every post (CPU cost)
-- For a 20-post topic page, that's 20 full pipeline executions per request
-- A caching layer (Redis/file) will be essential for production traffic — deferred to future work
-- No ability to detect "what changed" between edits without re-parsing
+- s9e library remains a runtime dependency (was already in vendor)
+- Two+ rendering paths in ContentPipeline increase complexity
+- Per-user rendering preferences still require render-time variation (unchanged from original)
+- A caching layer (`cache.threads` via `TagAwareCacheInterface`) will be essential for production traffic
 
 ---
 
@@ -129,38 +142,45 @@ Chosen option: **Lean core + plugin extensions**, because it keeps the core focu
 
 ---
 
-## ADR-004: Hybrid Tiered Counter Management
+## ADR-004: Event-Driven Counter Propagation
 
 ### Status
-Accepted
+Amended (2026-04-20) — supersedes original "Hybrid tiered counter management" decision. See cross-cutting-decisions-plan.md D8 and COUNTER_PATTERN.md.
 
 ### Context
 The legacy system maintains 20+ denormalized counters across 3 table levels (topic, forum, global) plus per-user post counts. Counter bugs are immediately visible to all users. The counters span two service boundaries: topic/forum counters are owned-data, but user_posts is owned by `phpbb\user`.
 
+**Amendment rationale**: The cross-cutting assessment (D8) determined that Threads must be completely unaware of Hierarchy. Forum counters are now propagated via domain events, not synchronous calls. This eliminates the coupling between Threads and Hierarchy.
+
 ### Decision Drivers
-- Forum-visible counters (topic count, post count) are critical UX — must be instantly accurate
+- **Threads must have zero imports from `phpbb\hierarchy`** — event-driven only (cross-cutting D8)
+- Forum-visible counters should reflect changes promptly (eventual consistency accepted)
 - User post counts are owned by `phpbb\user` — cross-service transaction is undesirable
 - Safety net needed for any bugs in counter logic
-- Legacy system already uses sync + reconciliation pattern
+- Follows the Tiered Counter Pattern standard (COUNTER_PATTERN.md)
 
 ### Considered Options
-1. **All synchronous** — all counters in one transaction (including user table)
+1. **All synchronous** — all counters in one transaction (including user table and forum table)
 2. **All event-driven** — eventual consistency for everything
 3. **Sync + reconciliation** — synchronous counters + batch resync jobs
 4. **Hybrid tiered** — sync for own data, events for cross-service, reconciliation for safety
 
 ### Decision Outcome
-Chosen option: **Hybrid tiered**, because it maps counter tiers to service boundaries. Topic/forum counters are updated synchronously in-transaction (CounterService + hierarchy.updateForumStats). User counters are updated via PostCreatedEvent consumed by phpbb\user (clean boundary). Periodic reconciliation catches any drift.
+Chosen option: **Hybrid tiered** (option 4, amended scope). Topic-level counters (`topic_posts_approved`, `topic_posts_unapproved`, `topic_posts_softdeleted`) are updated synchronously within the threads-owned transaction. Forum-level counters (`forum_posts_*`, `forum_topics_*`, `num_posts`, `num_topics`) are propagated via `ForumCountersChangedEvent` consumed by Hierarchy's `ForumStatsSubscriber`. User counters are updated via `PostCreatedEvent` consumed by `phpbb\user`. Periodic reconciliation catches any drift.
+
+**Key change from original**: Forum counters are NO LONGER updated in-transaction by Threads. Threads emits events; Hierarchy consumes them independently.
 
 ### Consequences
 
 #### Good
-- Forum-visible counters are always accurate (ACID guarantees)
-- No cross-service transaction — user table not locked during post operations
-- Clean service boundary: phpbb\user owns user_posts, updated via domain events
-- Self-healing via reconciliation batch job
+- **Zero coupling** — Threads has no import of `phpbb\hierarchy`
+- Topic-level counters are always accurate (ACID guarantees, same transaction)
+- No cross-service transaction — neither user table nor forum table locked during post operations
+- Clean service boundaries: each service owns its own counters
+- Self-healing via reconciliation batch job (COUNTER_PATTERN.md)
 
 #### Bad
+- Forum counters may be stale for one request cycle (eventual consistency)
 - Three mechanisms to maintain (sync + events + reconciliation)
 - User post count may lag by milliseconds (event dispatch latency)
 - Reconciliation is expensive (COUNT queries on full tables) — run infrequently

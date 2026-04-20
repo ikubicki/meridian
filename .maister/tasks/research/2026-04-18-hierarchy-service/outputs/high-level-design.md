@@ -707,10 +707,10 @@ src/phpbb/hierarchy/
 │   └── DecoratorPipeline.php
 │
 └── exception/
-    ├── ForumNotFoundException.php
-    ├── InvalidForumTypeException.php
-    ├── TreeLockException.php
-    └── InvalidMoveException.php
+    ├── ForumNotFoundException.php          # extends phpbb\common\Exception\NotFoundException
+    ├── InvalidForumTypeException.php       # extends phpbb\common\Exception\ValidationException
+    ├── TreeLockException.php               # extends phpbb\common\Exception\ConflictException
+    └── InvalidMoveException.php            # extends phpbb\common\Exception\ValidationException
 ```
 
 ---
@@ -734,60 +734,52 @@ use phpbb\hierarchy\dto\response\DeleteForumResponse;
 use phpbb\hierarchy\dto\response\MoveForumResponse;
 use phpbb\hierarchy\dto\response\ReorderForumResponse;
 use phpbb\hierarchy\dto\response\TreeResponse;
-use phpbb\hierarchy\event\ForumCreatedEvent;
-use phpbb\hierarchy\event\ForumUpdatedEvent;
-use phpbb\hierarchy\event\ForumDeletedEvent;
-use phpbb\hierarchy\event\ForumMovedEvent;
-use phpbb\hierarchy\event\ForumReorderedEvent;
-use phpbb\hierarchy\event\ForumMarkedReadEvent;
-use phpbb\hierarchy\event\AllForumsMarkedReadEvent;
-use phpbb\hierarchy\event\ForumSubscribedEvent;
-use phpbb\hierarchy\event\ForumUnsubscribedEvent;
+use phpbb\common\Event\DomainEventCollection;
 
 interface HierarchyServiceInterface
 {
-    // ── CRUD (return domain events) ──
+    // ── CRUD (return DomainEventCollection) ──
 
     /**
      * Create a forum. Runs request decorator chain, inserts forum,
      * positions in tree, dispatches ForumCreatedEvent, runs response decorators.
      *
-     * @return ForumCreatedEvent Contains the created forum and decorated response
+     * @return DomainEventCollection Contains ForumCreatedEvent
      */
-    public function createForum(CreateForumRequest $request): ForumCreatedEvent;
+    public function createForum(CreateForumRequest $request): DomainEventCollection;
 
     /**
      * Update a forum. Runs request decorators, persists changes,
      * dispatches ForumUpdatedEvent, runs response decorators.
      *
-     * @return ForumUpdatedEvent Contains old and new forum state
+     * @return DomainEventCollection Contains ForumUpdatedEvent
      */
-    public function updateForum(UpdateForumRequest $request): ForumUpdatedEvent;
+    public function updateForum(UpdateForumRequest $request): DomainEventCollection;
 
     /**
      * Delete a forum. Runs request decorators, handles content/subforum
      * migration, removes from tree, dispatches ForumDeletedEvent.
      *
-     * @return ForumDeletedEvent Contains deleted forum ID and all removed IDs
+     * @return DomainEventCollection Contains ForumDeletedEvent
      */
-    public function deleteForum(DeleteForumRequest $request): ForumDeletedEvent;
+    public function deleteForum(DeleteForumRequest $request): DomainEventCollection;
 
-    // ── Tree Operations (return domain events) ──
+    // ── Tree Operations (return DomainEventCollection) ──
 
     /**
      * Move forum to a new parent. Runs request decorators, reparents in tree,
      * dispatches ForumMovedEvent, runs response decorators.
      *
-     * @return ForumMovedEvent Contains forum, old parent, new parent
+     * @return DomainEventCollection Contains ForumMovedEvent
      */
-    public function moveForum(MoveForumRequest $request): ForumMovedEvent;
+    public function moveForum(MoveForumRequest $request): DomainEventCollection;
 
     /**
      * Reorder forum among siblings.
      *
-     * @return ForumReorderedEvent Contains forum and whether it actually moved
+     * @return DomainEventCollection Contains ForumReorderedEvent
      */
-    public function reorderForum(ReorderForumRequest $request): ForumReorderedEvent;
+    public function reorderForum(ReorderForumRequest $request): DomainEventCollection;
 
     // ── Query (return DTOs, not events — reads are side-effect-free) ──
 
@@ -1344,6 +1336,60 @@ class UserLastmarkListener implements EventSubscriberInterface
         // UPDATE phpbb_users SET user_lastmark = :time WHERE user_id = :uid
         $this->pdo->prepare('UPDATE phpbb_users SET user_lastmark = ? WHERE user_id = ?')
             ->execute([$event->markTime, $event->userId]);
+    }
+}
+
+// Forum stats subscriber (core) — tiered counter pattern (D8)
+// Listens for cross-service events to maintain forum counters.
+// See COUNTER_PATTERN.md for hot→cold→recalculation tiers.
+class ForumStatsSubscriber implements EventSubscriberInterface
+{
+    public function __construct(
+        private readonly \PDO $pdo,
+        private readonly TagAwareCacheInterface $cache,
+    ) {}
+
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'phpbb.threads.TopicCreatedEvent'      => 'onTopicCreated',
+            'phpbb.threads.PostCreatedEvent'       => 'onPostCreated',
+            'phpbb.threads.VisibilityChangedEvent' => 'onVisibilityChanged',
+        ];
+    }
+
+    /** Increment forum_topics, update forum_last_post_* */
+    public function onTopicCreated(object $event): void
+    {
+        $this->incrementCounter($event->forumId, 'forum_topics', 1);
+        $this->incrementCounter($event->forumId, 'forum_posts', 1);
+        $this->updateLastPost($event->forumId, $event->postId, $event->userId, $event->time);
+        $this->cache->invalidateTags(["forum.{$event->forumId}.stats"]);
+    }
+
+    /** Increment forum_posts, update forum_last_post_* */
+    public function onPostCreated(object $event): void
+    {
+        $this->incrementCounter($event->forumId, 'forum_posts', 1);
+        $this->updateLastPost($event->forumId, $event->postId, $event->userId, $event->time);
+        $this->cache->invalidateTags(["forum.{$event->forumId}.stats"]);
+    }
+
+    /** Adjust counters when topic/post visibility changes (approve/soft-delete) */
+    public function onVisibilityChanged(object $event): void
+    {
+        $delta = $event->newVisibility === 'approved' ? 1 : -1;
+        $column = $event->entityType === 'topic' ? 'forum_topics' : 'forum_posts';
+        $this->incrementCounter($event->forumId, $column, $delta);
+        $this->cache->invalidateTags(["forum.{$event->forumId}.stats"]);
+    }
+
+    /** Cron: full recalculation (cold tier) — runs hourly */
+    public function recalculateForumStats(int $forumId): void
+    {
+        // SELECT COUNT(*) FROM phpbb_topics WHERE forum_id=? AND topic_visibility=1
+        // SELECT COUNT(*) FROM phpbb_posts WHERE forum_id=? AND post_visibility=1
+        // UPDATE phpbb_forums SET forum_topics=?, forum_posts=? WHERE forum_id=?
     }
 }
 ```

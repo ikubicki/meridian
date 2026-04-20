@@ -2,7 +2,7 @@
 
 **Source**: Cross-cutting assessment §7.5
 **Priority**: ⚠️ High — must be resolved before Threads service implementation
-**Status**: 🔜 Needs dedicated research
+**Status**: ✅ RESOLVED — See `cross-cutting-decisions-plan.md` D8
 
 ## Problem
 
@@ -22,7 +22,7 @@ This is a **one-way dependency assumption** — Threads expects an API that Hier
 
 ## Acceptance Criteria
 
-- [ ] Agreed contract between Threads and Hierarchy for counter updates
-- [ ] Decision: synchronous call vs event-driven vs hybrid
-- [ ] Hierarchy HLD updated with counter update methods if synchronous
-- [ ] Transaction coordination strategy documented
+- [x] Agreed contract between Threads and Hierarchy for counter updates
+- [x] Decision: synchronous call vs event-driven vs hybrid → **Event-driven chosen**
+- [ ] Hierarchy HLD updated with counter update methods if synchronous → N/A (event-driven)
+- [ ] Transaction coordination strategy documented → Each service owns its own transaction

@@ -2,13 +2,13 @@
 
 **Date**: 2026-04-19
 **Scope**: All 10 research tasks under `.maister/tasks/research/`
-**Status**: ✅ Critical Blockers Resolved
+**Status**: ✅ All Blockers Resolved — Cross-Cutting Decisions Finalized
 
 ---
 
 ## 1. Executive Summary
 
-This collection of researches represents a **technically sophisticated and well-reasoned** body of architectural work. Each individual service design is internally coherent, with detailed interfaces, clear ADRs, and realistic entity models. The 3 previously critical misalignments have been **resolved**: (1) **User Service** has been researched (`2026-04-19-users-service/`), (2) the **extension model** is unified as macrokernel architecture (domain core + plugins, no tagged DI), and (3) **JWT tokens** are the chosen auth mechanism (`2026-04-19-auth-unified-service/`). Two medium-priority items remain tracked as research TODOs: content storage migration (s9e XML → raw text) and forum counter update contract (Threads ↔ Hierarchy).
+This collection of researches represents a **technically sophisticated and well-reasoned** body of architectural work. Each individual service design is internally coherent, with detailed interfaces, clear ADRs, and realistic entity models. All previously identified misalignments have been **resolved**: (1) **User Service** researched, (2) **extension model** unified as macrokernel, (3) **JWT tokens** chosen, (4) **content storage** decided (s9e XML default + `encoding_engine` field), (5) **forum counter contract** decided (event-driven, Threads emits → Hierarchy consumes), and (6) **all partially divergent patterns** standardized via cross-cutting decisions plan (`cross-cutting-decisions-plan.md`).
 
 ---
 
@@ -50,12 +50,12 @@ All 10 tasks have complete research outputs with HLD and decision logs. Document
 
 | Pattern | Assessment | Details |
 |---------|-----------|---------|
-| **Cache Integration** | ⚠️ Inconsistent | Notifications explicitly uses `TagAwareCacheInterface`. Auth uses its own file cache for role cache. Hierarchy, Threads, Messaging don't specify cache integration. |
-| **ID Strategy** | ⚠️ Mixed (intentional?) | Storage uses UUID v7 BINARY(16). All others use integer auto-increment or legacy IDs. Storage has good reasons (non-enumerable) but divergence should be documented as deliberate. |
-| **Schema Strategy** | ⚠️ Mixed | Auth/Hierarchy/Threads/Notifications reuse legacy tables. Messaging/Storage create entirely new tables. No unified migration plan. |
-| **Exception Design** | ⚠️ Per-service | Each service defines own exceptions (Auth: `AccessDeniedException`, Threads: `TopicLockedException`, Storage: `QuotaExceededException`). No shared base exception or HTTP error mapping convention. |
-| **Counter Management** | ⚠️ Similar but unnormalized | Threads: "hybrid tiered" (ADR-004). Messaging: "tiered hot+cold" (ADR-7). Same approach with different names — should be unified into a shared pattern specification. |
-| **Domain Events as Returns** | ⚠️ Partially adopted | Hierarchy and Threads return domain events from mutations. Messaging and Notifications use more traditional return types (result DTOs). Not consistent. |
+| **Cache Integration** | ✅ Resolved | All services MUST use `TagAwareCacheInterface` via pool isolation (`cache.{service}`). See `cross-cutting-decisions-plan.md` D1. |
+| **ID Strategy** | ✅ Resolved | Keep integer autoincrement PKs + add UUID v7 columns alongside. UUID as external ID, integer for joins. See `cross-cutting-decisions-plan.md` D2. |
+| **Schema Strategy** | ✅ Resolved | Reuse existing tables, additive-only schema changes. New tables only for redesigned features (Messaging, Storage). See `cross-cutting-decisions-plan.md` D3. |
+| **Exception Design** | ✅ Resolved | Shared `phpbb\common\Exception\` package with base exceptions + HTTP error mapping. See `cross-cutting-decisions-plan.md` D4. |
+| **Counter Management** | ✅ Resolved | Unified "Tiered Counter Pattern" standard. See `standards/backend/COUNTER_PATTERN.md` and `cross-cutting-decisions-plan.md` D5. |
+| **Domain Events as Returns** | ✅ Resolved | All mutations return `DomainEventCollection`. Standard in `standards/backend/DOMAIN_EVENTS.md`. See `cross-cutting-decisions-plan.md` D6. |
 
 ### ✅ Resolved (previously conflicting)
 
@@ -231,17 +231,17 @@ The unified auth service research covers JWT token lifecycle (creation, validati
 
 Previous concern about priority 8 vs 16 conflicts between Auth/REST API/Notifications subscribers is moot — the new kernel will have a well-defined middleware/subscriber stack with explicit ordering.
 
-### 7.4 🔜 DEFERRED: Content Storage Inconsistency
+### 7.4 ✅ RESOLVED: Content Storage Strategy
 
-**Status**: Deferred to dedicated research. See `TODO-content-storage-migration.md`.
+**Decision (2026-04-20)**: Keep **s9e XML as default** storage format. Add `encoding_engine VARCHAR(16) NOT NULL DEFAULT 's9e'` column to `phpbb_posts`. ContentPipeline reads `encoding_engine` to determine rendering strategy. No bulk migration needed. Future formats (raw, markdown) supported per-post via the engine field.
 
-**Summary**: Threads ADR-001 specifies raw text storage, but legacy `phpbb_posts` contains s9e XML. Requires either bulk migration or dual-format ContentPipeline. Not yet resolved — needs its own research task.
+See `cross-cutting-decisions-plan.md` D7. `TODO-content-storage-migration.md` superseded.
 
-### 7.5 🔜 DEFERRED: Forum Counter Update Contract
+### 7.5 ✅ RESOLVED: Forum Counter Update Contract
 
-**Status**: Deferred to dedicated research. See `TODO-forum-counter-contract.md`.
+**Decision (2026-04-20)**: **Event-driven**. Threads emits `TopicCreatedEvent`, `PostCreatedEvent`, etc. Hierarchy registers `ForumStatsSubscriber` to consume them. Threads is completely unaware of Hierarchy. Eventual consistency accepted. Self-healing via `recalculateForumStats()` cron job.
 
-**Summary**: Threads assumes `updateForumStats()` / `updateForumLastPost()` exist on Hierarchy, but Hierarchy hasn't defined them. One-way dependency assumption that needs contract alignment research.
+See `cross-cutting-decisions-plan.md` D8. `TODO-forum-counter-contract.md` superseded.
 
 ---
 

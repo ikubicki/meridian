@@ -182,5 +182,35 @@ This document describes the technology choices and rationale for **phpBB Vibed**
 
 ---
 
+## Target Architecture (New Services)
+
+The following stack applies to all new `phpbb\{service}\*` code (see [services-architecture.md](services-architecture.md)):
+
+| Layer | Technology | Notes |
+|---|---|---|
+| **PHP** | 8.2+ (target 8.3) | `readonly` classes, enums, match, named args, fibers |
+| **DI** | Symfony 7.x DI Container | YAML service definitions, autowire disabled |
+| **Events** | Symfony EventDispatcher 7.x | All mutations → `DomainEventCollection`; controllers dispatch |
+| **HTTP** | Symfony HttpKernel 7.x | REST API, YAML routes, JWT bearer auth |
+| **Database** | PDO (prepared statements) | No DBAL, no ORM. Direct PDO with named params |
+| **Cache** | `TagAwareCacheInterface` | Pool per service (`cache.{service}`), filesystem-first |
+| **Auth** | JWT (firebase/php-jwt) | Argon2id password hashing, 5-layer ACL |
+| **Content** | s9e TextFormatter | XML default storage, `encoding_engine` column |
+| **Testing** | PHPUnit 10.x | Strict mode, no legacy mocks, `#[Test]` attributes |
+| **Static Analysis** | PHPStan level 8 | Replaces PHP_CodeSniffer |
+| **Frontend** | React islands | `<NotificationBell>`, polling via Visibility API |
+| **Extension model** | Event-based (macrokernel) | `RegisterXxxEvent` pattern, no tagged DI |
+
+### Key Differences from Legacy
+
+- **No `$phpbb_root_path`** — `__DIR__`-based paths, `PHPBB_FILESYSTEM_ROOT` constant
+- **No custom class_loader** — Composer PSR-4 autoloading
+- **No `service_collection`** — Event-based plugin registration
+- **No `$db->sql_query()`** — PDO prepared statements only
+- **No `global`** — All deps via constructor injection
+- **No `append_sid()`** — Symfony router generates URLs
+
+---
+
 *Last Updated*: April 2026
 *Auto-detected from*: `composer.json`, `includes/startup.php`, `includes/constants.php`, `config/default/container/`, `phpbb/cache/driver/`, `phpbb/auth/provider/`

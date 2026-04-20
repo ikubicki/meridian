@@ -28,7 +28,7 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 |---------|----------|---------|--------------|
 | [Composer Autoload](../../tasks/research/2026-04-15-composer-autoload/) | Complete | PSR-4 autoloading for `phpbb\` | Delete custom class_loader, use Composer |
 | [Root Path Elimination](../../tasks/research/2026-04-15-phpbb-root-path-elimination/) | Complete | Remove legacy `$phpbb_root_path` | `__DIR__`-based paths, `PHPBB_FILESYSTEM_ROOT` constant |
-| [REST API Framework](../../tasks/research/2026-04-16-phpbb-rest-api/) | Complete | HTTP API layer | Symfony HttpKernel, YAML routes, DB opaque tokens, versioned `/api/v1/` |
+| [REST API Framework](../../tasks/research/2026-04-16-phpbb-rest-api/) | Complete | HTTP API layer | Symfony HttpKernel, YAML routes, JWT bearer tokens, versioned `/api/v1/` |
 
 ### Core Services
 
@@ -50,7 +50,7 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 |-------|-----------|-----------|
 | **0** | Composer Autoload + Root Path Elimination | Infrastructure prerequisites |
 | **1** | Cache Service | Foundational utility, no upstream deps |
-| **2** | User Service ⚠️ | Auth depends on User entity — **research needed** |
+| **2** | User Service | Auth depends on User entity — **research complete** (April 2026) |
 | **3** | Auth Service | Depends on User + Cache |
 | **4** | REST API Framework | Depends on Auth for token subscriber |
 | **5a** | Hierarchy Service | No service deps, Threads depends on it |
@@ -68,11 +68,22 @@ All services follow these conventions:
 - **Namespace**: `phpbb\{service}\` (PSR-4)
 - **Layers**: Repository (PDO) → Service (facade) → Controller (REST)
 - **DI**: Symfony Container, YAML service definitions
-- **Events**: Symfony EventDispatcher for domain events
+- **Events**: All mutations return `DomainEventCollection`; controllers dispatch. See [DOMAIN_EVENTS.md](../standards/backend/DOMAIN_EVENTS.md)
 - **Auth**: Services are auth-unaware; ACL enforced by API layer subscriber
-- **Cache**: TagAwareCacheInterface from cache-service (pools + tag invalidation)
-- **DB**: Direct PDO with prepared statements, explicit JOINs
+- **Cache**: All services MUST use `TagAwareCacheInterface` via pool isolation (`cache.{service}`). No exceptions
+- **DB**: Direct PDO with prepared statements, explicit JOINs. Maximum phpBB3 schema compatibility, zero legacy code references
 - **Entities**: `final readonly class` for value objects, PHP 8.2 enums for types
+- **IDs**: Integer autoincrement PKs + UUID v7 columns alongside. UUID as external ID
+- **Schema**: Reuse existing `phpbb_*` tables. Additive-only changes. New tables only for redesigned features
+- **Exceptions**: Shared `phpbb\common\Exception\*` base classes with HTTP error mapping
+- **Counters**: Tiered Counter Pattern (hot cache → cold DB → recalculation). See [COUNTER_PATTERN.md](../standards/backend/COUNTER_PATTERN.md)
+- **Content**: s9e XML default, `encoding_engine` column for format-aware ContentPipeline
+
+---
+
+## Cross-Cutting Decisions
+
+All partially divergent patterns resolved in `tasks/research/cross-cutting-decisions-plan.md` (2026-04-20).
 
 ---
 
@@ -80,11 +91,11 @@ All services follow these conventions:
 
 Full assessment: [cross-cutting-assessment.md](../../tasks/research/cross-cutting-assessment.md)
 
-### Critical Items (must resolve before implementation)
+### Critical Items (resolved)
 
-1. **User Service not researched** — Auth depends on `User` entity, all services need `user_id`
-2. **Extension model contradiction** — Hierarchy/Threads use events+decorators; Notifications uses tagged DI. Need unified ADR.
-3. **JWT vs DB token** — Auth HLD says JWT, REST API designs DB opaque tokens. Must align to one approach.
+1. ~~**User Service not researched**~~ — Research complete (April 2026). Users HLD documents full service decomposition.
+2. ~~**Extension model contradiction**~~ — Resolved: event-based plugin registration (macrokernel). All services use `RegisterXxxEvent` pattern; tagged DI dropped.
+3. ~~**JWT vs DB token**~~ — Resolved: JWT bearer tokens. Auth HLD specifies Argon2id + JWT issuance.
 
 ### Gaps (research needed during implementation)
 
@@ -103,7 +114,7 @@ Full assessment: [cross-cutting-assessment.md](../../tasks/research/cross-cuttin
 ```
 Composer Autoload → Root Path Elimination
     ├──→ Cache Service
-    ├──→ User Service ⚠️ → Auth Service → REST API Framework
+    ├──→ User Service → Auth Service → REST API Framework
     │                                         ├──→ Hierarchy → Threads → Notifications
     │                                         ├──→ Storage → Messaging → Notifications
     │                                         └──→ Notifications (polling + events)

@@ -4,13 +4,13 @@
 
 **Business context**: The phpBB threads subsystem — topics, posts, drafts, visibility, and content rendering — is the forum's core write path, currently spread across ~8,000 LOC of procedural code (`posting.php`, `functions_posting.php`, `viewtopic.php`, `content_visibility.php`, `message_parser.php`). The `submit_post()` monolith alone is ~1,000 lines handling 6 modes. This code is untestable, tightly coupled to globals, and manages 20+ denormalized counters with manual increment/decrement across 3 table levels. The `phpbb\threads` service replaces this with a clean, plugin-extensible OOP layer.
 
-**Chosen approach**: A **lean core decomposition** with `ThreadsService` facade orchestrating **3 repositories** (`TopicRepository`, `PostRepository`, `DraftRepository`), **3 domain services** (`VisibilityService`, `CounterService`, `TopicMetadataService`), **1 feature service** (`DraftService`), and a **`ContentPipeline`** for plugin-driven text formatting. Cross-cutting features — **Polls, ReadTracking, Subscriptions, Attachments** — are **plugins** that extend the core via **domain events and request/response decorators**. Content storage is **raw text only** — a single `post_text` column with no cached HTML or metadata; the content pipeline runs full parse+render on every display (future Redis/file cache will optimize). The API is **event-driven** — service methods return domain event objects as primary output.
+**Chosen approach**: A **lean core decomposition** with `ThreadsService` facade orchestrating **3 repositories** (`TopicRepository`, `PostRepository`, `DraftRepository`), **3 domain services** (`VisibilityService`, `CounterService`, `TopicMetadataService`), **1 feature service** (`DraftService`), and a **`ContentPipeline`** for plugin-driven text formatting. Cross-cutting features — **Polls, ReadTracking, Subscriptions, Attachments** — are **plugins** that extend the core via **domain events and request/response decorators**. Content storage uses the **existing `post_text` column** — legacy posts contain s9e XML and remain unchanged; an `encoding_engine` column (`VARCHAR(16) DEFAULT 's9e'`) tells the ContentPipeline which renderer to use. New posts default to `s9e` encoding. The API is **event-driven** — service methods return `DomainEventCollection` objects; controllers dispatch events post-commit.
 
 **Key decisions:**
-- **Raw text only storage** — single `post_text` column, no `plugin_metadata`, no `rendered_html`; full parse+render on every display (ADR-001)
+- **s9e XML default + encoding_engine** — existing `post_text` column preserved; `encoding_engine VARCHAR(16) DEFAULT 's9e'` added; ContentPipeline dispatches to renderer based on engine value; future formats supported per-post (ADR-001 amended)
 - **Hybrid content pipeline** — ordered `ContentPluginInterface` middleware chain for formatting + events for cross-cutting hooks like censoring (ADR-002)
 - **Lean core + plugin extensions** — Polls, ReadTracking, Subscriptions, Attachments extend via events + decorators, NOT core services (ADR-003)
-- **Hybrid tiered counters** — topic/forum counters synchronous in-transaction, user counters via events to `phpbb\user`, batch reconciliation as safety net (ADR-004)
+- **Event-driven counter propagation** — topic-level counters sync in own transaction; forum counters propagated via domain events to `phpbb\hierarchy` (ForumStatsSubscriber); user counters via events to `phpbb\user`; batch reconciliation as safety net (ADR-004 amended)
 - **Dedicated VisibilityService** — single entry point for all visibility transitions, 4-state machine, counter integration, cascades, SQL generation (ADR-005)
 - **Auth-unaware service** — no permission checks inside threads; API middleware enforces ACL; `f_noapprove` passed as parameter for initial visibility (ADR-006)
 - **DraftService in core** — simple CRUD in threads namespace, event-based cleanup on post submit (ADR-007)
@@ -40,7 +40,7 @@
 │ phpbb\auth   │     │      phpbb\threads                │────►│ phpbb\user   │
 │ (enforces    │     │      Service Layer                │     │ (user_posts  │
 │  f_post,     │     │                                   │     │  via events) │
-│  f_reply...) │     │  Sync: phpbb\hierarchy counters   │     └──────────────┘
+│  f_reply...) │     │  Events → phpbb\hierarchy counters │     └──────────────┘
 └──────────────┘     │  Async: domain events → plugins   │
                      └───────────┬───────────────────────┘
                                  │                    ▲
@@ -57,7 +57,7 @@
 
 **External systems**:
 - **phpbb\auth** — Called by the API layer (NOT by threads) to enforce `f_post`, `f_reply`, `m_edit`, `m_delete`, etc.
-- **phpbb\hierarchy** — Threads calls `updateForumStats()` and `updateForumLastPost()` synchronously within the same transaction for forum counter/last-post updates
+- **phpbb\hierarchy** — Consumes domain events (`TopicCreatedEvent`, `PostCreatedEvent`, `VisibilityChangedEvent`, etc.) via `ForumStatsSubscriber` to update forum counters and last-post info. Threads is completely unaware of Hierarchy — zero imports, zero direct calls (event-driven, eventual consistency)
 - **phpbb\user** — Consumes `PostCreatedEvent`, `PostVisibilityChangedEvent` etc. to update `user_posts` and `user_lastpost_time` (event-driven, post-commit)
 - **Plugin listeners** — Polls, ReadTracking, Subscriptions, Attachments, Search, Notifications all consume domain events and extend via DTO decorators
 
@@ -213,11 +213,11 @@ src/phpbb/threads/
 │   └── ContentPostRenderEvent.php
 │
 ├── exception/
-│   ├── TopicNotFoundException.php
-│   ├── PostNotFoundException.php
-│   ├── DraftNotFoundException.php
-│   ├── InvalidVisibilityTransitionException.php
-│   └── TopicLockedException.php
+│   ├── TopicNotFoundException.php              # extends phpbb\common\Exception\NotFoundException
+│   ├── PostNotFoundException.php               # extends phpbb\common\Exception\NotFoundException
+│   ├── DraftNotFoundException.php              # extends phpbb\common\Exception\NotFoundException
+│   ├── InvalidVisibilityTransitionException.php # extends phpbb\common\Exception\ValidationException
+│   └── TopicLockedException.php                # extends phpbb\common\Exception\ConflictException
 │
 ├── pipeline/
 │   ├── ContentPipeline.php
@@ -446,7 +446,7 @@ final class Draft
         public readonly int $forumId,
         public readonly int $topicId,     // 0 = new topic draft
         public readonly string $title,
-        public readonly string $message,  // Raw text (NOT parsed)
+        public readonly string $message,  // Stored text (s9e XML or per encoding_engine)
         public readonly int $savedAt,
     ) {}
 }
@@ -620,7 +620,9 @@ interface CounterServiceInterface
 {
     /**
      * Increment counters for a new post.
-     * Updates topic_posts_*, forum counters (via hierarchy), num_posts.
+     * Updates topic_posts_* within the threads-owned transaction.
+     * Forum counters are NOT updated here — propagated via domain events
+     * to phpbb\hierarchy's ForumStatsSubscriber (see COUNTER_PATTERN.md).
      * User counters are NOT updated here (event-driven via phpbb\user).
      */
     public function incrementPostCounters(
@@ -749,7 +751,17 @@ interface DraftServiceInterface
 
 ### Core Principle
 
-The core stores **only raw text** — exactly what the user typed. The `ContentPipeline` is the **only** way to transform text into HTML for display. It runs the full plugin chain on **every render**. There is no stored cache, no `rendered_html` column, no `plugin_metadata`. Caching will be a future concern addressed by a separate Redis/file cache layer that sits in front of the pipeline.
+The core stores content in the **existing `post_text` column** with an **`encoding_engine`** column indicating the format (default: `'s9e'`). Legacy posts contain s9e XML and remain unchanged. The `ContentPipeline` consults `encoding_engine` to dispatch to the correct renderer:
+
+```php
+match ($post->encodingEngine) {
+	's9e' => $this->s9eRenderer->render($post->postText),
+	'raw' => $this->bbcodeParser->parse($post->postText),
+	// Future formats added here
+};
+```
+
+New posts are stored with `encoding_engine = 's9e'` by default. The `ContentPipeline` runs the appropriate plugin chain on **every render**. There is no stored cache, no `rendered_html` column, no `plugin_metadata`. Caching is handled by the centralized cache service (`TagAwareCacheInterface`, pool `cache.threads`) wrapping the pipeline externally.
 
 ### ContentPipelineInterface
 
@@ -763,25 +775,24 @@ use phpbb\threads\pipeline\ContentContext;
 interface ContentPipelineInterface
 {
     /**
-     * Parse raw text at save time.
+     * Parse text at save time.
      * Runs ordered plugin chain (ContentPluginInterface::parse) then
      * dispatches ContentPreParseEvent / ContentPostParseEvent.
      *
-     * Returns the (possibly transformed) raw text to store.
-     * With raw-text-only storage, this is primarily for validation
-     * and normalization (e.g., strip zero-width chars, normalize newlines).
+     * Returns the (possibly transformed) text to store.
+     * For s9e encoding, this produces s9e XML from user input.
+     * For raw encoding, this is primarily validation/normalization.
      */
     public function parse(string $rawText, ContentContext $context): string;
 
     /**
-     * Render raw text for display.
-     * Runs ordered plugin chain (ContentPluginInterface::render) then
-     * dispatches ContentPreRenderEvent / ContentPostRenderEvent.
+     * Render stored text for display.
+     * Consults encoding_engine to determine rendering strategy,
+     * then runs ordered plugin chain (ContentPluginInterface::render).
      *
-     * Executes on EVERY display — no persistent cache in core.
-     * Future: Redis/file cache wraps this method externally.
+     * Executes on EVERY display — cache.threads pool wraps this externally.
      */
-    public function render(string $rawText, ContentContext $context): string;
+    public function render(string $storedText, ContentContext $context): string;
 
     /**
      * Register a content plugin into the pipeline.
@@ -809,13 +820,15 @@ interface ContentPluginInterface
     public function getPriority(): int;
 
     /**
-     * Parse phase (at save time): validate/normalize raw text.
+     * Parse phase (at save time): validate/normalize text.
+     * For s9e engine: produces s9e XML. For raw engine: normalizes input.
      * Returns the (possibly modified) text.
      */
     public function parse(string $text, ContentContext $context): string;
 
     /**
-     * Render phase (at display time): transform raw text into HTML.
+     * Render phase (at display time): transform stored text into HTML.
+     * For s9e engine: delegates to s9e renderer. For raw engine: runs BBCode parser.
      * Returns the (possibly modified) text/HTML.
      */
     public function render(string $text, ContentContext $context): string;
@@ -874,7 +887,7 @@ These fire **during** parse/render operations (synchronous, in-process) for cros
 | SmiliesPlugin | 200 | No-op | Replace smiley codes → `<img>` tags (if viewSmilies) |
 | AutolinkPlugin | 300 | No-op | Detect URLs/emails → `<a>` tags |
 | CensorPlugin | 900 | No-op | Replace censored words (if viewCensored) |
-| S9eCompatPlugin | 50 | No-op | Detect legacy s9e XML format, render via s9e library |
+| S9eRendererPlugin | 50 | Produce s9e XML from input | Render s9e XML via s9e library (default engine) |
 
 ---
 
@@ -1087,7 +1100,7 @@ All events are dispatched **after** the database transaction commits. Each event
 | Event | Key Payload | Typical Consumers |
 |-------|-------------|-------------------|
 | `VisibilityChangedEvent` | entityType ('post'/'topic'), entityId, topicId, forumId, oldVisibility, newVisibility, affectedPostIds[], actorId | phpbb\user (post counts), SearchPlugin, NotificationPlugin (approval queue) |
-| `ForumCountersChangedEvent` | forumId, delta (postsApproved±, topicsApproved±, etc.) | phpbb\hierarchy (update forum stats) |
+| `ForumCountersChangedEvent` | forumId, delta (postsApproved±, topicsApproved±, etc.) | phpbb\hierarchy ForumStatsSubscriber (event-driven, eventual consistency) |
 
 ### Draft Events
 
@@ -1120,7 +1133,7 @@ class CreateTopicRequest
         public readonly int $forumId,
         public readonly int $posterId,
         public readonly string $title,
-        public readonly string $message,        // Raw text
+        public readonly string $message,        // User input text
         public readonly TopicType $type = TopicType::Normal,
         public readonly int $iconId = 0,
         public readonly bool $noapprove = false, // f_noapprove result from auth
@@ -1153,7 +1166,7 @@ class CreateReplyRequest
         public readonly int $topicId,
         public readonly int $forumId,
         public readonly int $posterId,
-        public readonly string $message,          // Raw text
+        public readonly string $message,          // User input text
         public readonly int $iconId = 0,
         public readonly bool $noapprove = false,
     ) {}
@@ -1183,7 +1196,7 @@ class EditPostRequest
     public function __construct(
         public readonly int $postId,
         public readonly int $editorId,
-        public readonly string $message,          // Raw text
+        public readonly string $message,          // User input text
         public readonly string $editReason = '',
         public readonly bool $noapprove = false,   // If false and post was approved → REAPPROVE
     ) {}
@@ -1324,7 +1337,7 @@ class SaveDraftRequest
         public readonly int $forumId,
         public readonly int $topicId,         // 0 = new topic
         public readonly string $title,
-        public readonly string $message,      // Raw text
+        public readonly string $message,      // User input text
     ) {}
 }
 ```
@@ -1654,7 +1667,8 @@ Note: "user_posts" changes are dispatched as events consumed by `phpbb\user`, no
 
 | Tier | Counters | Timing | Reason |
 |------|----------|--------|--------|
-| **Sync (in-transaction)** | topic_posts_approved/unapproved/softdeleted, forum_posts_*, forum_topics_*, num_posts, num_topics | Same DB transaction | Critical UX — forum listings show these |
+| **Sync (in-transaction)** | topic_posts_approved/unapproved/softdeleted | Same DB transaction (threads-owned tables only) | Critical UX — topic detail shows these |
+| **Event-driven (post-commit)** | forum_posts_*, forum_topics_*, num_posts, num_topics | Via domain events → phpbb\hierarchy ForumStatsSubscriber | Threads is unaware of Hierarchy; eventual consistency; see COUNTER_PATTERN.md |
 | **Event-driven (post-commit)** | user_posts, user_lastpost_time | Via domain events → phpbb\user listener | Clean service boundary — user entity owned by phpbb\user |
 | **Reconciliation (batch)** | All of the above | Periodic cron / admin action | Safety net — catches any drift from bugs |
 
@@ -1678,18 +1692,25 @@ Note: "user_posts" changes are dispatched as events consumed by `phpbb\user`, no
 
 ### ForumCountersChangedEvent
 
-Forum counter updates are communicated to `phpbb\hierarchy` via the `ForumCountersChangedEvent` or direct method call:
+Forum counter updates are communicated to `phpbb\hierarchy` via domain events. Threads emits `ForumCountersChangedEvent` as part of its `DomainEventCollection` return — Hierarchy's `ForumStatsSubscriber` consumes it. **Threads has zero awareness of Hierarchy** (no imports, no direct calls).
 
 ```php
-// Inside CounterService — called within the same transaction
-$this->hierarchyService->updateForumStats($forumId, new ForumStatsDelta(
-    postsApproved: $approvedDelta,
-    postsUnapproved: $unapprovedDelta,
-    postsSoftdeleted: $softdeletedDelta,
-    topicsApproved: $topicApprovedDelta,
-    topicsUnapproved: $topicUnapprovedDelta,
-    topicsSoftdeleted: $topicSoftdeletedDelta,
+// Inside CounterService — builds event data, does NOT call hierarchy
+$events->add(new ForumCountersChangedEvent(
+    entityId: $forumId,
+    actorId: $actorId,
+    delta: new ForumStatsDelta(
+        postsApproved: $approvedDelta,
+        postsUnapproved: $unapprovedDelta,
+        postsSoftdeleted: $softdeletedDelta,
+        topicsApproved: $topicApprovedDelta,
+        topicsUnapproved: $topicUnapprovedDelta,
+        topicsSoftdeleted: $topicSoftdeletedDelta,
+    ),
 ));
+```
+
+Hierarchy's `ForumStatsSubscriber` listens for this event and updates `phpbb_forums` counter columns. See `COUNTER_PATTERN.md` for the tiered counter standard and `cross-cutting-decisions-plan.md` D8.
 ```
 
 ---
@@ -1714,12 +1735,18 @@ No auth exceptions — those are handled externally by `phpbb\auth` middleware i
 
 ### With phpbb\hierarchy
 
-| Method | Direction | Timing | Purpose |
-|--------|-----------|--------|---------|
-| `hierarchy->updateForumStats(forumId, ForumStatsDelta)` | threads → hierarchy | Synchronous (in-transaction) | Update forum counter columns |
-| `hierarchy->updateForumLastPost(forumId, ForumLastPostInfo)` | threads → hierarchy | Synchronous (in-transaction) | Update forum last post denormalized columns |
-| `hierarchy->recalculateForumLastPost(forumId)` | threads → hierarchy | Synchronous (in-transaction) | Recalculate after delete (find new last post) |
-| Forum entity (forumId validation) | threads reads hierarchy data | Query | Validate forumId exists |
+Threads is **completely unaware** of Hierarchy — zero imports, zero direct calls. Communication is exclusively via domain events:
+
+| Event | Direction | Timing | Consumer |
+|-------|-----------|--------|----------|
+| `TopicCreatedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: increment forum topic/post counters, update last post |
+| `PostCreatedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: increment forum post counter, update last post |
+| `VisibilityChangedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: transfer between visibility buckets |
+| `ForumCountersChangedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: apply counter delta |
+| `TopicDeletedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: decrement counters, recalculate last post |
+| `TopicMovedEvent` | threads → hierarchy | Post-commit (event-driven) | `ForumStatsSubscriber`: transfer counters between forums |
+
+Eventual consistency is accepted — forum counters may be stale for one request cycle. Self-healing via `recalculateForumStats()` cron job (see COUNTER_PATTERN.md).
 
 ### With phpbb\auth
 
@@ -1857,7 +1884,7 @@ CREATE TABLE phpbb_drafts (
     forum_id            int unsigned NOT NULL DEFAULT 0,
     save_time           int unsigned NOT NULL DEFAULT 0,
     draft_subject       varchar(255) NOT NULL DEFAULT '',
-    draft_message       mediumtext NOT NULL,                  -- Raw text
+    draft_message       mediumtext NOT NULL,                  -- User input text
 
     INDEX user_id (user_id)
 );
@@ -1891,13 +1918,16 @@ ThreadsService.createReply(request)
   ├── BEGIN TRANSACTION
   │     ├── PostRepository.create(postData)         → post_id
   │     ├── CounterService.incrementPostCounters(topicId, forumId, visibility)
-  │     │     ├── UPDATE topics SET topic_posts_{vis}+1
-  │     │     └── hierarchy->updateForumStats(forumId, delta)
+  │     │     └── UPDATE topics SET topic_posts_{vis}+1
   │     ├── TopicMetadataService.recalculateLastPost(topicId)
-  │     │     └── hierarchy->updateForumLastPost(forumId, lastPostInfo)
   │     └── COMMIT
   │
-  ├── Dispatch PostCreatedEvent
+  ├── Build DomainEventCollection:
+  │     ├── PostCreatedEvent (for search, notifications, user, etc.)
+  │     └── ForumCountersChangedEvent (for hierarchy ForumStatsSubscriber)
+  │
+  ├── Controller dispatches events post-commit
+  │     ├── ForumStatsSubscriber (hierarchy): update forum counters + last post
   │     ├── AttachmentPlugin: adopt orphans (attachment_refs from extra)
   │     ├── SearchPlugin: index new post
   │     ├── NotificationPlugin: notify watchers/quoted users
@@ -1905,7 +1935,7 @@ ThreadsService.createReply(request)
   │     ├── ReadTrackingPlugin: mark as read for author
   │     └── phpbb\user listener: increment user_posts, update lastpost_time
   │
-  └── ResponseDecoratorChain → PostCreatedEvent returned to caller
+  └── DomainEventCollection returned to caller
 ```
 
 ### Display Topic — Full Flow
@@ -1956,11 +1986,11 @@ ThreadsService.getTopicWithPosts(request)
 **When**: API controller creates `CreateTopicRequest(forumId: 5, posterId: 42, title: "Best PHP framework?", message: "Vote below:", noapprove: true)`. PollRequestDecorator adds `extra['poll_config'] = PollConfig(title: "Which?", options: [...], maxOptions: 1)`.
 
 **Then**:
-1. ThreadsService creates topic (visibility=Approved) and first post with raw text "Vote below:"
-2. CounterService increments topic_posts_approved+1, forum counters+1
-3. TopicCreatedEvent dispatched post-commit
-4. PollPlugin listener receives TopicCreatedEvent, reads poll_config from extras, creates poll_options rows
-5. Response includes TopicCreatedEvent with topicId, postId
+1. ThreadsService creates topic (visibility=Approved) and first post with s9e-parsed text "Vote below:"
+2. CounterService increments topic_posts_approved+1 (topic-level, in-transaction)
+3. DomainEventCollection returned with TopicCreatedEvent + ForumCountersChangedEvent
+4. Controller dispatches events: ForumStatsSubscriber updates forum counters; PollPlugin creates poll_options rows
+5. Response includes DomainEventCollection with topicId, postId
 
 ### Example 2: Moderator soft-deletes a topic with 15 posts
 
@@ -1971,7 +2001,7 @@ ThreadsService.getTopicWithPosts(request)
 **Then**:
 1. VisibilityService sets topic_visibility = Deleted
 2. Cascade: 12 approved posts → Deleted (post_delete_time = topic_delete_time). 2 unapproved and 1 already-deleted untouched.
-3. CounterService: topic approved→softdeleted; forum: posts_approved -12, posts_softdeleted +12, topics_approved -1, topics_softdeleted +1; num_posts -12, num_topics -1
+3. CounterService: topic approved→softdeleted; topic-level counters adjusted in-transaction. ForumCountersChangedEvent emitted: posts_approved -12, posts_softdeleted +12, topics_approved -1, topics_softdeleted +1; num_posts -12, num_topics -1
 4. TopicMetadataService: recalculates last post (now null/empty for approved posts)
 5. VisibilityChangedEvent dispatched: affectedPostIds = [12 post IDs]
 6. phpbb\user listener: decrements user_posts for each of the 12 posters (event-driven)
@@ -1984,7 +2014,7 @@ ThreadsService.getTopicWithPosts(request)
 
 **Then**:
 1. PostRepository fetches post IDs 16-30 (two-phase: IDs first, then full rows)
-2. ContentPipeline.render() called for each of the 15 posts with `ContentContext(viewSmilies: false)`
+2. ContentPipeline.render() called for each of the 15 posts — consults `encoding_engine` (s9e for legacy, future formats via engine column) — with `ContentContext(viewSmilies: false)`
 3. BBCodePlugin renders `[b]bold[/b]` → `<strong>bold</strong>` but SmiliesPlugin skips smiley→image conversion because viewSmilies=false
 4. CensorPlugin applies word filtering
 5. PollResponseDecorator adds poll results to TopicViewResponse extras
@@ -1997,10 +2027,10 @@ ThreadsService.getTopicWithPosts(request)
 
 | # | Decision | ADR | Rationale |
 |---|----------|-----|-----------|
-| 1 | Raw text only storage | ADR-001 | Simplest model; caching deferred to separate layer; pipeline runs on every render |
+| 1 | s9e XML default + encoding_engine | ADR-001 (amended) | Preserve existing s9e XML; encoding_engine column for format-aware pipeline; no bulk migration needed |
 | 2 | Hybrid content pipeline | ADR-002 | Middleware for formatting order + events for cross-cutting hooks |
 | 3 | Lean core + plugin extensions | ADR-003 | Polls, ReadTracking, Subscriptions, Attachments out of core → smaller surface, cleaner boundaries |
-| 4 | Hybrid tiered counters | ADR-004 | Sync for UX-critical, events for cross-service, reconciliation for safety |
+| 4 | Event-driven counter propagation | ADR-004 (amended) | Topic counters sync in own tx; forum counters via events to Hierarchy; user counters via events; reconciliation for safety |
 | 5 | Dedicated VisibilityService | ADR-005 | Centralizes 4-state machine, counter effects, cascades, SQL generation |
 | 6 | Auth-unaware service | ADR-006 | Follows hierarchy pattern; API middleware enforces ACL |
 | 7 | DraftService in core | ADR-007 | Simple CRUD, event-based cleanup, good first-implementation candidate |
@@ -2016,7 +2046,7 @@ See [decision-log.md](decision-log.md) for full MADR-format ADRs.
 - **Notification delivery**: Consumes domain events but notification routing/email is external
 - **Moderator control panel UI**: UI layer consumes the service API
 - **Admin control panel**: Forum configuration lives in `phpbb\hierarchy`
-- **Render caching**: Future Redis/file cache layer wraps `ContentPipeline.render()` — NOT a threads core concern
+- **Render caching**: Centralized `cache.threads` pool (`TagAwareCacheInterface`) wraps `ContentPipeline.render()` — NOT a threads core concern
 - **Attachment storage**: AttachmentPlugin owns file storage, orphan management, MIME validation
 - **Poll CRUD**: PollPlugin owns poll creation, voting, results, option management
 - **Read tracking**: ReadTrackingPlugin owns per-user read state (DB or cookie strategy)
@@ -2029,9 +2059,10 @@ See [decision-log.md](decision-log.md) for full MADR-format ADRs.
 
 1. **Counter accuracy**: All denormalized counters match `COUNT(*)` reality after any operation sequence (verified by reconciliation)
 2. **Visibility correctness**: All transitions follow the state machine; cascade operations produce deterministic post-visibility states
-3. **Plugin isolation**: Core threads service functions correctly with ZERO content plugins registered (raw text stored and returned as-is)
-4. **Event completeness**: Every state-changing operation dispatches a domain event with sufficient data for all known consumers (Search, Notifications, Attachments, User)
+3. **Plugin isolation**: Core threads service functions correctly with ZERO content plugins registered (stored text returned as-is for the active encoding engine)
+4. **Event completeness**: Every state-changing operation returns a `DomainEventCollection` with sufficient data for all known consumers (Hierarchy ForumStatsSubscriber, Search, Notifications, Attachments, User)
 5. **Auth-unaware guarantee**: No import of `phpbb\auth` anywhere in the `phpbb\threads` namespace
+6. **Hierarchy-unaware guarantee**: No import of `phpbb\hierarchy` anywhere in the `phpbb\threads` namespace — all communication via domain events
 6. **Render-time flexibility**: Two users viewing the same post with different preferences (viewSmilies, viewCensored) get different HTML output
 
 ---
@@ -2040,13 +2071,13 @@ See [decision-log.md](decision-log.md) for full MADR-format ADRs.
 
 ### Legacy s9e Content
 
-Existing posts store s9e XML in `post_text`. Two migration strategies:
+Existing posts store s9e XML in `post_text`. The s9e format is **preserved as the default** — no migration needed:
 
-1. **S9eCompatPlugin** (immediate): A content plugin at priority 50 that detects legacy s9e XML format (starts with `<r>` or `<t>`) and delegates to the s9e renderer. New posts store raw text; old posts continue to render via s9e until backfilled.
+1. **`encoding_engine` column** (schema change): `ALTER TABLE phpbb_posts ADD COLUMN encoding_engine VARCHAR(16) NOT NULL DEFAULT 's9e';` — all existing posts automatically tagged as s9e.
+2. **S9eRendererPlugin** (priority 50): The primary content plugin that renders s9e XML via the s9e PHP library. This is the **default rendering path**, not a compatibility shim.
+3. **Future format migration**: To migrate individual posts to a new format (e.g., raw BBCode, Markdown), update `encoding_engine` and rewrite `post_text` per-post. No bulk migration required.
 
-2. **Batch backfill** (background): A reparser job unparses all `post_text` from s9e XML back to original BBCode text. Once complete, S9eCompatPlugin can be removed.
-
-The recommended approach: deploy S9eCompatPlugin for zero-downtime migration, run batch backfill in background, remove compat plugin after completion.
+See `cross-cutting-decisions-plan.md` D7 for the full decision rationale.
 
 ### Counter Recalculation
 

@@ -183,7 +183,6 @@ a:hover { color: #D31141; text-decoration: underline; }
 /* ── Header: left — logo ───────────────────────────────── */
 .header-logo {
   flex: 0 0 auto;
-  padding: 8px 10px;
 }
 .header-logo a { display: block; text-decoration: none; }
 
@@ -211,7 +210,7 @@ a:hover { color: #D31141; text-decoration: underline; }
   flex: 1;
   border: 0;
   border-radius: 5px;
-  height: 28px;
+  height: 38px;
   padding: 8px 40px 8px 8px;
   font-size: 1.2em;
   font-family: Verdana, Helvetica, Arial, sans-serif;
@@ -233,11 +232,12 @@ a:hover { color: #D31141; text-decoration: underline; }
   cursor: pointer;
   border: 0;
   border-radius: 5px;
-  background-color: #fffd;
+  background-color: #fff4;
   color: #536482;
-  height: 28px;
+  height: 38px;
+  width: 38px;
   position: relative;
-  left: -28px;
+  left: -38px;
   top: 0px
 }
 .header-search .button-search:hover {
@@ -338,7 +338,7 @@ a:hover { color: #D31141; text-decoration: underline; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin: 0 10px 5px;
   font-size: 1.1em;
   line-height: 2.2em;
 }
