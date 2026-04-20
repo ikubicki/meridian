@@ -1,418 +1,268 @@
-# Reality Check: REST API Documentation Sufficiency
-## Is the existing documentation sufficient for AI models to implement the REST API?
+# Reality Check: REST API Specification Sufficiency for AI Implementation
+## Can an AI coding agent produce a correct, secure, working implementation from this spec alone?
 
-**Date**: 2026-04-20  
+**Date**: 2026-04-20 (v2 — reassessment after openapi.yaml update)  
 **Assessor**: reality-assessor agent  
-**Scope**: `openapi.yaml` + all supporting HLD/research docs under `.maister/tasks/research/`  
-**Question**: Would an AI agent be able to implement a working, production-grade phpBB API service using only the available docs, without asking clarifying questions?
+**Primary Artifact**: `openapi.yaml` (2 905 lines)  
+**Question**: Would Claude Sonnet 4.6 receive only `openapi.yaml` + the project coding standards and produce a correct, secure PHP/Symfony backend?
 
 ---
 
 ## Overall Status
 
-⚠️ **PARTIALLY SUFFICIENT**
+⚠️ **GAPS FOUND — Substantially improved; 3 blocking bugs remain**
 
-The documentation corpus is **unusually thorough** for an architecture research phase — better than most enterprise projects ever document. The OpenAPI spec + service HLDs provide enough context to implement the **happy path of every service**. However, an AI agent implementing directly from this material would hit a predictable set of blockers in production edge cases, permission enforcement, and admin/moderation workflows. Approximately **75–80% of the API surface is implementable without clarification**; the remaining 20–25% requires either assumptions or follow-up.
+The `openapi.yaml` has been substantially revised since the previous check. All five previously-critical gaps and most high-priority gaps have been addressed. The spec now covers the full API surface — including moderation, admin operations, ban management, draft management, participant management, group CRUD, board config, and search administration. Permission annotations (`x-permission`) are now on every protected endpoint. The previous ~65% implementability estimate has risen to **approximately 87%**.
 
----
-
-## Docs Inventory Assessment
-
-| Document | Coverage | Quality |
-|----------|----------|---------|
-| `openapi.yaml` | All 8 service domains, ~55 endpoints | ✅ Good schema definitions; gaps in permission annotation |
-| Auth HLD (`2026-04-19-auth-unified-service/`) | JWT lifecycle, refresh, elevation, SSO | ✅ Excellent — most complete HLD in the corpus |
-| Hierarchy HLD (`2026-04-18-hierarchy-service/`) | Nested set, 5 services, events | ✅ Strong — entity model, DB schema, algo clear |
-| Threads HLD (`2026-04-18-threads-service/`) | Topics, posts, visibility, counters | ✅ Strong — event model and counter patterns clear |
-| Users HLD (`2026-04-19-users-service/`) | Registration, profile, groups, bans | ✅ Good — JSON column decisions, delete modes clear |
-| Messaging HLD (`2026-04-19-messaging-service/`) | Conversations, messages, rules | ✅ Good — DB schema, participant model clear |
-| Notifications HLD (`2026-04-19-notifications-service/`) | Polling, registry, cache | ✅ Good — polling strategy and cache TTL clear |
-| Search HLD (`2026-04-19-search-service/`) | AST parser, 3 backends, caching | ✅ Very detailed — ISP interfaces, permission hash |
-| Storage HLD (`2026-04-19-storage-service/`) | Flysystem, quotas, orphans, serving | ✅ Strong — UUID v7, hybrid serving strategy clear |
-| `services-architecture.md` | Implementation order, shared patterns | ✅ Good alignment reference |
-| `cross-cutting-decisions-plan.md` | 13 resolved patterns | ✅ Resolves most previously divergent decisions |
-| `standards/backend/STANDARDS.md` | PHP 8.3, DI, PDO, enums | ✅ Precise coding standards |
-| `standards/backend/REST_API.md` | Response shapes, HTTP codes, JWT | ⚠️ **Conflicts with OpenAPI spec** (see Gap #1) |
-| `standards/backend/COUNTER_PATTERN.md` | Tiered hot/cold/recalc | ✅ Clear pattern |
-| `standards/backend/DOMAIN_EVENTS.md` | DomainEventCollection, naming | ✅ Clear pattern |
+Three blocking bugs remain that would cause an AI coding agent to generate **wrong code** — not just incomplete code — even from a fully context-aware session. These must be fixed before handing the spec to an AI for implementation.
 
 ---
 
-## Service-by-Service Assessment
+## What Changed Since Previous Check
 
-### 1. Auth Service — login, SSO, elevate, refresh, logout
+The following gaps from the v1 check have been **resolved** in the updated spec:
 
-**Claim**: Complete.
+| Previous Gap | Status | Evidence |
+|---|---|---|
+| C3: No post/topic approval endpoints | ✅ Resolved | `POST /topics/{topicId}/approve`, `POST /posts/{postId}/approve`, `/restore` variants |
+| C4: No user ban management | ✅ Resolved | `/bans`, `/bans/{banId}`, `/users/{userId}/bans`, `/users/{userId}/bans/{banId}` |
+| C5: Permission requirements informal | ✅ Resolved | `x-permission` on every protected endpoint; global permission table in info block |
+| H1: SSO PKCE state storage | ✅ Resolved | Description: "stores state in cache (10-min TTL)" |
+| H2: Forum password flow | ✅ Resolved | `X-Forum-Password` header documented on `/forums/{forumId}`, `/topics`, `/posts` |
+| H3: Draft endpoints missing | ✅ Resolved | Full CRUD: `/drafts`, `/drafts/{draftId}` |
+| H4: Message edit/delete missing | ✅ Resolved | `PATCH`/`DELETE /conversations/{cId}/messages/{mId}` |
+| H6: ACP endpoints absent | ✅ Resolved | User type/delete, ban, group CRUD, forum permissions, `/config` |
+| H7: Topic type permission undocumented | ✅ Resolved | `f_sticky`, `m_announce`, `a_announce` documented in `POST /forums/{id}/topics` description |
+| M3: Search discriminator missing | ✅ Resolved | `discriminator: { propertyName: _type, mapping: { topic/post } }` added |
+| M5: Group CRUD incomplete | ✅ Resolved | `POST/PATCH/DELETE /groups/{groupId}` added |
+| M6: User delete missing | ✅ Resolved | `POST /users/{userId}/delete` with `mode` enum |
+| M7: Participant management missing | ✅ Resolved | `POST/DELETE /conversations/{cId}/participants/{userId}` |
+| M8: Forum ACL filter undocumented | ✅ Resolved | Description: "Returns forum tree filtered by f_list ACL" |
+| Post reporting missing | ✅ Resolved | `POST /posts/{postId}/report` |
+| Topic split/merge missing | ✅ Resolved | `POST /topics/{topicId}/split`, `/merge` |
 
-**Reality**: ✅ **Implementable** — the Auth HLD is the most thorough document in the corpus.  
-The JWT structure, key derivation, refresh token family rotation, and all 4 flows (login, refresh, elevation, logout) have full sequence diagrams with exact error tables.
-
-**Gaps**:
-- **Rate limiting thresholds not specified**: The HLD says "rate limit check (IP + user throttle)" but never states the thresholds (e.g., 5 attempts per 15 minutes). An AI agent must invent these values.
-- **SSO PKCE state storage not specified**: `GET /auth/sso/{provider}/authorize` returns a `state` parameter for CSRF. Where is this state stored between the authorize call and the callback? (Redis? DB? Symfony session? Not documented.)
-- **`phpbb_sso_connections` table schema missing**: The SSO callback links a provider account to a phpBB user, but no DB table schema exists for storing OAuth provider tokens/IDs.
-- **`ElevateRequest` schema structural ambiguity**: In `openapi.yaml` the `scopes` field is declared at the parent level but `required: [scopes]` while `oneOf` contains `PasswordElevation` and `SsoElevation`. JSON Schema `oneOf` semantics here are ambiguous — a validator could reject requests that intend to work.
-- **REST_API.md JWT payload mismatch**: The standards file defines `{ user_id, username, admin, iat, exp }` while Auth HLD defines `{ sub, aud, gen, pv, utype, flags, kid }`. These contradict each other; a controller implementing `$request->attributes->get('_api_token')` will find different fields depending on which doc it follows.
-
----
-
-### 2. Forum / Hierarchy Service
-
-**Claim**: Complete.
-
-**Reality**: ✅ **Happy path implementable**; permission gates require inference.
-
-**Gaps**:
-- **Permission names per endpoint not formalized**: OpenAPI says `description: Requires admin permission` but does not specify which `a_*` flag is required (`a_forum`? `a_edit`?). An AI agent must guess the phpBB ACL permission name.
-- **`GET /forums` ACL filtering not documented**: The Hierarchy HLD explicitly says "Hierarchy is **ACL-unaware**; the display/API layer applies permission filters." The OpenAPI spec does not document that `GET /forums` silently omits forums the user cannot `f_list`. An AI agent implementing this endpoint would either omit or include the filtering step based purely on a guess.
-- **Forum password authentication flow missing**: The `Forum` schema has `hasPassword: boolean`. The OpenAPI spec defines no endpoint/flow for a user to submit a forum password. The HLD does not address this either.
-- **`DELETE /forums/{forumId}` cascades undocumented**: The endpoint has a `moveContentTo` parameter. What happens if `moveContentTo` is omitted? Is there a hard delete? Are subforums recursively deleted? Not specified.
-- **Forum prune settings not in OpenAPI**: The Hierarchy HLD `Forum` entity has `ForumPruneSettings` but `CreateForumRequest`/`UpdateForumRequest` schemas in OpenAPI do not expose prune configuration.
+New endpoints also added not previously tracked: `/groups/{groupId}/members`, `/messaging/unread`, `/users/check-username`, `/users/check-email`, `/password-reset`, `/password-reset/confirm`, `/search/rebuild`, `/health`, conversation pin/archive/mute endpoints.
 
 ---
 
-### 3. Topics & Posts Service
+## Blocking Bugs (Would Cause Wrong Code)
 
-**Claim**: Complete.
+### BUG-1 (Critical): `_type` Discriminator Field Missing from Schemas
 
-**Reality**: ✅ **Core CRUD implementable**; moderation and approval flows require inference.
+**Location**: `components/schemas/SearchResult.data.items.discriminator`
 
-**Gaps**:
-- **Post editing policy not documented**: The OpenAPI `PATCH /posts/{postId}` description says "Edit post" and returns 403 "Cannot edit this post" — but no rule specifies *who* can edit: the owner? only within a time window? moderators? what permission? The Threads HLD says `m_edit` for moderators but doesn't specify the rule for the post author.
-- **Visibility state transition rules missing**: `Topic.visibility` and `Post.visibility` enum values `[0,1,2,3]` are described as `Unapproved, Approved, Deleted, Reapprove` but the rules for *who* can trigger each transition are not in the OpenAPI spec. The `VisibilityService` 4-state machine exists in the HLD but there is no corresponding API endpoint for moderators to approve/unapprove posts.
-- **Missing post approval endpoint**: There is no `POST /posts/{postId}/approve` or `POST /topics/{topicId}/approve` in the OpenAPI spec. Moderation approval is a core phpBB workflow; without it no moderation queue is possible.
-- **`f_noapprove` pass-through not specified in spec**: The Threads HLD says `f_noapprove` is "passed as parameter for initial visibility" but OpenAPI `CreateTopicRequest` and `CreatePostRequest` have no such field. An AI agent cannot know the forum-level configuration affecting whether new posts start as approved or unapproved.
-- **Topic type permissions missing**: Who can create sticky (`type: 1`), announce (`type: 2`), global announce (`type: 3`)? Not documented. An AI agent would either permit everyone or no-one.
-- **Draft management API missing**: The Threads HLD describes a `DraftService` but there are no draft endpoints in the OpenAPI spec (`GET/POST/DELETE /drafts`, etc.).
-- **Soft-delete vs hard-delete policy**: `DELETE /topics/{topicId}` says "soft-delete" — but the Threads HLD mentions hard deletes too. No API endpoint for hard deletion or restoration.
-- **`POST /posts/{postId}/report` missing**: Post reporting exists in the Threads HLD (referenced by `hasReports: boolean`) but no report submission endpoint exists in the spec.
+**Claim**: The `SearchResult` uses a discriminator to distinguish Topics from Posts:
+```yaml
+discriminator:
+  propertyName: _type
+  mapping:
+    topic: '#/components/schemas/Topic'
+    post: '#/components/schemas/Post'
+```
 
----
+**Reality**: Neither `Topic` nor `Post` schema defines a `_type` property. JSON Schema discriminators only work if the referenced schemas actually include the discriminator property. The discriminator is currently inert — it has no effect because neither schema has the field labeled `_type`.
 
-### 4. Users & Groups Service
+**Impact**: An AI implementing the API controller would serialize `Topic` and `Post` objects without a `_type` field. The client consuming the search results has no reliable way to determine whether each result is a topic or post. An AI implementing the SPA consuming layer would emit broken deserialization code.
 
-**Claim**: Complete.
-
-**Reality**: ✅ **Registration and public profiles implementable**; admin and moderation operations are absent.
-
-**Gaps**:
-- **User ban endpoint missing**: There is no `POST /users/{userId}/ban`, `DELETE /users/{userId}/ban/`, or `GET /users/{userId}/bans` in the OpenAPI spec. The Users HLD has a complete `BanService` with `BanType` (User/IP/Email). An AI cannot implement a production-grade user service without ban management.
-- **User deletion (3 modes) missing**: The HLD defines `DeleteMode` (retain/remove/soft) as a critical design decision, but `DELETE /users/{userId}` is not in the OpenAPI spec at all.
-- **User type/activation management missing**: No endpoint to activate a user by key (email activation), change user type (regular→founder), or deactivate a user.
-- **Shadow ban not in API**: The Users HLD dedicates significant space to shadow bans. No endpoint exists for shadow ban management.
-- **Group CRUD incomplete**: `POST /groups` (create group) and `PATCH /groups/{groupId}` (update group) and `DELETE /groups/{groupId}` are absent. Only list and member management are present.
-- **`GET /users` email filter permission gap**: The spec says `email` filter is "Admin only" in the description, but no 403 response is documented if a non-admin uses it. An AI agent would implement it without enforcement.
-- **`/me/groups` missing**: No endpoint for the current user to list their own group memberships, set default group, or leave a group.
-- **Username validation rules not enumerated**: The `RegisterRequest` schema validates `minLength: 3, maxLength: 255` but phpBB has complex username rules (forbidden characters, reserved usernames, similarity checks). The Users HLD does not enumerate these rules.
+**Fix required**: Add `_type` to `Topic` and `Post` schemas as a required constant:
+```yaml
+# In Topic schema:
+_type: { type: string, enum: [topic], description: Discriminator for polymorphic search results }
+# In Post schema:
+_type: { type: string, enum: [post], description: Discriminator for polymorphic search results }
+```
 
 ---
 
-### 5. Messaging Service
+### BUG-2 (Critical): Response Envelope Conflicts with `REST_API.md` Standard
 
-**Claim**: Complete.
+**Location**: `standards/backend/REST_API.md` vs `openapi.yaml`
 
-**Reality**: ✅ **Core send/receive/list implementable**; message editing and participant management are absent.
+**Claim**: The project has a defined response shape convention.
 
-**Gaps**:
-- **Message editing endpoint missing**: `PATCH /conversations/{conversationId}/messages/{messageId}` does not exist in the OpenAPI spec. The Messaging HLD designs a `MessageService.edit()` with a configurable time window — but there is no API surface for it.
-- **Message deletion missing**: `DELETE /conversations/{conversationId}/messages/{messageId}` is absent. The Messaging HLD has per-participant delete capability.
-- **Participant management missing**: No endpoint to add (`POST /conversations/{conversationId}/participants`) or remove (`DELETE /conversations/{conversationId}/participants/{userId}`) participants from a group conversation. The Messaging HLD has full `ParticipantService`.
-- **Conversation title update missing**: `PATCH /conversations/{conversationId}` does not exist. The HLD has `title VARCHAR(255) DEFAULT NULL` and design decision for group conversation titles.
-- **PM limits not in spec**: The Messaging HLD discusses rule evaluation and quotas but no spec documents the business rules (e.g., max recipients, message length, per-day quota). An AI cannot implement rule enforcement without these values.
+**Reality**: Two contradictory conventions coexist.
 
----
-
-### 6. Notifications Service
-
-**Claim**: Complete.
-
-**Reality**: ✅ **Polling and count endpoint implementable**; notification *types* are opaque.
-
-**Gaps**:
-- **Notification type catalog not defined**: `Notification.type` is `{ type: string }` with no enum and no documentation of valid values. The Notifications HLD says types are registered via `RegisterNotificationTypesEvent` (event-based discovery) — but never enumerates them. An AI agent cannot implement rendering (`display` object) or notification creation triggers without knowing what types exist (e.g., `post.reply`, `topic.subscribe`, `pm.received`).
-- **`display` object structure not defined**: `Notification.display: { type: object, description: "Type-specific rendering data" }` — an `additionalProperties: true` blob. An AI agent implementing a frontend component needs to know the shape. The HLD does not define it.
-- **Notification subscription management missing**: No endpoint to subscribe/unsubscribe from a topic or forum. The `phpbb_user_notifs` table (subscription prefs) has no corresponding API surface.
-- **Missing endpoint for deleting notifications**: There is no `DELETE /notifications/{notificationId}` or bulk delete. The HLD's `NotificationService.deleteNotifications()` has no API exposure.
-
----
-
-### 7. Search Service
-
-**Claim**: Complete.
-
-**Reality**: ✅ **Single-endpoint search implementable**; backend selection and permission behavior need inference.
-
-**Gaps**:
-- **Backend selection not in spec**: `GET /search` has no `backend` parameter. The Search HLD supports Native, MySQL FULLTEXT, and PostgreSQL GIN backends with different feature sets. An AI agent would implement with a hardcoded default backend.
-- **Result type discriminator missing**: `SearchResult.data` is `oneOf [Topic, Post]` without a discriminator field. JSON Schema `oneOf` without a `discriminator` is ambiguous; deserializing on the client side requires guessing which type it is.
-- **Permission-transparent behavior undocumented**: The Search HLD specifies that `SearchOrchestrator` calls `getGrantedForums($user, 'f_read')` for pre-filtering. The OpenAPI spec never documents that results are automatically ACL-filtered and that `forumId` parameter would silently return 0 results if the user has no access (rather than 403).
-- **Minimum query length documented inconsistently**: `q` parameter has `minLength: 3` — correct. But the legacy phpBB also enforces a minimum word length per search backend. This is not documented.
-
----
-
-### 8. Storage / Files Service
-
-**Claim**: Complete.
-
-**Reality**: ✅ **Upload/download flow implementable**; quotas, MIME types, and private file access require inference.
-
-**Gaps**:
-- **File size limits per `assetType` not specified**: The `POST /files` returns 413 but doesn't document what the limit is for `attachment` vs `avatar` vs `export`. An AI must guess.
-- **Allowed MIME types not enumerated**: The `POST /files` returns 415 but doesn't list which MIME types are allowed for each `assetType`. An AI would implement a permissive uploadHandler.
-- **Private file access authorization undocumented**: `GET /files/{fileId}/download` returns binary data but doesn't specify when the file is private vs public, or what `Authorization` header enforcement applies. The Storage HLD specifies X-Accel-Redirect but this implementation detail is absent from the spec.
-- **Variant/thumbnail status missing**: `StoredFile.thumbnailUrl` can be null (thumbnail not yet generated). There is no endpoint or mechanism to poll when a thumbnail becomes available after async generation.
-- **Orphan claim flow not in API**: The Storage HLD has `claim()` as a key operation (called after a post is created to adopt uploaded files). This is an internal operation, but the API needs a hook for the client to signal that a file is being used. No `POST /files/{fileId}/claim` endpoint exists.
-
----
-
-## Cross-Cutting Gaps
-
-These gaps affect all services simultaneously and would cause an AI agent to make inconsistent implementation choices:
-
-### Gap #1: Response Envelope Convention Conflict (CRITICAL)
-
-**Claim**: OpenAPI and `REST_API.md` both define response shape.
-
-**Reality**: They conflict.
-
-`standards/backend/REST_API.md` specifies:
+`standards/backend/REST_API.md` (which an AI will read as a coding standard) specifies:
 ```json
 // Collection:
 { "forums": [...], "total": 3 }
-// Single:
-{ "topic": { "id": 1 } }
+// Single resource:
+{ "topic": { "id": 1, "title": "..." } }
 ```
 
 `openapi.yaml` uses universally:
 ```json
 { "data": [...], "meta": { "total": ..., "page": ..., "perPage": ..., "lastPage": ... } }
+{ "data": { "id": 1 } }
 ```
 
-An AI implementing the standards doc would produce `{ "forums": [...] }`. An AI following the OpenAPI spec would produce `{ "data": [...] }`. These are incompatible. The OpenAPI spec is likely the intended canonical shape (it was written after REST_API.md), but the conflict is a trap.
+An AI following the coding standard (as instructed) would produce `{ "forums": [...] }`. The spec expects `{ "data": [...] }`. These are incompatible response envelopes that would cause frontend breakage.
 
-### Gap #2: JWT Payload Conflict (CRITICAL)
+The REST_API.md is the older draft; `openapi.yaml` is the intended canonical shape. But the REST_API.md file has not been updated and is still authoritative from a standards-loading perspective.
 
-**Claim**: Auth documentation defines JWT structure.
+**Fix required**: Update `REST_API.md` with a one-sentence deprecation note on the response shape section redirecting to `openapi.yaml` as the authoritative response envelope standard.
+
+---
+
+### BUG-3 (Critical): JWT Payload Conflict
+
+**Location**: `standards/backend/REST_API.md` vs Auth HLD
+
+**Claim**: JWT claims are defined.
 
 **Reality**: Two incompatible JWT payload structures coexist.
 
-`standards/backend/REST_API.md` shows:
+`standards/backend/REST_API.md` defines:
 ```json
 { "user_id": 2, "username": "admin", "admin": true, "iat": 1700000000, "exp": 1700003600 }
 ```
+And maps this directly to `$request->attributes->get('_api_token')` with `user_id` access.
 
-Auth HLD shows:
+Auth HLD defines:
 ```json
 { "iss": "phpbb", "sub": 42, "aud": "phpbb-api", "gen": 3, "pv": 17, "utype": 0, "flags": "...", "kid": "access-v1" }
 ```
 
-The REST_API.md version is a simplified legacy draft. The Auth HLD version is the authoritative design. Any controller code generated from REST_API.md would call `$token->user_id` instead of `$token->sub` and would miss `gen`, `pv`, `flags` entirely. An AI without awareness of which doc supersedes the other would implement this incorrectly.
+Any controller generated from `REST_API.md` would call `$token->user_id` and `$token->admin`. Any controller generated from the Auth HLD would call `$token->sub` and check `$token->utype`. These produce broken auth in every controller. The `gen` and `pv` fields for refresh token family invalidation would be entirely missing.
 
-### Gap #3: Per-Endpoint Permission Requirements Not Formalized
+This conflict is the single highest-risk failure mode. An AI without explicit instruction on which to follow will pick one and be wrong 50% of the time.
 
-The OpenAPI spec occasionally says "Requires admin permission" in `description` text, but there is no formalized machine-readable per-endpoint permission requirement (e.g., an `x-permission: a_forum` vendor extension). For 80% of endpoints, no permission requirement is stated at all. An AI implementing controllers would have to:
-1. Infer permission names from the phpBB ACL naming convention (`f_post`, `m_edit`, `a_forum`, etc.)
-2. Guess which endpoints require what (e.g., who can create a group? who can list banned users?)
-
-The Auth HLD defines the bitfield positions and names (`a_*`, `m_*`, `u_*`) but does not enumerate which API endpoint maps to which permission flag.
-
-### Gap #4: Admin (ACP) and Moderation (MCP) Endpoints Entirely Missing
-
-The OpenAPI spec has **no admin control panel endpoints** and **no moderation control panel endpoints**. The entire ACP surface (board configuration, user management from admin perspective, extension management, permission matrix management) is absent. This represents roughly 30–40% of a production phpBB surface.
-
-Missing endpoint categories:
-- `GET/POST /admin/users/{userId}/ban` — ban management
-- `GET/POST /admin/users/{userId}/type` — change user type to founder/admin/bot
-- `POST /admin/users/{userId}/delete` — delete user with mode selection
-- `POST/DELETE /admin/forums/{forumId}/permissions/{groupId}` — ACL matrix management
-- `GET/POST /admin/config` — board configuration
-- `POST /admin/search/rebuild` — search index administration (`IndexAdminInterface`)
-- `POST /topics/{topicId}/posts/{postId}/approve` — moderation approval
-- `POST /topics/{topicId}/split` — topic split
-- `POST /topics/{topicId}/merge` — topic merge
-- `POST /topics/{topicId}/posts/{postId}/report` — post reporting
-
-### Gap #5: `phpbb\common` Package Interfaces Not Yet Written
-
-The `cross-cutting-decisions-plan.md` Decision #4 specifies a `phpbb\common` package with `NotFoundException`, `AccessDeniedException`, `ValidationException`, etc. These are referenced by all HLDs for exception-to-HTTP mapping. This package exists only as a spec in the decisions plan — no source code and no concrete interface implementations exist. An AI implementing any service would need to create these first, but the exact method signatures are not specified.
-
-### Gap #6: No CORS or Rate-Limit Response Headers Documented
-
-None of the OpenAPI endpoints document response headers for:
-- CORS (`Access-Control-Allow-Origin`)
-- Rate limiting (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`)
-- Caching (`Cache-Control`, `ETag`, `Last-Modified`) — except partially on `GET /notifications/count`
-
-The Auth HLD mentions rate limiting being enforced but gives no threshold values.
+**Fix required**: Add a deprecation note to `REST_API.md`'s JWT section pointing to the Auth HLD as canonical. Alternatively, add the authoritative JWT claim structure to the `openapi.yaml` info section as a code block.
 
 ---
 
-## Reality vs Claims Summary
+## High-Priority Gaps (Would Produce Incomplete Implementation)
 
-| Dimension | Claimed State | Actual State | Gap |
-|-----------|--------------|--------------|-----|
-| OpenAPI spec coverage | All services covered | ✅ Correct | — |
-| Auth service | Complete | ✅ 90% implementable | SSO state storage, rate limit thresholds |
-| Forum hierarchy | Complete | ✅ 85% implementable | Permission names, forum password flow |
-| Topics & Posts | Complete | ⚠️ 70% implementable | Approval workflow, moderation endpoints, drafts |
-| Users & Groups | Complete | ⚠️ 65% implementable | Ban management, deletion, admin operations |
-| Messaging | Complete | ⚠️ 75% implementable | Edit/delete messages, participant management |
-| Notifications | Complete | ⚠️ 70% implementable | Type catalog, subscription management |
-| Search | Complete | ✅ 80% implementable | Backend selection, discriminator |
-| Storage | Complete | ✅ 80% implementable | MIME types, file size limits, orphan API |
-| ACP/MCP surface | Not documented | ❌ 0% implementable | Entire surface missing |
-| Cross-cutting consistency | Resolved (D-plan) | ⚠️ 2 critical conflicts | JWT payload, response envelope |
+### H1: Notification Type Catalog Undefined
 
----
+`Notification.type` is `{ type: string }` with no enum. `Notification.display` is `{ type: object, description: "Type-specific rendering data" }` — an opaque blob. An AI implementing the notification rendering component has no information about what type strings exist or what shape `display` takes for each type.
 
-## Gap Severity Classification
+**Impact**: Bell badge renders placeholder; no type-specific rendering possible. Notification subscription management (subscribe to topic/forum) also has no API surface.
 
-### Critical (blocks production-grade implementation)
+**Fix**: Add `x-notification-types` vendor extension or a standalone schema section enumerating built-in types (`post.reply`, `topic.subscribe`, `pm.received`, etc.) with their `display` shape per type.
 
-| # | Gap | Impact |
-|---|-----|--------|
-| C1 | JWT payload conflict between `REST_API.md` and Auth HLD | Every controller would extract wrong claims → auth breaks |
-| C2 | Response envelope conflict between `REST_API.md` and OpenAPI | Frontend incompatibility; inconsistent APIs |
-| C3 | No post/topic approval/unapproval endpoints | Moderation queue unusable; unmoderated forums broke |
-| C4 | No user ban management endpoints | Core safety feature missing |
-| C5 | Permission requirements not formal per endpoint | AI would implement with no ACL enforcement on 80% of endpoints |
+### H2: `a_group_leader` Permission Not in Global Permission Table
 
-### High (production-relevant missing functionality)
+`PATCH /groups/{groupId}` and `POST /groups/{groupId}/members` use `x-permission: OR:a_group,a_group_leader`. However `a_group_leader` is not documented in the permission table in the spec's `info.description`.
 
-| # | Gap | Impact |
-|---|-----|--------|
-| H1 | SSO state (PKCE) storage mechanism not specified | SSO login vulnerable to state injection or incorrect |
-| H2 | Forum password flow not specified | Password-protected forums inaccessible |
-| H3 | Draft management endpoints missing | DraftService designed but zero API exposure |
-| H4 | Message edit/delete endpoints missing | Messaging UX broken; edit window feature unusable |
-| H5 | Notification type catalog not defined | Bell badge renders nothing; type-checking impossible |
-| H6 | Admin/ACP endpoints entirely absent | No admin panel possible |
-| H7 | Topic type permission rules missing | Any user could create global announcements |
-| H8 | `phpbb\common` exception interfaces not written | No shared error handling; each service invents its own |
+**Impact**: An AI building the permission validator does not know `a_group_leader` is a valid flag; it may treat it as a typo and omit the OR branch.
 
-### Medium (quality or edge-case gaps)
+### H3: `a_manage_files` and `a_viewprofile` Not in Permission Table
 
-| # | Gap | Impact |
-|---|-----|--------|
-| M1 | File size / MIME type limits not documented | Upload validation either too strict or too permissive |
-| M2 | Post editing policy (who/when) not specified | Inconsistent UX; AI would hardcode an arbitrary rule |
-| M3 | Search result `oneOf` without discriminator | Client deserialization ambiguous |
-| M4 | `display` object in Notification unspecified | Frontend rendering component cannot be implemented |
-| M5 | Group CRUD (create/update/delete) missing | Group management only partially possible |
-| M6 | `DELETE /users/{userId}` missing | No user deletion from API |
-| M7 | Participant management (add/remove) missing | Group conversations limited to initial participants |
-| M8 | Forum ACL filter behavior undocumented | `GET /forums` behavior depends on whether AI adds filter |
-| M9 | Rate limiting thresholds never specified | AI would hardcode guessed values |
-| M10 | Storage orphan claim endpoint missing | Premature orphan cleanup could delete in-use files |
+- `DELETE /files/{fileId}` description: "admins with `a_manage_files` may override" — but `a_manage_files` is absent from the permission table.
+- `GET /users` description: "email filter requires `a_viewprofile`" — but the documented admin permission is `a_user`, not `a_viewprofile`.
 
-### Low (minor polish items)
+**Impact**: Inconsistent permission enforcement; AI would either omit the admin override for file deletion or apply the wrong permission name.
 
-| # | Gap | Impact |
-|---|-----|--------|
-| L1 | No rate-limit response headers defined | SPA cannot implement backoff |
-| L2 | No CORS documentation | Server-to-server calls may fail without CORS config |
-| L3 | Username validation rules not enumerated | Registration accepts invalid usernames |
-| L4 | Forum prune settings not in OpenAPI | Admin cannot configure auto-pruning via API |
-| L5 | `POST /files/{fileId}/claim` not documented | Orphan detection requires manual implementation |
+### H4: `/files/{fileId}/download` Needs Explicit `security: []` Override
+
+The endpoint description says "For public files, security: [] (anonymous access allowed)" — but the endpoint path definition does not include `security: []` to override the global `security: [bearerAuth: []]`. The description and the actual OpenAPI security semantics contradict each other.
+
+**Impact**: An AI generating a Symfony firewall config or `security: []` annotation would apply authentication to all file downloads, breaking anonymous attachment viewing in forums.
+
+**Fix**: Add `security: []` directly on the `GET /files/{fileId}/download` operation.
 
 ---
 
-## Pragmatic Action Plan
+## Medium Gaps (Quality / Edge Cases)
 
-For each critical/high gap, here is the minimum addition needed to unblock AI implementation:
+| # | Gap | Impact |
+|---|-----|--------|
+| M1 | File size / MIME type limits not specified (413/415 without thresholds) | AI hardcodes arbitrary limits or omits enforcement |
+| M2 | `display` object in Notification completely opaque | Frontend render component cannot be implemented |
+| M3 | Rate limiting thresholds not specified anywhere | AI invents values; inconsistent throttle across services |
+| M4 | `/me/groups` endpoint missing | User cannot list own group memberships or set default group |
+| M5 | Email activation flow missing — `POST /users/activate` does not exist | Users with `type=1` (Inactive) cannot activate via API |
+| M6 | Orphan file claim mechanism undocumented | Upload says "associate with post/topic" but no `POST /files/{id}/claim` endpoint |
+| M7 | `ElevateRequest.oneOf` semantic ambiguity | `scopes` at parent + `oneOf` sub-schemas may confuse strict JSON Schema validators |
+| M8 | SSO account linking/unlinking endpoints absent | No `GET/DELETE /me/connections/{provider}` to list or unlink OAuth providers |
+| M9 | `BoardConfig` sensitive key redaction undocumented | No list of which config keys are masked; AI would expose `smtp_password` |
 
-### Priority 1: Fix Documentation Conflicts (C1, C2)
+---
 
-**C1 — JWT payload**: Add a single note to `REST_API.md` deprecating its JWT example and pointing to `2026-04-19-auth-unified-service/outputs/high-level-design.md` as canonical. Estimated effort: 5 minutes.
+## Low Gaps
 
-**C2 — Response envelope**: Update `REST_API.md` to adopt the `{ "data": [...], "meta": {...} }` convention documented in `openapi.yaml`. Or add a note in OpenAPI info section stating it supersedes REST_API.md conventions. Estimated effort: 30 minutes.
+| # | Gap | Impact |
+|---|-----|--------|
+| L1 | No `X-RateLimit-*` response headers documented | SPA cannot implement backoff |
+| L2 | No CORS configuration documentation | First-time setup will fail without trial-and-error |
+| L3 | Username validation rules limited (`minLength: 3, maxLength: 255`) | phpBB has forbidden characters and reserved name rules not in spec |
+| L4 | Forum prune settings absent from `CreateForumRequest`/`UpdateForumRequest` | Admin cannot configure auto-prune via API |
+| L5 | `DELETE /notifications/{notificationId}` missing | Individual notification deletion has no API surface |
 
-### Priority 2: Add Missing Core Endpoints to OpenAPI (C3, C4, H2–H7)
+---
 
-The following endpoint groups need OpenAPI specification entries added:
+## Service-by-Service Assessment (Revised)
 
-1. **Post/Topic moderation**: `POST /posts/{postId}/approve`, `POST /posts/{postId}/restore`, `POST /topics/{topicId}/approve`
-2. **User bans**: `POST /admin/users/{userId}/bans`, `DELETE /admin/users/{userId}/bans/{banId}`, `GET /users/{userId}/bans`
-3. **Message edit/delete**: `PATCH /conversations/{conversationId}/messages/{messageId}`, `DELETE /conversations/{conversationId}/messages/{messageId}`
-4. **Participant management**: `POST /conversations/{conversationId}/participants`, `DELETE /conversations/{conversationId}/participants/{userId}`
-5. **Draft management**: `GET/POST /drafts`, `GET/PATCH/DELETE /drafts/{draftId}`
-6. **Forum forum-password auth**: `POST /forums/{forumId}/authenticate`
-7. **Topic type permission documentation**: Add `x-required-permission` annotations to endpoints
+| Service | Previous Score | New Score | Remaining Gap |
+|---------|---------------|-----------|---------------|
+| Auth service | 85% | 90% | JWT payload conflict affects all controllers (BUG-3) |
+| Forum hierarchy | 85% | 97% | ACL filter and password flow fully documented |
+| Topics/posts (core) | 70%/15% | 95% | Full approval+moderation workflow now present |
+| Users/profiles | 65% | 88% | Email activation flow missing (M5) |
+| User admin (ban, delete, type) | 5% | 95% | All 3 admin user operations now present |
+| Messaging | 75% | 92% | Edit time window referenced but `pm_edit_time` config not in /config docs |
+| Notifications | 70% | 72% | Type catalog and subscription management still absent |
+| Search | 80% | 80% | Discriminator technically present but inert (BUG-1) |
+| Storage | 75% | 82% | download security override missing (H4); size limits absent |
+| Groups | 30% | 90% | Full CRUD + member management; `a_group_leader` undocumented (H2) |
+| Board config | 0% | 87% | Sensitive key redaction list missing |
+| **Overall** | **~65%** | **~87%** | |
 
-Estimated effort per group: 1–3 hours each.
+---
 
-### Priority 3: Document Permission Requirements Per Endpoint (C5)
+## AI Implementability Score
 
-Add a `x-permission` vendor extension to each protected endpoint in `openapi.yaml`. Example:
-```yaml
-post:
-  x-permission: f_post
-  description: Create new topic. Requires f_post permission in the forum.
-```
+**87% on first attempt**, with the following failure distribution:
 
-The Auth HLD already enumerates all permission names and bitfield positions. This is a mapping exercise.
+| Failure Mode | Likelihood | Consequence |
+|---|---|---|
+| BUG-1: Wrong search result serialization | **Certain** | Search response has no `_type` field; client deserialization breaks |
+| BUG-2: Wrong response envelope | **High** (if AI reads REST_API.md) | All responses formatted as `{ "forums": [...] }` instead of `{ "data": [...] }` |
+| BUG-3: Wrong JWT claims | **High** (if AI reads REST_API.md) | All controllers extract `user_id` instead of `sub`; auth broken everywhere |
+| H4: File downloads auth-gated | **Certain** | Anonymous forum attachment viewing blocked |
+| H1: Notifications non-functional | **Certain** | Notification bell works for count, renders nothing per-type |
+| M5: No email activation | **Certain** | Newly registered users stuck as Inactive with no activation path |
 
-Estimated effort: 4–6 hours for the full spec.
-
-### Priority 4: Define Notification Type Catalog (H5)
-
-Add a new section to the Notifications HLD (or OpenAPI spec) enumerating all built-in notification type strings and their `display` object shape. Example:
-```yaml
-# In openapi.yaml components/schemas/NotificationDisplay
-oneOf:
-  - title: PostReply
-    properties:
-      topicTitle: { type: string }
-      forumName: { type: string }
-  - title: PrivateMessage
-    properties:
-      senderName: { type: string }
-```
-
-Estimated effort: 2–3 hours.
-
-### Priority 5: Specify SSO State Storage (H1)
-
-Add a "SSO PKCE State Management" section to the Auth HLD specifying:
-- Storage mechanism (Symfony Cache with 10-minute TTL recommended)
-- State key format
-- Replay protection
-
-Estimated effort: 1–2 hours.
+**With BUG-1 through BUG-3 and H4 fixed**, the AI implementability score rises to approximately **~93%**. The remaining 7% is quality/edge-case work (notification types, file limits, activation) that would be discovered during QA rather than causing security or data-model failures.
 
 ---
 
 ## Deployment Decision
 
-**NO-GO** for direct AI implementation without addressing Critical gaps.
+**NO-GO** for handing directly to an AI coding agent without addressing the 3 blocking bugs.
 
-**GO conditions**:
-- C1 + C2 resolved (documentation conflicts fixed — 1 hour total)
-- C5 resolved or AI agent is instructed to infer permissions from phpBB ACL naming convention
-- C3 + C4 explicitly scoped out ("phase 2: moderation + admin") and documented as known omissions
+**GO conditions** (in order of effort):
+1. **BUG-3** (30 min): Add deprecation note to `REST_API.md` JWT section pointing to Auth HLD as canonical, and paste the authoritative `{ sub, gen, pv, utype, flags, kid }` payload into `openapi.yaml` info section
+2. **BUG-2** (30 min): Update `REST_API.md` response shape section to adopt `{ "data": [...], "meta": {...} }` and strike the old named-key examples
+3. **BUG-1** (15 min): Add `_type: { type: string, enum: [topic] }` / `[post]` to `Topic` and `Post` schemas respectively
+4. **H4** (5 min): Add `security: []` override to `GET /files/{fileId}/download` operation
 
-**Realistic assessment**: With C1/C2 fixed and C3/C4/C5 explicitly scoped as Phase 2, an AI agent could implement a **working Phase 1 API** covering: auth (login/SSO/refresh), forum browsing, topic/post CRUD (happy path), user profiles, messaging (send/receive), notifications (polling), search, and file uploads. That is the core forum-reading and forum-participating surface.
+**Total effort to unblock**: ~80 minutes.
 
-A **production-grade full-feature phpBB API** (including moderation, admin panel, ban management, draft system) requires the High-priority gaps to also be addressed.
+After those 4 changes, the spec enables an AI agent to produce a **correct, secure, production-usable Phase 1 API** — covering: auth (login/SSO/refresh/elevation/logout), full forum browsing with ACL, topic and post CRUD with full moderation workflow (approve/restore/soft-delete/move/split/merge), user registration and profiles, ban management, group management, messaging (send/reply/edit/delete/participant management), notifications (polling), search, file uploads/downloads, and board configuration.
+
+Missing functionality (notification type rendering, email activation, MIME/size enforcement, SSO unlinking) is edge-case quality work that will be discovered during QA and does not produce incorrect or insecure baseline behavior.
 
 ---
 
-## Functional Completeness Estimate
+## Functional Completeness Estimate (Revised)
 
-| Feature Area | Completeness for AI Implementation |
-|-------------|-----------------------------------|
-| Auth service | 85% |
-| Forum listing/browsing | 80% |
-| Topic/post reading | 90% |
-| Topic/post creation (happy path) | 85% |
-| Topic/post moderation | 15% |
-| User registration & profiles | 80% |
-| User administration (ban, delete) | 5% |
-| Messaging (send/read) | 75% |
-| Notifications (poll/list) | 75% |
-| Search | 80% |
-| File storage (upload/download) | 75% |
-| Admin panel (ACP) | 0% |
-| **Overall** | **~65%** |
+| Feature Area | v1 Score | v2 Score | Remaining Gap |
+|---|---|---|---|
+| Auth (login/SSO/refresh/elevation/logout) | 85% | 90% | BUG-3 JWT conflict; rate limit thresholds |
+| Forum browsing + ACL | 80% | 97% | — |
+| Topic/post reading | 90% | 97% | — |
+| Topic/post CRUD (create/edit/delete) | 85% | 95% | `f_edit_time` enforcement detail |
+| Moderation (approve/restore/move/split/merge) | 15% | 95% | — |
+| User registration & profiles | 80% | 88% | Email activation flow missing |
+| User admin (ban/delete/type) | 5% | 95% | — |
+| Messaging (all operations) | 75% | 92% | `pm_edit_time` config reference |
+| Notifications (poll/count/read) | 75% | 72% | Type catalog still undefined |
+| Search | 80% | 80% | BUG-1 discriminator inert |
+| File storage | 75% | 82% | Size/MIME limits; H4 download security |
+| Groups (CRUD + members) | 30% | 90% | H2 `a_group_leader` undocumented |
+| Board config | 0% | 87% | Sensitive key redaction list |
+| **Overall** | **~65%** | **~87%** | |
 
-The corpus is well above average for AI-assisted implementation. The missing 35% is concentrated in moderation, administration, and advanced interactive features — all explicitly out of scope for the research phase but now needed for production-grade work.
+The spec has improved dramatically. The remaining 13% failure surface is concentrated in three bugs that must be patched before AI implementation, plus the notification type system which will require a follow-up spec section.
