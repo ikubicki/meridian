@@ -1,268 +1,280 @@
 # Reality Check: REST API Specification Sufficiency for AI Implementation
 ## Can an AI coding agent produce a correct, secure, working implementation from this spec alone?
 
-**Date**: 2026-04-20 (v2 — reassessment after openapi.yaml update)  
+**Date**: 2026-04-20 (v3 — re-check after claimed fixes from v2)  
 **Assessor**: reality-assessor agent  
-**Primary Artifact**: `openapi.yaml` (2 905 lines)  
+**Primary Artifact**: `openapi.yaml` (2 915 lines)  
 **Question**: Would Claude Sonnet 4.6 receive only `openapi.yaml` + the project coding standards and produce a correct, secure PHP/Symfony backend?
 
 ---
 
 ## Overall Status
 
-⚠️ **GAPS FOUND — Substantially improved; 3 blocking bugs remain**
+⚠️ **GAPS FOUND — BUG-1 and SEC-1 genuinely fixed; BUG-2 only partially addressed; BUG-3 not fixed**
 
-The `openapi.yaml` has been substantially revised since the previous check. All five previously-critical gaps and most high-priority gaps have been addressed. The spec now covers the full API surface — including moderation, admin operations, ban management, draft management, participant management, group CRUD, board config, and search administration. Permission annotations (`x-permission`) are now on every protected endpoint. The previous ~65% implementability estimate has risen to **approximately 87%**.
-
-Three blocking bugs remain that would cause an AI coding agent to generate **wrong code** — not just incomplete code — even from a fully context-aware session. These must be fixed before handing the spec to an AI for implementation.
+Two of the four v2 issues were genuinely resolved. `_type` discriminator fields are now in both `Topic` and `Post` schemas; `GET /files/{fileId}/download` now carries `x-permission: authenticated` with a description that requires auth for all downloads. The other two issues show mixed results: BUG-2 (response envelope conflict) added a "spec wins" disclaimer but left all conflicting code examples untouched; BUG-3 (JWT payload conflict) is claimed resolved but the old `{ "user_id", "admin" }` payload remains in `REST_API.md` with no deprecation note, and the openapi.yaml still contains zero documentation of JWT claim structure.
 
 ---
 
-## What Changed Since Previous Check
+## v3 Fix Verification (Claimed Fixes from v2)
 
-The following gaps from the v1 check have been **resolved** in the updated spec:
+### BUG-1: `_type` Discriminator — ✅ CONFIRMED FIXED
 
-| Previous Gap | Status | Evidence |
-|---|---|---|
-| C3: No post/topic approval endpoints | ✅ Resolved | `POST /topics/{topicId}/approve`, `POST /posts/{postId}/approve`, `/restore` variants |
-| C4: No user ban management | ✅ Resolved | `/bans`, `/bans/{banId}`, `/users/{userId}/bans`, `/users/{userId}/bans/{banId}` |
-| C5: Permission requirements informal | ✅ Resolved | `x-permission` on every protected endpoint; global permission table in info block |
-| H1: SSO PKCE state storage | ✅ Resolved | Description: "stores state in cache (10-min TTL)" |
-| H2: Forum password flow | ✅ Resolved | `X-Forum-Password` header documented on `/forums/{forumId}`, `/topics`, `/posts` |
-| H3: Draft endpoints missing | ✅ Resolved | Full CRUD: `/drafts`, `/drafts/{draftId}` |
-| H4: Message edit/delete missing | ✅ Resolved | `PATCH`/`DELETE /conversations/{cId}/messages/{mId}` |
-| H6: ACP endpoints absent | ✅ Resolved | User type/delete, ban, group CRUD, forum permissions, `/config` |
-| H7: Topic type permission undocumented | ✅ Resolved | `f_sticky`, `m_announce`, `a_announce` documented in `POST /forums/{id}/topics` description |
-| M3: Search discriminator missing | ✅ Resolved | `discriminator: { propertyName: _type, mapping: { topic/post } }` added |
-| M5: Group CRUD incomplete | ✅ Resolved | `POST/PATCH/DELETE /groups/{groupId}` added |
-| M6: User delete missing | ✅ Resolved | `POST /users/{userId}/delete` with `mode` enum |
-| M7: Participant management missing | ✅ Resolved | `POST/DELETE /conversations/{cId}/participants/{userId}` |
-| M8: Forum ACL filter undocumented | ✅ Resolved | Description: "Returns forum tree filtered by f_list ACL" |
-| Post reporting missing | ✅ Resolved | `POST /posts/{postId}/report` |
-| Topic split/merge missing | ✅ Resolved | `POST /topics/{topicId}/split`, `/merge` |
+**Evidence**:
+- `Topic` schema (line 337): `_type: { type: string, const: topic, description: Discriminator field for SearchResult deserialization }`
+- `Post` schema (line 370): `_type: { type: string, const: post, description: Discriminator field for SearchResult deserialization }`
+- `SearchResult.data.items.discriminator` at line 662: `propertyName: _type`
 
-New endpoints also added not previously tracked: `/groups/{groupId}/members`, `/messaging/unread`, `/users/check-username`, `/users/check-email`, `/password-reset`, `/password-reset/confirm`, `/search/rebuild`, `/health`, conversation pin/archive/mute endpoints.
+The discriminator is now live — both referenced schemas include the property, so OpenAPI validators and code generators will correctly use `_type` to branch between `Topic` and `Post` in search results.
 
 ---
 
-## Blocking Bugs (Would Cause Wrong Code)
+### BUG-2: Response Envelope Conflict — ⚠️ PARTIALLY FIXED
 
-### BUG-1 (Critical): `_type` Discriminator Field Missing from Schemas
+**What was done**: A disclaimer block was added at the top of `REST_API.md` (lines 5–10):
+> "The OpenAPI specification … is the **single source of truth** for all endpoint contracts … In case of any conflict between this document and the OpenAPI spec, **the spec wins**."
 
-**Location**: `components/schemas/SearchResult.data.items.discriminator`
+**What remains wrong**: The remainder of `REST_API.md` is unchanged. An AI agent reading the document will see:
+- "Response Shape Conventions" section (line 45) still uses `{ "forums": [...], "total": 3 }` and `{ "topic": { ... } }`
+- PHP code examples in the "Controller Conventions" section still return `['forums' => $forums, 'total' => count($forums)]` and `['forum' => $forum]`
+- The disclaimer requires a developer to mentally override every code example they encounter; an AI coding agent making pattern-completion decisions from examples will implement the wrong format
 
-**Claim**: The `SearchResult` uses a discriminator to distinguish Topics from Posts:
-```yaml
-discriminator:
-  propertyName: _type
-  mapping:
-    topic: '#/components/schemas/Topic'
-    post: '#/components/schemas/Post'
-```
+**Impact**: The disclaimer reduces (but does not eliminate) the risk that an AI produces the wrong response envelope. An AI in a fresh context with no prior instruction to prefer the spec over examples will likely pattern-match on the code, producing `{ "forums": [...] }` rather than `{ "data": [...], "meta": {...} }`. Probability of wrong envelope in generated controllers: **~50%** (was ~80% without disclaimer).
 
-**Reality**: Neither `Topic` nor `Post` schema defines a `_type` property. JSON Schema discriminators only work if the referenced schemas actually include the discriminator property. The discriminator is currently inert — it has no effect because neither schema has the field labeled `_type`.
-
-**Impact**: An AI implementing the API controller would serialize `Topic` and `Post` objects without a `_type` field. The client consuming the search results has no reliable way to determine whether each result is a topic or post. An AI implementing the SPA consuming layer would emit broken deserialization code.
-
-**Fix required**: Add `_type` to `Topic` and `Post` schemas as a required constant:
-```yaml
-# In Topic schema:
-_type: { type: string, enum: [topic], description: Discriminator for polymorphic search results }
-# In Post schema:
-_type: { type: string, enum: [post], description: Discriminator for polymorphic search results }
-```
+**Fix still required**: Replace the conflicting examples in "Response Shape Conventions" and "Controller Conventions" sections with `{ "data": [...], "meta": {...} }` format. The disclaimer alone is not sufficient.
 
 ---
 
-### BUG-2 (Critical): Response Envelope Conflicts with `REST_API.md` Standard
+### BUG-3: JWT Payload Conflict — ❌ NOT FIXED
 
-**Location**: `standards/backend/REST_API.md` vs `openapi.yaml`
+**What was done**: Nothing. The user's task description says "BUG-3 resolved: openapi.yaml is the authoritative source for JWT payload shape." This claim is incorrect.
 
-**Claim**: The project has a defined response shape convention.
+**Evidence of what is actually in the files**:
 
-**Reality**: Two contradictory conventions coexist.
-
-`standards/backend/REST_API.md` (which an AI will read as a coding standard) specifies:
+`REST_API.md` lines 95–105 still contain:
 ```json
-// Collection:
-{ "forums": [...], "total": 3 }
-// Single resource:
-{ "topic": { "id": 1, "title": "..." } }
+{
+    "user_id": 2,
+    "username": "admin",
+    "admin": true,
+    "iat": 1700000000,
+    "exp": 1700003600
+}
 ```
+No deprecation note. No pointer to the Auth HLD. Not marked as outdated.
 
-`openapi.yaml` uses universally:
-```json
-{ "data": [...], "meta": { "total": ..., "page": ..., "perPage": ..., "lastPage": ... } }
-{ "data": { "id": 1 } }
-```
+`openapi.yaml` contains **zero documentation** of JWT payload structure. `TokenPair.accessToken` is declared as `{ type: string }` with no description of what claims are inside. The correct claims (`sub`, `gen`, `pv`, `utype`, `flags`, `kid`) appear nowhere in the spec.
 
-An AI following the coding standard (as instructed) would produce `{ "forums": [...] }`. The spec expects `{ "data": [...] }`. These are incompatible response envelopes that would cause frontend breakage.
+**Impact**: Unchanged from v2 — this is the single highest-risk failure mode. Any AI agent that:
+1. reads `REST_API.md` (which copilot-instructions.md directs it to do), AND
+2. implements the `AuthSubscriber` or any controller that reads token claims
 
-The REST_API.md is the older draft; `openapi.yaml` is the intended canonical shape. But the REST_API.md file has not been updated and is still authoritative from a standards-loading perspective.
+…will produce: `$token->user_id`, `$token->admin` — both of which are wrong. The correct implementation is `$token->sub` (for user ID) and checking `$token->utype` or the `flags` bitfield (for permission level). The `gen`/`pv` staleness-check logic will be entirely absent. **Auth is broken in every controller generated from this context.**
 
-**Fix required**: Update `REST_API.md` with a one-sentence deprecation note on the response shape section redirecting to `openapi.yaml` as the authoritative response envelope standard.
-
----
-
-### BUG-3 (Critical): JWT Payload Conflict
-
-**Location**: `standards/backend/REST_API.md` vs Auth HLD
-
-**Claim**: JWT claims are defined.
-
-**Reality**: Two incompatible JWT payload structures coexist.
-
-`standards/backend/REST_API.md` defines:
-```json
-{ "user_id": 2, "username": "admin", "admin": true, "iat": 1700000000, "exp": 1700003600 }
-```
-And maps this directly to `$request->attributes->get('_api_token')` with `user_id` access.
-
-Auth HLD defines:
-```json
-{ "iss": "phpbb", "sub": 42, "aud": "phpbb-api", "gen": 3, "pv": 17, "utype": 0, "flags": "...", "kid": "access-v1" }
-```
-
-Any controller generated from `REST_API.md` would call `$token->user_id` and `$token->admin`. Any controller generated from the Auth HLD would call `$token->sub` and check `$token->utype`. These produce broken auth in every controller. The `gen` and `pv` fields for refresh token family invalidation would be entirely missing.
-
-This conflict is the single highest-risk failure mode. An AI without explicit instruction on which to follow will pick one and be wrong 50% of the time.
-
-**Fix required**: Add a deprecation note to `REST_API.md`'s JWT section pointing to the Auth HLD as canonical. Alternatively, add the authoritative JWT claim structure to the `openapi.yaml` info section as a code block.
+**Fix still required** (two steps):
+1. Add a deprecation note immediately before the JWT payload code block in `REST_API.md`:
+   > "⚠️ Deprecated payload shape — see Auth HLD or `openapi.yaml` info section for the canonical claims (`sub`, `gen`, `pv`, `utype`, `flags`, `kid`)."
+2. Add a JWT Claims table to `openapi.yaml`'s `info.description` section:
+   ```
+   ## JWT Access Token Claims
+   | Claim | Type | Description |
+   |---|---|---|
+   | iss | string | "phpbb" |
+   | sub | integer | User ID (use this, not user_id) |
+   | aud | string | "phpbb-api" or "phpbb-admin" |
+   | iat | integer | Issued-at Unix timestamp |
+   | exp | integer | Expiry (iat + 900 for access, iat + 300 for elevated) |
+   | jti | string | UUID v4 — unique per token; check deny-list |
+   | gen | integer | Token generation — must match user.token_generation |
+   | pv | integer | Permission version — must match user.perm_version |
+   | utype | integer | User type (0=Normal, 3=Founder) |
+   | flags | string | Base64-encoded 92-bit permission bitfield |
+   | kid | string | Key ID for rotation ("access-v1", "elevated-v1") |
+   | scope | string[] | [Elevated only] ["acp"] or ["mcp"] |
+   | elv_jti | string | [Elevated only] Parent access token JTI |
+   ```
 
 ---
 
-## High-Priority Gaps (Would Produce Incomplete Implementation)
+### SEC-1 / H4: File Download Security — ✅ CONFIRMED FIXED (design changed)
 
-### H1: Notification Type Catalog Undefined
+**Evidence**: `GET /files/{fileId}/download` now has `x-permission: authenticated` (line 2833) and description: "All file downloads require a valid JWT (authenticated user)."
 
-`Notification.type` is `{ type: string }` with no enum. `Notification.display` is `{ type: object, description: "Type-specific rendering data" }` — an opaque blob. An AI implementing the notification rendering component has no information about what type strings exist or what shape `display` takes for each type.
+**Design decision documented**: The decision was to require authentication for ALL downloads, including public-visibility files. This differs from classic phpBB (guests can view public attachments), but the spec now clearly states the behavior. `security: []` is correctly absent — the global `bearerAuth` requirement applies.
 
-**Impact**: Bell badge renders placeholder; no type-specific rendering possible. Notification subscription management (subscribe to topic/forum) also has no API surface.
-
-**Fix**: Add `x-notification-types` vendor extension or a standalone schema section enumerating built-in types (`post.reply`, `topic.subscribe`, `pm.received`, etc.) with their `display` shape per type.
-
-### H2: `a_group_leader` Permission Not in Global Permission Table
-
-`PATCH /groups/{groupId}` and `POST /groups/{groupId}/members` use `x-permission: OR:a_group,a_group_leader`. However `a_group_leader` is not documented in the permission table in the spec's `info.description`.
-
-**Impact**: An AI building the permission validator does not know `a_group_leader` is a valid flag; it may treat it as a typo and omit the OR branch.
-
-### H3: `a_manage_files` and `a_viewprofile` Not in Permission Table
-
-- `DELETE /files/{fileId}` description: "admins with `a_manage_files` may override" — but `a_manage_files` is absent from the permission table.
-- `GET /users` description: "email filter requires `a_viewprofile`" — but the documented admin permission is `a_user`, not `a_viewprofile`.
-
-**Impact**: Inconsistent permission enforcement; AI would either omit the admin override for file deletion or apply the wrong permission name.
-
-### H4: `/files/{fileId}/download` Needs Explicit `security: []` Override
-
-The endpoint description says "For public files, security: [] (anonymous access allowed)" — but the endpoint path definition does not include `security: []` to override the global `security: [bearerAuth: []]`. The description and the actual OpenAPI security semantics contradict each other.
-
-**Impact**: An AI generating a Symfony firewall config or `security: []` annotation would apply authentication to all file downloads, breaking anonymous attachment viewing in forums.
-
-**Fix**: Add `security: []` directly on the `GET /files/{fileId}/download` operation.
+**Note**: This removes guest access to forum attachments. If this is intentional (React SPA requiring login to view attachments), it is now correctly specified. If guests should be able to download public files, a `security: []` override is still needed.
 
 ---
 
-## Medium Gaps (Quality / Edge Cases)
+## Remaining Gaps (Carried from v2, Still Present)
 
-| # | Gap | Impact |
-|---|-----|--------|
-| M1 | File size / MIME type limits not specified (413/415 without thresholds) | AI hardcodes arbitrary limits or omits enforcement |
-| M2 | `display` object in Notification completely opaque | Frontend render component cannot be implemented |
-| M3 | Rate limiting thresholds not specified anywhere | AI invents values; inconsistent throttle across services |
-| M4 | `/me/groups` endpoint missing | User cannot list own group memberships or set default group |
-| M5 | Email activation flow missing — `POST /users/activate` does not exist | Users with `type=1` (Inactive) cannot activate via API |
-| M6 | Orphan file claim mechanism undocumented | Upload says "associate with post/topic" but no `POST /files/{id}/claim` endpoint |
-| M7 | `ElevateRequest.oneOf` semantic ambiguity | `scopes` at parent + `oneOf` sub-schemas may confuse strict JSON Schema validators |
-| M8 | SSO account linking/unlinking endpoints absent | No `GET/DELETE /me/connections/{provider}` to list or unlink OAuth providers |
-| M9 | `BoardConfig` sensitive key redaction undocumented | No list of which config keys are masked; AI would expose `smtp_password` |
+### H1 (High): Notification Type Catalog Undefined
+
+`Notification.type` is `{ type: string }` — no enum. `Notification.display` is `{ type: object, description: "Type-specific rendering data" }` — completely opaque. An AI implementing the notification bell and per-type rendering has no specification. Notification subscription/unsubscription endpoints are also absent.
+
+**Status**: Unchanged. All notification rendering work will stall.
 
 ---
 
-## Low Gaps
+### H2 (High): `a_group_leader` Used But Undocumented
 
-| # | Gap | Impact |
-|---|-----|--------|
-| L1 | No `X-RateLimit-*` response headers documented | SPA cannot implement backoff |
-| L2 | No CORS configuration documentation | First-time setup will fail without trial-and-error |
-| L3 | Username validation rules limited (`minLength: 3, maxLength: 255`) | phpBB has forbidden characters and reserved name rules not in spec |
-| L4 | Forum prune settings absent from `CreateForumRequest`/`UpdateForumRequest` | Admin cannot configure auto-prune via API |
-| L5 | `DELETE /notifications/{notificationId}` missing | Individual notification deletion has no API surface |
+`PATCH /groups/{groupId}`, `POST /groups/{groupId}/members`, and `DELETE /groups/{groupId}/members/{userId}` carry `x-permission: OR:a_group,a_group_leader`. However `a_group_leader` does not appear in the global permission table in `info.description`. An AI building the permission validator may treat it as a typo or omit the OR branch entirely.
+
+**Status**: Unchanged.
 
 ---
 
-## Service-by-Service Assessment (Revised)
+### H3 (Medium): `a_viewprofile` Misused in `GET /users`
 
-| Service | Previous Score | New Score | Remaining Gap |
-|---------|---------------|-----------|---------------|
-| Auth service | 85% | 90% | JWT payload conflict affects all controllers (BUG-3) |
-| Forum hierarchy | 85% | 97% | ACL filter and password flow fully documented |
-| Topics/posts (core) | 70%/15% | 95% | Full approval+moderation workflow now present |
-| Users/profiles | 65% | 88% | Email activation flow missing (M5) |
-| User admin (ban, delete, type) | 5% | 95% | All 3 admin user operations now present |
-| Messaging | 75% | 92% | Edit time window referenced but `pm_edit_time` config not in /config docs |
-| Notifications | 70% | 72% | Type catalog and subscription management still absent |
-| Search | 80% | 80% | Discriminator technically present but inert (BUG-1) |
-| Storage | 75% | 82% | download security override missing (H4); size limits absent |
-| Groups | 30% | 90% | Full CRUD + member management; `a_group_leader` undocumented (H2) |
-| Board config | 0% | 87% | Sensitive key redaction list missing |
-| **Overall** | **~65%** | **~87%** | |
+`GET /users` (user list endpoint) description says "email filter requires `a_viewprofile`". But `a_viewprofile` is listed in the spec as a **user preference** permission (`u_viewprofile`), not an admin permission. The correct admin permission for managing user data is `a_user`. This inconsistency will cause an AI to apply the wrong permission check on the email filter.
+
+**Status**: Unchanged.
+
+---
+
+### M4 (Medium): `/me/groups` Endpoint Missing
+
+Users cannot list their own group memberships or set their default group via the API. The `User.defaultGroupId` field is present in the schema but there is no endpoint to change it. The `GroupService.setDefaultGroup()` method (in Auth HLD) has no REST surface.
+
+**Status**: Unchanged.
+
+---
+
+### M5 (Medium): Email Activation Flow Missing
+
+`POST /users` (register) returns a `User` object with `type` potentially set to `1` (Inactive) when the board requires email confirmation. There is no `POST /users/activate` endpoint that accepts an activation key from the email link. New users on boards with email verification enabled have no way to activate their account through the API.
+
+**Status**: Unchanged. Note: `POST /users/{userId}/type` (admin endpoint, `x-permission: a_user`) can manually activate a user, but the self-service activation flow is absent.
+
+---
+
+### M6 (Medium): Orphan File Claim Mechanism Undocumented
+
+`POST /files` (upload) response description says "client associates it with a post/topic to prevent orphan cleanup." `StoredFile.isOrphan` and `StoredFile.claimedAt` fields are present. But there is no documented mechanism (endpoint or request field) for performing the claim. The AI-generated upload flow will leave files perpetually orphaned.
+
+**Status**: Unchanged.
+
+---
+
+### M7 (Low): `ElevateRequest.oneOf` Semantic Ambiguity
+
+`ElevateRequest` declares `scopes` at the root then uses `oneOf` for either password or SSO sub-schemas. Some strict JSON Schema validators interpret this as requiring the root `scopes` property to be absent from the `oneOf` sub-schemas. May cause runtime validation errors depending on the validator library.
+
+**Status**: Unchanged.
+
+---
+
+### M8 (Low): SSO Account Linking/Unlinking Absent
+
+When a user authenticates via SSO, they create an account linked to a provider. There are no `GET /me/connections` or `DELETE /me/connections/{provider}` endpoints to list or revoke these links. An SSO user who wants to unlink a provider or link a new one has no API path.
+
+**Status**: Unchanged.
+
+---
+
+### M9 (Low): BoardConfig Sensitive Key List Absent
+
+`GET /config` description says "Sensitive keys (e.g. smtp_password) are redacted." No list of which keys are redacted. An AI implementing the config controller will either redact nothing (exposing credentials) or guess which keys to hide. The actual phpBB config table contains ~200+ keys; the ones holding credentials must be enumerated explicitly.
+
+**Status**: Unchanged.
+
+---
+
+## New Issues Found (v3)
+
+### NEW-1 (High): JWT Claims Absent from openapi.yaml
+
+The spec makes no mention of what claims are inside an `accessToken`. `TokenPair.accessToken` is `{ type: string }` — no description. An AI building `AuthSubscriber.php` or any controller that reads permissions from the JWT token has **no spec-level guidance** on claim names. This makes BUG-3 worse than v2 recognised: even if `REST_API.md` is resolved, the spec itself needs to document claims. Without this, every AI-generated auth middleware is guesswork.
+
+**Fix**: Add the JWT Claims table to `openapi.yaml` `info.description` (see BUG-3 fix step 2 above).
+
+---
+
+### NEW-2 (Medium): Registration Response Lacks Activation State Signal
+
+`POST /users` (register) always returns HTTP 201 with `data: { User }`. When the board is configured to require email confirmation, the returned user will have `type: 1` (Inactive). The SPA has no reliable way to know it should show "check your email" vs "you're logged in" — it must infer from `type`, but this inference is not documented.
+
+**Fix**: Add `requiresEmailActivation: boolean` to the `POST /users` 201 response, or use HTTP 202 (Accepted) for pending-activation registrations.
+
+---
+
+### NEW-3 (Low): Guest Attachment Access Change Not Documented as Intentional
+
+Classic phpBB allows unauthenticated users to download attachments in public forums. The new spec requires JWT for all file downloads (`x-permission: authenticated`). This is a breaking behavior change that should be explicitly noted as intentional in the spec — otherwise teams migrating from phpBB 3.x may assume it is an oversight.
+
+---
+
+## Service-by-Service Assessment (v3 Update)
+
+| Service | v1 Score | v2 Score | v3 Score | Change from v2 |
+|---------|----------|----------|----------|----------------|
+| Auth service | 85% | 90% | 90% | No change; BUG-3 not fixed |
+| Forum hierarchy | 85% | 97% | 97% | No change |
+| Topics/posts (core) | 70%/15% | 95% | 95% | No change |
+| Users/profiles | 65% | 88% | 88% | No change; activation still missing |
+| User admin (ban, delete, type) | 5% | 95% | 95% | No change |
+| Messaging | 75% | 92% | 92% | No change |
+| Notifications | 70% | 72% | 72% | No change |
+| Search | 80% | 80% | 95% | **BUG-1 fixed** — `_type` now correct |
+| Storage | 75% | 82% | 88% | **SEC-1 fixed** — auth model clarified |
+| Groups | 30% | 90% | 90% | No change; `a_group_leader` still undocumented |
+| Board config | 0% | 87% | 87% | No change |
+| **Overall** | **~65%** | **~87%** | **~89%** | +2% from two genuine fixes |
 
 ---
 
 ## AI Implementability Score
 
-**87% on first attempt**, with the following failure distribution:
+**v3: ~89% on first attempt** (up from ~87% in v2, up from ~65% in v1)
 
-| Failure Mode | Likelihood | Consequence |
-|---|---|---|
-| BUG-1: Wrong search result serialization | **Certain** | Search response has no `_type` field; client deserialization breaks |
-| BUG-2: Wrong response envelope | **High** (if AI reads REST_API.md) | All responses formatted as `{ "forums": [...] }` instead of `{ "data": [...] }` |
-| BUG-3: Wrong JWT claims | **High** (if AI reads REST_API.md) | All controllers extract `user_id` instead of `sub`; auth broken everywhere |
-| H4: File downloads auth-gated | **Certain** | Anonymous forum attachment viewing blocked |
-| H1: Notifications non-functional | **Certain** | Notification bell works for count, renders nothing per-type |
-| M5: No email activation | **Certain** | Newly registered users stuck as Inactive with no activation path |
+| Failure Mode | v2 Status | v3 Status | Consequence |
+|---|---|---|---|
+| BUG-1: Wrong search result serialization | Blocking | **FIXED** | `_type` now in Topic/Post schemas |
+| BUG-2: Wrong response envelope | Blocking | **Partially mitigated** | Disclaimer present; code examples still wrong |
+| BUG-3: Wrong JWT claims | Blocking | **Still blocking** | `user_id`/`admin` still in REST_API.md; no JWT docs in spec |
+| H4/SEC-1: File downloads ambiguous | High | **FIXED** | Auth requirement unambiguous |
+| H1: Notifications type catalog absent | High | Still absent | Bell renders; per-type UI cannot be implemented |
+| M5: No email activation | Medium | Still absent | Inactive users cannot self-activate |
+| NEW-1: JWT claims absent from spec | — | **New blocker** | Auth middleware implementable only via Auth HLD |
 
-**With BUG-1 through BUG-3 and H4 fixed**, the AI implementability score rises to approximately **~93%**. The remaining 7% is quality/edge-case work (notification types, file limits, activation) that would be discovered during QA rather than causing security or data-model failures.
+**With BUG-3 + NEW-1 fixed** (JWT claims documented in spec + REST_API.md deprecated): score rises to **~93%**.
+
+The remaining 7% is quality/edge-case surface: notification type rendering, email activation, MIME/size limits, orphan file claim, `a_group_leader` in permission table. These are discoverable during QA and do not produce incorrect security behavior.
 
 ---
 
 ## Deployment Decision
 
-**NO-GO** for handing directly to an AI coding agent without addressing the 3 blocking bugs.
+**CONDITIONAL GO. The `openapi.yaml` alone is markedly better. The combined context of `openapi.yaml` + current `REST_API.md` is still a NO-GO.**
 
-**GO conditions** (in order of effort):
-1. **BUG-3** (30 min): Add deprecation note to `REST_API.md` JWT section pointing to Auth HLD as canonical, and paste the authoritative `{ sub, gen, pv, utype, flags, kid }` payload into `openapi.yaml` info section
-2. **BUG-2** (30 min): Update `REST_API.md` response shape section to adopt `{ "data": [...], "meta": {...} }` and strike the old named-key examples
-3. **BUG-1** (15 min): Add `_type: { type: string, enum: [topic] }` / `[post]` to `Topic` and `Post` schemas respectively
-4. **H4** (5 min): Add `security: []` override to `GET /files/{fileId}/download` operation
+The critical path to a safe AI implementation handoff:
 
-**Total effort to unblock**: ~80 minutes.
+| Fix | File | Effort | Blocks |
+|-----|------|--------|--------|
+| 1. Add JWT Claims table | `openapi.yaml` info.description | 20 min | NEW-1, BUG-3 partial |
+| 2. Deprecate JWT payload in `REST_API.md` | `REST_API.md` L95-L103 | 5 min | BUG-3 |
+| 3. Replace conflicting response envelope examples | `REST_API.md` L45-L180 | 30 min | BUG-2 |
+| **Total** | | **~55 min** | |
 
-After those 4 changes, the spec enables an AI agent to produce a **correct, secure, production-usable Phase 1 API** — covering: auth (login/SSO/refresh/elevation/logout), full forum browsing with ACL, topic and post CRUD with full moderation workflow (approve/restore/soft-delete/move/split/merge), user registration and profiles, ban management, group management, messaging (send/reply/edit/delete/participant management), notifications (polling), search, file uploads/downloads, and board configuration.
-
-Missing functionality (notification type rendering, email activation, MIME/size enforcement, SSO unlinking) is edge-case quality work that will be discovered during QA and does not produce incorrect or insecure baseline behavior.
+After these 3 changes, the combined spec context is sufficient for an AI agent to produce a correct, secure Phase 1 implementation. The remaining gaps (notification types, email activation, orphan claim) will be discovered during QA and require spec additions, not doc conflict resolution.
 
 ---
 
-## Functional Completeness Estimate (Revised)
+## Functional Completeness Estimate (v3)
 
-| Feature Area | v1 Score | v2 Score | Remaining Gap |
-|---|---|---|---|
-| Auth (login/SSO/refresh/elevation/logout) | 85% | 90% | BUG-3 JWT conflict; rate limit thresholds |
-| Forum browsing + ACL | 80% | 97% | — |
-| Topic/post reading | 90% | 97% | — |
-| Topic/post CRUD (create/edit/delete) | 85% | 95% | `f_edit_time` enforcement detail |
-| Moderation (approve/restore/move/split/merge) | 15% | 95% | — |
-| User registration & profiles | 80% | 88% | Email activation flow missing |
-| User admin (ban/delete/type) | 5% | 95% | — |
-| Messaging (all operations) | 75% | 92% | `pm_edit_time` config reference |
-| Notifications (poll/count/read) | 75% | 72% | Type catalog still undefined |
-| Search | 80% | 80% | BUG-1 discriminator inert |
-| File storage | 75% | 82% | Size/MIME limits; H4 download security |
-| Groups (CRUD + members) | 30% | 90% | H2 `a_group_leader` undocumented |
-| Board config | 0% | 87% | Sensitive key redaction list |
-| **Overall** | **~65%** | **~87%** | |
-
-The spec has improved dramatically. The remaining 13% failure surface is concentrated in three bugs that must be patched before AI implementation, plus the notification type system which will require a follow-up spec section.
+| Feature Area | v1 | v2 | v3 | Remaining Gap |
+|---|---|---|---|---|
+| Auth (login/SSO/refresh/elevation/logout) | 85% | 90% | 90% | BUG-3 JWT conflict; rate limit thresholds |
+| Forum browsing + ACL | 80% | 97% | 97% | — |
+| Topic/post reading | 90% | 97% | 97% | — |
+| Topic/post CRUD (create/edit/delete) | 85% | 95% | 95% | `f_edit_time` enforcement detail |
+| Moderation (approve/restore/move/split/merge) | 15% | 95% | 95% | — |
+| User registration & profiles | 80% | 88% | 88% | Email activation flow (M5) |
+| User admin (ban/delete/type) | 5% | 95% | 95% | — |
+| Messaging (all operations) | 75% | 92% | 92% | `pm_edit_time` config reference |
+| Notifications (poll/count/read) | 75% | 72% | 72% | Type catalog (H1) |
+| Search | 80% | 80% | 95% | — (BUG-1 fixed) |
+| File storage | 75% | 82% | 88% | Size/MIME limits; orphan claim (M6) |
+| Groups (CRUD + members) | 30% | 90% | 90% | `a_group_leader` undocumented (H2) |
+| Board config | 0% | 87% | 87% | Sensitive key list (M9) |
+| **Overall** | **~65%** | **~87%** | **~89%** | |
