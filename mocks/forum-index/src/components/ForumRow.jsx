@@ -122,7 +122,7 @@ function LastPostInfo({ forum }) {
 
   return (
     <span className="last-post-info">
-      <a href={`#post-${forum.forum_last_post_id}`} className="lastsubject" title={forum.forum_last_post_subject}>
+      <a href={`#post-${forum.forum_last_post_id}`} className="lastsubject" aria-label={forum.forum_last_post_subject}>
         {truncate(forum.forum_last_post_subject, 26)}
       </a>
       <br />

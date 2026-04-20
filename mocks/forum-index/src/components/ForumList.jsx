@@ -16,9 +16,9 @@ export default function ForumList({ forums }) {
       {categories.map((cat) => {
         const children = forums.filter((f) => f.parent_id === cat.forum_id);
         return (
-          <div className="forabg" key={cat.forum_id}>
+          <div className="forabg" key={cat.forum_id} role="region" aria-label={cat.forum_name}>
             <div className="inner">
-              {/* Category header row (mirrors dl.row-item inside li.header) */}
+              {/* Category header row */}
               <ul className="topiclist">
                 <li className="header">
                   <dl className="row-item">
@@ -29,15 +29,15 @@ export default function ForumList({ forums }) {
                         </a>
                       </div>
                     </dt>
-                    <dd className="topics">Topics</dd>
-                    <dd className="posts">Posts</dd>
-                    <dd className="lastpost"><span>Last post</span></dd>
+                    <dd className="topics" aria-hidden="true">Topics</dd>
+                    <dd className="posts" aria-hidden="true">Posts</dd>
+                    <dd className="lastpost" aria-hidden="true"><span>Last post</span></dd>
                   </dl>
                 </li>
               </ul>
 
               {/* Forum rows */}
-              <ul className="topiclist forums">
+              <ul className="topiclist forums" aria-label={`Forums in ${cat.forum_name}`}>
                 {children.map((forum) => (
                   <ForumRow key={forum.forum_id} forum={forum} />
                 ))}

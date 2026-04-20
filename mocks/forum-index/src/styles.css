@@ -6,11 +6,11 @@
 /* ── Reset & base ──────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 100%; height: 101%; }
+html { font-size: 62.5%; height: 101%; }
 
 body {
   font-family: Verdana, Helvetica, Arial, sans-serif;
-  font-size: 10px;
+  font-size: 1.3rem;
   line-height: normal;
   color: #536482;
   background-color: #F5F7FA;
@@ -23,22 +23,22 @@ body {
 body::before {
   content: '';
   position: fixed;
-  top: calc(-20% - 200px);
+  top: -300px;
   left: -20%;
   width: 140%;
-  height: calc(140% + 200px);
   z-index: -1;
   background: #f5f7fa linear-gradient(to bottom, #0076B1 150px, #12A3EB 400px, #F5F7FA 750px, #F5F7FA 100%) no-repeat;
   background-size: 100% 200%;
   animation: gradient-flow 25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
   transform-origin: center center;
+  min-height: 1000px;
 }
 
 @keyframes gradient-flow {
   0%   { transform: rotate(0deg); }
-  25%  { transform: rotate(-15deg); }
+  25%  { transform: rotate(-25deg); }
   50%  { transform: rotate(0deg); }
-  75%  { transform: rotate(15deg); }
+  75%  { transform: rotate(25deg); }
   100% { transform: rotate(0deg); }
 }
 
@@ -80,8 +80,6 @@ input:focus-visible, .inputbox:focus-visible {
   width: auto;
   height: auto;
 }
-
-.username { font-weight: bold; }
 
 /* ── Page wrapper ──────────────────────────────────────── */
 .wrap {
@@ -562,7 +560,7 @@ ul.topiclist.forums {
   font-size: 28px;
 }
 .forum-icon-unread { color: #105289; }
-.forum-icon-read { color: #8899aa; }
+.forum-icon-read { color: #5a6b7c; }
 .forum-icon-link { color: #536482; }
 
 /* ── Forum title ───────────────────────────────────────── */
@@ -626,7 +624,7 @@ a.forumtitle:hover { color: #D31141; text-decoration: underline; }
 .lastsubject:hover { color: #D31141; text-decoration: underline; }
 .last-post-link { color: #368AD2; font-size: 1em; text-decoration: none; }
 .last-post-link:hover { color: #D31141; }
-.no-posts { color: #999; font-style: italic; }
+.no-posts { color: #666; font-style: italic; }
 
 .last-post-info { font-size: 1em; }
 

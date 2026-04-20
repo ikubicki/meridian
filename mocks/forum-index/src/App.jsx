@@ -32,7 +32,7 @@ function Header() {
             <a href="#" title="Board index">
               <img
                 className="site-logo"
-                src="/site_logo.svg"
+                src="./site_logo.svg"
                 alt="phpBB"
               />
             </a>
@@ -97,16 +97,16 @@ function HamburgerMenu() {
         <span className="material-symbols-outlined">menu</span>
       </button>
       <div className={`dropdown dropdown-right${open ? ' dropdown-open' : ''}`}>
-        <ul className="dropdown-contents" role="menu">
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">help</span> FAQ</a></li>
+        <ul className="dropdown-contents">
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">help</span> FAQ</a></li>
           <li role="separator" aria-hidden="true" className="separator" />
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">mark_chat_unread</span> Unanswered topics</a></li>
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">local_fire_department</span> Active topics</a></li>
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">groups</span> The team</a></li>
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">people</span> Members</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">mark_chat_unread</span> Unanswered topics</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">local_fire_department</span> Active topics</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">groups</span> The team</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">people</span> Members</a></li>
           <li role="separator" aria-hidden="true" className="separator" />
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">person_add</span> Register</a></li>
-          <li><a href="#" role="menuitem"><span className="material-symbols-outlined menu-icon">login</span> Login</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">person_add</span> Register</a></li>
+          <li><a href="#"><span className="material-symbols-outlined menu-icon">login</span> Login</a></li>
         </ul>
       </div>
     </div>
@@ -132,9 +132,11 @@ function StickyHeader() {
             <img src="/favicon.ico" alt="phpBB" className="sticky-ico" />
             <img src="./site_logo.svg" alt="phpBB" className="sticky-svg" />
           </a>
-          <ul className="breadcrumbs">
-            <li className="crumb"><a href="#">Board index</a></li>
-          </ul>
+          <nav aria-label="Breadcrumb">
+            <ul className="breadcrumbs">
+              <li className="crumb"><a href="#" aria-current="page">Board index</a></li>
+            </ul>
+          </nav>
         </div>
 
         <div className="sticky-right">
@@ -172,9 +174,11 @@ function StickyHeader() {
 function ActionBar() {
   return (
     <div className="action-bar compact">
-      <ul className="breadcrumbs">
-        <li className="crumb"><a href="#">Board index</a></li>
-      </ul>
+      <nav aria-label="Breadcrumb">
+        <ul className="breadcrumbs">
+          <li className="crumb"><a href="#" aria-current="page">Board index</a></li>
+        </ul>
+      </nav>
       <a href="#" className="mark-read">Mark forums read</a>
     </div>
   );
