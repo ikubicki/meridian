@@ -20,7 +20,11 @@
 		"chat": "https://www.phpbb.com/support/chat/"
 	},
 	"scripts": {
-		"post-update-cmd": "echo 'You MUST manually modify the clean-vendor-dir target in build/build.xml when adding or upgrading dependencies.'"
+		"post-update-cmd": "echo 'You MUST manually modify the clean-vendor-dir target in build/build.xml when adding or upgrading dependencies.'",
+		"setup": "sh -lc '[ -f package.json ] || npm init -y >/dev/null; npm install --save-dev @redocly/cli'",
+		"swagger": "node_modules/.bin/redocly bundle .maister/tasks/research/2026-04-20-rest-api-spec/spec/root.yaml -o .maister/tasks/research/2026-04-20-rest-api-spec/outputs/openapi.yaml",
+		"swagger:lint": "@php -r \"$service = $argv[1] ?? ''; if ($service === '') { fwrite(STDERR, 'Usage: composer swagger:lint -- <service|root>'.PHP_EOL); exit(1); } if (!preg_match('/^[a-z0-9-]+$/', $service)) { fwrite(STDERR, 'Invalid service name.'.PHP_EOL); exit(1); } $file = '.maister/tasks/research/2026-04-20-rest-api-spec/spec/' . $service . '.yaml'; passthru('node_modules/.bin/redocly lint ' . escapeshellarg($file), $code); exit($code);\"",
+		"swagger:build": "@swagger && node_modules/.bin/redocly lint .maister/tasks/research/2026-04-20-rest-api-spec/outputs/openapi.yaml"
 	},
 	"replace": {
 		"phpbb/phpbb-core": "self.version"
