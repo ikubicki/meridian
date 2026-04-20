@@ -1,0 +1,124 @@
+/*
+ * phpBB prosilver theme – pixel-accurate reproduction.
+ * Colours, fonts, spacing, gradients taken from prosilver colours.css / common.css.
+ */
+
+/* ── Reset & base ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 62.5%; height: 101%; }
+
+body {
+  font-family: 'Inter', Verdana, Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  font-size: 1.3rem;
+  line-height: normal;
+  color: #536482;
+  background-color: #F5F7FA;
+  margin: 0;
+  padding: 12px 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -300px;
+  left: -20%;
+  width: 140%;
+  z-index: -1;
+  background: #f5f7fa linear-gradient(to bottom, #0076B1 150px, #12A3EB 400px, #F5F7FA 750px, #F5F7FA 100%) no-repeat;
+  background-size: 100% 200%;
+  animation: gradient-flow 60s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  transform-origin: center center;
+  min-height: 1000px;
+}
+
+@keyframes gradient-flow {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-25deg); }
+  50%  { transform: rotate(0deg); }
+  75%  { transform: rotate(25deg); }
+  100% { transform: rotate(0deg); }
+}
+
+a { color: #105289; text-decoration: none; }
+a:hover { color: #D31141; text-decoration: underline; }
+
+/* ── Focus visible (V-03 fix) ───────────────────────── */
+:focus-visible {
+  outline: 2px solid #105289;
+  outline-offset: 2px;
+}
+input:focus-visible, .inputbox:focus-visible {
+  outline: 2px solid #105289;
+  outline-offset: 0;
+}
+
+/* ── Skip link (V-04 fix) ─────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #105289;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+}
+
+/* ── Page wrapper ──────────────────────────────────────── */
+.wrap {
+  max-width: 1152px;
+  min-width: 625px;
+  margin: 0 auto;
+  padding: 15px;
+}
+
+/* ── Page body ─────────────────────────────────────────── */
+.page-body-inner { padding: 0; }
+
+/* ── dl reset ──────────────────────────────────────────── */
+dl { margin: 0; }
+dd { margin: 0; }
+dt { margin: 0; }
+
+/* ── li.row strong (phpBB legacy quirk) ────────────────── */
+li.row strong {
+  color: #000000;
+  font-weight: normal;
+}
+
+/* ── Material Symbols sizing ───────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+.hamburger-btn .material-symbols-outlined { font-size: 22px; }
+.button-search .material-symbols-outlined { font-size: 20px; }
+.sticky-search-btn .material-symbols-outlined { font-size: 18px; }
+.subforum-icon .material-symbols-outlined { font-size: 14px; vertical-align: -2px; }
+.last-post-link .material-symbols-outlined { font-size: 16px; vertical-align: -3px; }
+.menu-icon { font-size: 16px; vertical-align: -3px; margin-right: 4px; }
+
+/* ── Icon inline helper ──────────────────────────────────── */
+.icon-inline {
+  font-size: 1em;
+  vertical-align: middle;
+  line-height: 1;
+}

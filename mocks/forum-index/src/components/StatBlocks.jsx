@@ -1,3 +1,5 @@
+import '../styles/StatBlocks.css';
+
 /**
  * Bottom stat blocks mirroring index_body.html:
  *   - Who is online

@@ -6,7 +6,7 @@ import { FORUM_TYPE_LINK } from '../data.js';
  *
  * Layout: icon | name + desc + mods + subforums | topics | posts | last post
  */
-export default function ForumRow({ forum }) {
+export default function ForumRow({ forum, onTopicClick }) {
   const isLink = forum.forum_type === FORUM_TYPE_LINK;
   const hasLastPost = !!(forum.forum_last_post_subject || forum.forum_last_post_time);
   const unread = hasLastPost;
@@ -78,7 +78,7 @@ export default function ForumRow({ forum }) {
             <dd className="posts">{forum.forum_posts_approved.toLocaleString()}</dd>
             <dd className="lastpost">
               {hasLastPost ? (
-                <LastPostInfo forum={forum} />
+                <LastPostInfo forum={forum} onTopicClick={onTopicClick} />
               ) : (
                 <span className="no-posts">No posts</span>
               )}
@@ -110,7 +110,7 @@ function ForumIcon({ isLink, unread }) {
 }
 
 /* ── Last post snippet ──────────────────────────────────── */
-function LastPostInfo({ forum }) {
+function LastPostInfo({ forum, onTopicClick }) {
   const ts = forum.forum_last_post_time;
   const date = ts ? new Date(ts * 1000).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -122,7 +122,7 @@ function LastPostInfo({ forum }) {
 
   return (
     <span className="last-post-info">
-      <a href={`#post-${forum.forum_last_post_id}`} className="lastsubject" aria-label={forum.forum_last_post_subject}>
+      <a href="#" onClick={(e) => { e.preventDefault(); onTopicClick && onTopicClick(); }} className="lastsubject" aria-label={forum.forum_last_post_subject}>
         {truncate(forum.forum_last_post_subject, 26)}
       </a>
       <br />

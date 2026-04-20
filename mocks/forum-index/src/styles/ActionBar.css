@@ -1,0 +1,46 @@
+/* ── Action bar ────────────────────────────────────────── */
+.action-bar.compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 10px 5px;
+  font-size: 1.1em;
+  line-height: 2.2em;
+  color: #fff;
+  text-shadow: 0 1px 0 #0076B188;
+  letter-spacing: -0.5px;
+}
+
+.action-bar .breadcrumbs {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+.action-bar .breadcrumbs .crumb a {
+  color: #fff;
+  font-weight: 300;
+  text-decoration: none;
+}
+.action-bar .breadcrumbs .crumb .crumb-sep {
+  color: #fff8;
+  padding: 0 6px;
+  text-shadow: none;
+}
+.action-bar .breadcrumbs .crumb.current {
+  color: #fff;
+  font-weight: 600;
+}
+
+.action-bar .breadcrumbs .crumb a:hover {
+  color: #D31141;
+  text-decoration: underline;
+}
+
+.mark-read { color: #fff; }
+
+.breadcrumbs .crumb .icon {
+  font-style: normal;
+  font-size: 1em;
+}

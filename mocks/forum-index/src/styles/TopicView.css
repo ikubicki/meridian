@@ -1,0 +1,60 @@
+/* ── Topic view wrapper ──────────────────────────────────── */
+.topic-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Topic hero header ───────────────────────────────────── */
+.topic-hero {
+  padding: 20px 4px 16px;
+}
+
+.topic-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.topic-hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.topic-hero-title {
+font-size: 3em;
+  font-weight: 200;
+  color: #fff;
+  margin: 0 0 8px;
+  line-height: 1.2;
+  letter-spacing: -2px;
+  text-shadow: 0px -1px 0 #0008;
+}
+
+.topic-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-left: 5px;
+}
+
+.topic-hero-author {
+  font-size: 1.15em;
+  font-weight: 600;
+  color: #105289;
+  text-decoration: none;
+}
+.topic-hero-author:hover { color: #D31141; text-decoration: underline; }
+
+.topic-hero-date,
+.topic-hero-count {
+  font-size: 1.1em;
+  color: #0008;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media screen and (max-width: 600px) {
+  .topic-hero-title { font-size: 1.6em; }
+}

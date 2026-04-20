@@ -285,4 +285,113 @@ const onlineUsers = {
 
 const birthdays = [];
 
-export { forums, stats, onlineUsers, birthdays, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK };
+const topic = {
+  topic_id: 1,
+  forum_id: 2,
+  forum_name: 'Przedstaw się',
+  topic_title: 'Cześć, jestem nowy!',
+  topic_type: 0, // POST_NORMAL
+  topic_posts_approved: 4,
+  topic_first_post_id: 1,
+  topic_first_poster_name: 'joanna',
+  topic_last_post_time: 1744327440, // Sat Apr 11 01:24
+  topic_last_poster_name: 'hanna',
+  topic_status: 0, // ITEM_UNLOCKED
+};
+
+const posts = [
+  {
+    post_id: 1,
+    topic_id: 1,
+    post_subject: 'Cześć, jestem nowy!',
+    post_text: `Hej wszystkim! Właśnie dołączyłam do tej społeczności i chciałam się przywitać.
+
+Mam na imię Joanna, jestem z Wrocławia. Programowaniem interesuję się od jakichś 3 lat — zaczęłam od Pythona, teraz głównie piszę w JavaScripcie i trochę w PHP. Pracuję jako junior dev w małej firmie webowej i uczę się szybciej niż kiedykolwiek wcześniej.
+
+Poza kodem uwielbiam gry — głównie RPG-i, ostatnio skończyłam Baldur's Gate 3 i jestem zachwycona poziomem narracji. Gram też czasem w planszówki ze znajomymi.
+
+Cieszę się, że tu trafiłam. Mam nadzieję, że uda mi się rozwinąć skrzydła i może nawet komuś pomóc. Liczę na miłą atmosferę! :)`,
+    post_time: 1744315320, // Fri Apr 10 22:02
+    post_edit_time: null,
+    post_edit_count: 0,
+    poster_id: 67,
+    poster_name: 'joanna',
+    poster_colour: '',
+    poster_posts: 3,
+    poster_joined: 1745017140, // Fri Apr 18 21:59
+    poster_rank: 'Newbie',
+    poster_avatar: null,
+    post_attachment: false,
+  },
+  {
+    post_id: 2,
+    topic_id: 1,
+    post_subject: 'Re: Cześć, jestem nowy!',
+    post_text: `Witaj Joanna, miło Cię tu widzieć!
+
+Baldur's Gate 3 to naprawdę świetny wybór — ja spędziłem przy nim chyba z 200 godzin i wciąż nie widziałem wszystkiego. Jeśli lubisz RPG-i z dobrą historią, polecam też Pillars of Eternity, jeśli jeszcze nie grałaś.
+
+Co do programowania — JavaScript jest teraz wszędzie, więc bardzo dobry kierunek. Ja zacząłem od C++ na studiach, ale zawodowo skończyłem na PHP i Node.js. Jeśli masz jakieś pytania techniczne, śmiało pisz na dział "Pytania i odpowiedzi" — ludzie tu są pomocni.
+
+Jeszcze raz witamy w społeczności!`,
+    post_time: 1744316520, // Fri Apr 10 22:22
+    post_edit_time: null,
+    post_edit_count: 0,
+    poster_id: 82,
+    poster_name: 'cyprian',
+    poster_colour: '',
+    poster_posts: 5,
+    poster_joined: 1745016540, // Fri Apr 18 21:49
+    poster_rank: 'Newbie',
+    poster_avatar: null,
+    post_attachment: false,
+  },
+  {
+    post_id: 3,
+    topic_id: 1,
+    post_subject: 'Re: Cześć, jestem nowy!',
+    post_text: `Hej! Kolejna programistka w szeregach, super!
+
+Wrocław to świetne miasto na developerską karierę — jest tam masa firm technologicznych i sporo meetupów. Byłam na kilku konferencjach tam organizowanych i za każdym razem super atmosfera.
+
+Jakie gry RPG jeszcze masz na celowniku? Ja właśnie skończyłam Cyberpunk 2077 z rozszerzeniem Phantom Liberty i byłam mile zaskoczona — na premierze grałam i wtedy był dramat, ale teraz gra jest naprawdę dojrzała.
+
+Przy okazji — jeśli interesujesz się frontendem, wrzuć coś do działu Programowanie, chętnie porozmawiam. Właśnie uczę się Reacta i zawsze fajnie mieć kogoś do wymiany doświadczeń.`,
+    post_time: 1744321200, // Fri Apr 11 23:40
+    post_edit_time: 1744322400,
+    post_edit_count: 1,
+    poster_id: 101,
+    poster_name: 'xena',
+    poster_colour: '',
+    poster_posts: 8,
+    poster_joined: 1745016540,
+    poster_rank: 'Newbie',
+    poster_avatar: null,
+    post_attachment: false,
+  },
+  {
+    post_id: 4,
+    topic_id: 1,
+    post_subject: 'Re: Cześć, jestem nowy!',
+    post_text: `Witamy oficjalnie w naszej małej społeczności!
+
+Cieszę się, że dołączyłaś. To forum dopiero startuje, ale właśnie dlatego każda nowa osoba jest cenna — możemy razem nadać mu charakter. Staram się być tu aktywna i trzymać porządek, więc jeśli cokolwiek by Ci przeszkadzało albo miałabyś pomysł na nowy dział, pisz śmiało.
+
+Co do gier — BG3 zrobiło na mnie niesamowite wrażenie cliffhangerami między aktami. Grałam z trójką znajomych co-op i przeżyliśmy niejedną kłótnię przy wyborach dialogowych.
+
+Dobrego startu! Mam nadzieję, że zostaniesz tu na dłużej.`,
+    post_time: 1744327440, // Sat Apr 11 01:24
+    post_edit_time: null,
+    post_edit_count: 0,
+    poster_id: 87,
+    poster_name: 'hanna',
+    poster_colour: '',
+    poster_posts: 10,
+    poster_joined: 1745016540,
+    poster_rank: 'Junior Member',
+    poster_avatar: null,
+    post_attachment: false,
+  },
+];
+
+export { forums, stats, onlineUsers, birthdays, topic, posts, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK };

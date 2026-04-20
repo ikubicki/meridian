@@ -1,0 +1,170 @@
+/* ── Header bar (blue gradient banner) ─────────────────── */
+#page-header {
+  padding: 0;
+}
+
+.headerbar {
+  color: #FFFFFF;
+  margin-bottom: 4px;
+  padding: 5px;
+}
+
+.headerbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  gap: 10px;
+}
+
+/* ── Header: left — logo ───────────────────────────────── */
+.header-logo {
+  flex: 0 0 auto;
+}
+.header-logo a { display: block; text-decoration: none; }
+
+.site-logo {
+  display: block;
+  width: 149px;
+  height: 52px;
+}
+
+/* ── Header: center — search ───────────────────────────── */
+.header-search {
+  flex: 1 1 auto;
+  max-width: 420px;
+}
+
+.header-search fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  border-radius: 5px;
+}
+
+.header-search .inputbox {
+  flex: 1;
+  border: 0;
+  border-radius: 5px;
+  height: 38px;
+  padding: 8px 40px 8px 8px;
+  font-size: 1.2em;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  background: #fff3;
+  color: #fff;
+  outline: none;
+}
+.header-search .inputbox:focus {
+  background: #fffe;
+  color: #333;
+}
+
+.header-search .button-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 1.3em;
+  cursor: pointer;
+  border: 0;
+  border-radius: 5px;
+  background-color: #fff4;
+  color: #fff;
+  height: 38px;
+  width: 38px;
+  position: relative;
+  left: -38px;
+  top: 0px
+}
+.header-search .button-search:hover {
+  background: #fff;
+  color: #333;
+}
+.header-search .button-search:focus-visible {
+  outline: none;
+  background: #fff;
+  color: #333;
+}
+.header-search .inputbox:focus ~ .button-search,
+.header-search:has(.inputbox:focus) .button-search {
+  color: #536482;
+}
+
+/* ── Header: right — hamburger ─────────────────────────── */
+.header-hamburger {
+  flex: 0 0 auto;
+  padding: 8px 0 8px 10px;
+  position: relative;
+}
+
+.hamburger-btn {
+  background: rgba(255,255,255,0.15);
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 22px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.hamburger-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ── Dropdown (Quick Links etc.) ───────────────────────── */
+.dropdown {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 100;
+  padding: 0;
+  min-width: 180px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+.header-hamburger:hover > .dropdown,
+.dropdown.dropdown-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dropdown.dropdown-right {
+  left: auto;
+  right: 0;
+  width: max-content;
+}
+
+.dropdown-contents {
+  list-style: none;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 5px;
+  padding: 5px 0;
+  overflow: hidden;
+}
+
+.dropdown-contents li a {
+  display: block;
+  padding: 4px 12px;
+  font-size: 1.1em;
+  color: #105289;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.dropdown-contents li a:hover {
+  background: #EEF5F9;
+  color: #D31141;
+  text-decoration: none;
+}
+
+.dropdown-contents li.separator {
+  border-top: 1px solid #D5DEE5;
+  margin: 4px 0;
+}

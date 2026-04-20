@@ -1,4 +1,5 @@
 import { FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK } from '../data.js';
+import '../styles/ForumList.css';
 import ForumRow from './ForumRow.jsx';
 
 /**
@@ -7,7 +8,7 @@ import ForumRow from './ForumRow.jsx';
  * phpBB layout: each category gets a `.forabg` wrapper, containing a header row
  * with column labels (Topics / Posts / Last Post) and then a list of forum rows.
  */
-export default function ForumList({ forums }) {
+export default function ForumList({ forums, onTopicClick }) {
   // Group forums: categories are top-level, forums are children
   const categories = forums.filter((f) => f.forum_type === FORUM_TYPE_CAT);
 
@@ -39,7 +40,7 @@ export default function ForumList({ forums }) {
               {/* Forum rows */}
               <ul className="topiclist forums" aria-label={`Forums in ${cat.forum_name}`}>
                 {children.map((forum) => (
-                  <ForumRow key={forum.forum_id} forum={forum} />
+                  <ForumRow key={forum.forum_id} forum={forum} onTopicClick={onTopicClick} />
                 ))}
               </ul>
             </div>

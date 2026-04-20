@@ -1,0 +1,141 @@
+/* ── Sticky header ─────────────────────────────────────── */
+.sticky-header {
+  position: fixed;
+  top: -100px;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #0d96daf0;
+  color: #fff;
+  transition: top 0.25s ease;
+  pointer-events: none;
+}
+.sticky-header.sticky-visible,
+.sticky-header:focus-within {
+  top: 0;
+  pointer-events: auto;
+}
+
+.sticky-inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 6px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sticky-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.sticky-logo .sticky-ico {
+  height: 24px;
+  width: 24px;
+  display: block;
+}
+.sticky-logo .sticky-svg {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+
+.sticky-left .breadcrumbs {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  text-shadow: 0px 1px 0 #0008;
+  letter-spacing: -0.5px;
+}
+.sticky-left .breadcrumbs .crumb a {
+  color: #fff;
+  font-weight: 000;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 1.1em;
+}
+.sticky-left .breadcrumbs .crumb a:hover {
+  color: #D31141;
+  text-decoration: underline;
+}
+.sticky-left .breadcrumbs .crumb-sep {
+  color: #fff8;
+  padding: 0 5px;
+  text-shadow: none;
+}
+.sticky-left .breadcrumbs .crumb.current {
+  color: rgba(255,255,255,0.9);
+  font-size: 1.05em;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.sticky-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sticky-search-btn {
+  background: rgba(255,255,255,0.25);
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.sticky-search-btn:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+.sticky-search-bar {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 15px 8px;
+}
+.sticky-search-bar input {
+  width: 100%;
+  border: 0;
+  border-radius: 5px;
+  height: 30px;
+  padding: 4px 10px;
+  font-size: 1.3em;
+  font-family: Verdana, Helvetica, Arial, sans-serif;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.sticky-search-bar input:focus {
+  background: rgba(255,255,255,0.8);
+  color: #333;
+}
+
+/* Sticky header hamburger reuses .header-hamburger styles */
+.sticky-right .header-hamburger {
+  padding: 0;
+}
+.sticky-right .hamburger-btn {
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+}

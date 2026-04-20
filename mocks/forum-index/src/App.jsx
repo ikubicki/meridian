@@ -1,19 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import { forums, stats, onlineUsers, birthdays, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK } from './data.js';
+import './styles/Header.css';
+import './styles/StickyHeader.css';
+import './styles/ActionBar.css';
+import { forums, stats, onlineUsers, birthdays, topic, posts, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK } from './data.js';
 import ForumList from './components/ForumList.jsx';
 import StatBlocks from './components/StatBlocks.jsx';
+import TopicView from './components/TopicView.jsx';
 
 export default function App() {
+  const [view, setView] = useState('index'); // 'index' | 'topic'
+
   return (
     <div id="wrap" className="wrap">
       <a href="#page-body" className="skip-link">Skip to content</a>
       <Header />
-      <StickyHeader />
+      <StickyHeader view={view} topic={topic} onBack={() => setView('index')} />
       <main id="page-body">
         <div className="page-body-inner">
-          <ActionBar />
-          <ForumList forums={forums} />
-          <StatBlocks stats={stats} onlineUsers={onlineUsers} birthdays={birthdays} />
+          {view === 'index' ? (
+            <>
+              <ActionBar />
+              <ForumList forums={forums} onTopicClick={() => setView('topic')} />
+              <StatBlocks stats={stats} onlineUsers={onlineUsers} birthdays={birthdays} />
+            </>
+          ) : (
+            <TopicView topic={topic} posts={posts} onBack={() => setView('index')} />
+          )}
         </div>
       </main>
       <Footer />
@@ -114,7 +126,7 @@ function HamburgerMenu() {
 }
 
 /* ── Sticky Header (appears after 100px scroll) ─────────── */
-function StickyHeader() {
+function StickyHeader({ view, topic, onBack }) {
   const [visible, setVisible] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -134,7 +146,23 @@ function StickyHeader() {
           </a>
           <nav aria-label="Breadcrumb">
             <ul className="breadcrumbs">
-              <li className="crumb"><a href="#" aria-current="page">Board index</a></li>
+              {view === 'topic' ? (
+                <>
+                  <li className="crumb">
+                    <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>Board index</a>
+                    <span className="crumb-sep" aria-hidden="true"> › </span>
+                  </li>
+                  <li className="crumb">
+                    <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }}>{topic.forum_name}</a>
+                    <span className="crumb-sep" aria-hidden="true"> › </span>
+                  </li>
+                  <li className="crumb current" aria-current="page">{topic.topic_title}</li>
+                </>
+              ) : (
+                <li className="crumb">
+                  <a href="#" aria-current="page">Board index</a>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
