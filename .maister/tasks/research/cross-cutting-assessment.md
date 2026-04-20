@@ -225,6 +225,8 @@ Hierarchy, Auth, and Storage all mention admin operations. No ACP service/API is
 
 The unified auth service research covers JWT token lifecycle (creation, validation, refresh, revocation), key management, and integration with the REST API layer. The previous REST API ADR-002 DB token design is superseded by the JWT approach from the auth unified service research.
 
+> **Note (2026-04-20)**: The `2026-04-18-auth-service/` research is **SUPERSEDED** by `2026-04-19-auth-unified-service/`. The unified service is the single authoritative design for both AuthN and AuthZ.
+
 ### 7.3 ✅ RESOLVED: Symfony Kernel Rewrite
 
 **Decision (2026-04-19)**: The Symfony kernel will be **rewritten from scratch** alongside the phpBB refactor, with an **updated Symfony version**. This eliminates the subscriber priority conflict entirely — the new kernel will define a clean request lifecycle with proper authentication → authorization ordering built in from the start.
@@ -247,14 +249,15 @@ See `cross-cutting-decisions-plan.md` D8. `TODO-forum-counter-contract.md` super
 
 ## 8. Architecture Concerns
 
-### 8.1 Big Bang vs Incremental Migration
+### 8.1 ✅ RESOLVED: Big Bang Migration
 
-The researches are **ambiguous** about migration strategy:
+**Decision (2026-04-20)**: **Big bang** cutover. No legacy/new coexistence during transition. The new system fully replaces the old one.
 
-- **Greenfield signals**: Messaging designs entirely new tables. Storage designs new `stored_files` table. Cache is clean-break (ADR-007: "No bridge adapter. Legacy consumers must be rewritten."). Notifications is a "full rewrite."
-- **Incremental signals**: Auth preserves legacy bitfield cache format for ACP compatibility. Hierarchy reuses `phpbb_forums` table exactly. Threads reuses `phpbb_topics`/`phpbb_posts`. REST API starts with session-based auth for existing infrastructure.
-
-**Unresolved**: How does the legacy phpBB application coexist with new services during transition? Can a user use the old `posting.php` while new API endpoints exist? What happens when old code writes to `phpbb_posts` and new code reads it?
+- New system aims for maximum backward compatibility with existing data, but given the age of the codebase, 100% compatibility is explicitly NOT a goal.
+- No rollback strategy — this is a new system, not an upgrade. If something breaks, it gets fixed forward.
+- **PM data migration**: Script required to migrate `phpbb_privmsgs*` → `messaging_conversations` (7 tables).
+- **Attachment migration**: Script required to migrate `phpbb_attachments` → `phpbb_stored_files` (UUID v7 IDs).
+- Legacy phpBB application does NOT coexist with new services. Old `posting.php`, `viewtopic.php` etc. are fully retired.
 
 ### 8.2 Database Access Layer
 
@@ -272,22 +275,26 @@ All services use PDO directly. This is consistent but means:
 
 But the Cache Service design has no stampede prevention (ADR-003: "No stampede prevention. Accept duplicate computations."). For a popular topic with cold cache + 100 concurrent users, all 100 will re-parse all 20 posts simultaneously. This is a realistic concern for popular threads.
 
-### 8.4 Frontend Strategy
+### 8.4 ✅ RESOLVED: Frontend Strategy — React SPA
 
-**Only Notifications defines a frontend approach**: React component with `useNotifications` hook. If the entire application is being rewritten, questions remain:
-- Is the whole frontend moving to React? Or is it a progressive migration with React islands?
-- What renders forum threads, topic views, user profiles?
-- Is there a shared state management approach (Redux, Zustand, React Query)?
-- How do server-side rendered pages coexist with React components?
+**Decision (2026-04-20)**: The frontend will be a **React Single Page Application (SPA)** consuming the REST API. Complete separation from legacy server-rendered views.
 
-Notifications ADR-006 acknowledges this: *"React component can coexist with jQuery pages via `ReactDOM.createRoot()` on a mount point."* But no comprehensive frontend strategy exists.
+- No server-side rendering, no React islands, no progressive migration
+- Full React SPA using REST API for all data
+- Legacy Twig/prosilver templates are completely retired
+- Modern JS tooling (Vite, TypeScript envisioned)
+- The `mocks/forum-index/` prototype validates this approach
 
-### 8.5 Testing Strategy
+### 8.5 ✅ RESOLVED: Testing Strategy — Unit + E2E
 
-No service research addresses testing strategy. Given the services are designed for testability (interfaces, DI, no globals), the obvious approach is PHPUnit with mock dependencies. But:
-- No shared test infrastructure is defined (test DB setup, factory classes, mock event dispatcher)
-- No integration test strategy (how to test Threads → Hierarchy counter sync?)
-- No API integration test strategy (Postman collection, PHPUnit functional tests?)
+**Decision (2026-04-20)**: All new code must be covered by:
+
+1. **Unit tests** (PHPUnit 10+) — every service, repository, value object
+2. **E2E tests** (Playwright) — full user flows through the React SPA + REST API
+
+- Standard PHPUnit conventions documented in `.maister/docs/standards/testing/STANDARDS.md`
+- Playwright for browser-based end-to-end testing of the React SPA
+- No integration-test grey area — either isolated unit tests or full-stack E2E
 
 ---
 

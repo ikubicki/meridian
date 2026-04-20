@@ -14,9 +14,11 @@ See the full index at [.maister/docs/INDEX.md](.maister/docs/INDEX.md).
 
 ## Key Reminders
 
-- This is a **phpBB** codebase — follow phpBB naming and formatting conventions (tabs for indentation, no closing PHP tag, snake_case functions in legacy, camelCase in OOP classes).
-- Always use parameterized queries or `$db->sql_escape()` — never interpolate raw user input into SQL.
-- Check CSRF tokens (`check_form_key`) on all state-changing POST requests.
+- This is a **phpBB rewrite** targeting **Symfony 8.x**, **PHP 8.2+**, **React SPA** frontend.
+- Follow phpBB naming and formatting conventions (tabs for indentation, no closing PHP tag, camelCase in OOP classes).
+- Always use PDO prepared statements — never interpolate raw user input into SQL.
 - New code must live under the `phpbb\` namespace (PSR-4).
-- Use dependency injection via the Symfony container; avoid `global` in OOP code.
-- All user-visible strings go through the phpBB language system.
+- Use dependency injection via the Symfony 8.x container; avoid `global` in OOP code.
+- Frontend is a React SPA consuming the REST API — no server-rendered views.
+- All new code must have PHPUnit unit tests; critical flows need Playwright E2E tests.
+- Auth Unified Service (`2026-04-19-auth-unified-service/`) is the authoritative auth design (supersedes `2026-04-18-auth-service/`).

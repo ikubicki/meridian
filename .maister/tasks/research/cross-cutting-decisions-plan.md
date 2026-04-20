@@ -1,8 +1,8 @@
 # Cross-Cutting Architectural Decisions — Implementation Plan
 
 **Date**: 2026-04-20
-**Source**: Cross-cutting assessment §3 (partially divergent patterns)
-**Status**: ✅ All 8 decisions made — ready for implementation
+**Source**: Cross-cutting assessment §3 (partially divergent patterns) + §8 (architecture concerns)
+**Status**: ✅ All 13 decisions made — ready for implementation
 
 ---
 
@@ -325,6 +325,142 @@ deleteTopic() →
 
 ---
 
+## Decision 9: Migration Strategy — Big Bang + Migration Scripts
+
+**Decision**: Big bang cutover. No legacy/new coexistence. Two migration scripts required for data that changes schema fundamentally.
+
+### Migration Scripts Required
+
+| Script | Source | Target | Notes |
+|--------|--------|--------|-------|
+| `migrate_private_messages.php` | `phpbb_privmsgs`, `phpbb_privmsgs_to`, `phpbb_privmsgs_folder`, `phpbb_privmsgs_rules` | `messaging_conversations` + 6 related tables | Thread-per-participant-set model, map folder assignments to pins/archive |
+| `migrate_attachments.php` | `phpbb_attachments` | `phpbb_stored_files` | Generate UUID v7 IDs, move physical files to Flysystem paths, map `attach_id` → UUID |
+
+### Rules
+
+1. **Big bang** — old system is fully retired, new system takes over completely
+2. **No rollback strategy** — this is a new system, not an upgrade. Issues get fixed forward.
+3. **High backward compat** — aim for maximum data preservation, but 100% compat is NOT a goal given codebase age
+4. **Migration scripts run once** before go-live — they are one-shot tools, not reusable infrastructure
+5. **Legacy web/ directory** — completely replaced by React SPA + REST API
+
+### Changes Required
+
+| File / Service | Change |
+|----------------|--------|
+| Messaging HLD | Add reference to migration script requirements |
+| Storage HLD | Add reference to migration script requirements |
+| Cross-cutting assessment §8.1 | Mark as ✅ RESOLVED |
+
+---
+
+## Decision 10: Frontend Strategy — React SPA
+
+**Decision**: The entire frontend is a **React Single Page Application** consuming the REST API. Complete break from server-rendered legacy.
+
+### Architecture
+
+- **React SPA** — full client-side rendering
+- **REST API** — all data flows through `/api/v1/`
+- **No SSR** — pure client-side React
+- **No legacy coexistence** — Twig/prosilver templates fully retired
+- **Tooling**: Vite + TypeScript (target)
+
+### Rules
+
+1. Every piece of UI is a React component
+2. All state comes from REST API calls
+3. No server-side templating in the new system
+4. Authentication via JWT bearer tokens in API calls
+5. The `mocks/forum-index/` prototype validates the UI approach
+
+### Changes Required
+
+| File / Service | Change |
+|----------------|--------|
+| All service HLDs | REST controllers are the ONLY consumer interface |
+| Notifications HLD | `<NotificationBell>` component is part of the main SPA, not a standalone island |
+| Cross-cutting assessment §8.4 | Mark as ✅ RESOLVED |
+
+---
+
+## Decision 11: Testing Strategy — Unit + E2E
+
+**Decision**: All new code requires unit tests (PHPUnit 10+) and the system requires end-to-end tests (Playwright).
+
+### Testing Layers
+
+| Layer | Tool | Scope |
+|-------|------|-------|
+| **Unit** | PHPUnit 10+ | Every service, repository, value object, entity |
+| **E2E** | Playwright | Full user flows through React SPA + REST API |
+
+### Rules
+
+1. No grey area — tests are either isolated unit tests OR full-stack E2E via Playwright
+2. Unit tests mock all dependencies (PDO, cache, event dispatcher)
+3. E2E tests use real database, real API, real browser
+4. All new service code must have unit test coverage before merging
+5. Critical user journeys (login, post, message, search) must have E2E coverage
+
+### Changes Required
+
+| File / Service | Change |
+|----------------|--------|
+| Testing STANDARDS.md | Already covers PHPUnit conventions; add Playwright section |
+| Infrastructure | Add `phpunit.xml`, `playwright.config.ts`, CI pipeline |
+| Cross-cutting assessment §8.5 | Mark as ✅ RESOLVED |
+
+---
+
+## Decision 12: Auth Service Consolidation
+
+**Decision**: `2026-04-19-auth-unified-service/` is the **single authoritative design** for authentication AND authorization. The earlier `2026-04-18-auth-service/` research is **SUPERSEDED**.
+
+### Rules
+
+1. Auth Unified Service owns: AuthN (login, session, JWT tokens) + AuthZ (ACL, permissions, roles)
+2. The old auth-service HLD is kept for historical reference only — NOT for implementation
+3. Any reference to "Auth Service" in other documents means the unified service
+4. Implementation follows the `2026-04-19-auth-unified-service/outputs/high-level-design.md`
+
+### Changes Required
+
+| File / Service | Change |
+|----------------|--------|
+| `2026-04-18-auth-service/` | Add SUPERSEDED.md marker |
+| `services-architecture.md` | Update Auth Service link to unified |
+| All cross-references | Point to unified service |
+
+---
+
+## Decision 13: Symfony Version — 8.x
+
+**Decision**: Target **Symfony 8.x** for all new services. Not 6.x, not 7.x — go directly to the latest major.
+
+### Rationale
+
+- Symfony 3.4 is massively EOL — jumping to 8.x avoids two intermediate upgrades
+- 8.x provides the most modern DI container, HttpKernel, and event system
+- New code is greenfield — no backward compat concerns with Symfony internals
+- PHP 8.2+ is a requirement for Symfony 8.x (already our baseline)
+
+### Rules
+
+1. All new services use Symfony 8.x components
+2. `composer.json` updated to require `symfony/*: ^8.0`
+3. Legacy `vendor/symfony/` 3.4 packages only exist for backward compat of legacy entry points during transition (which is short — big bang)
+
+### Changes Required
+
+| File / Service | Change |
+|----------------|--------|
+| `composer.json` | Update Symfony deps to `^8.0` |
+| `tech-stack.md` | Update Symfony version target |
+| All HLDs referencing "Symfony 7.x" | Update to "Symfony 8.x" |
+
+---
+
 ## Implementation Priority
 
 | Order | Decision | Effort | Blocking |
@@ -337,6 +473,11 @@ deleteTopic() →
 | **6** | D3: Schema strategy | Small | Standard doc only |
 | **7** | D7: Content storage | Medium | Threads HLD amendment |
 | **8** | D8: Forum counters | Medium | Threads + Hierarchy HLD updates |
+| **9** | D12: Auth consolidation | Small | Mark superseded, update refs |
+| **10** | D13: Symfony 8.x | Medium | composer.json + all docs |
+| **11** | D9: Migration scripts | Large | Before go-live (can be parallel) |
+| **12** | D10: Frontend React SPA | Large | Frontend development |
+| **13** | D11: Testing infrastructure | Medium | phpunit.xml + playwright setup |
 
 D1–D6 are **standard definitions** (documentation). D7–D8 require **HLD amendments**.
 

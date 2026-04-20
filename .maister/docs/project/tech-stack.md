@@ -40,7 +40,7 @@ This document describes the technology choices and rationale for **phpBB Vibed**
 | `symfony/process` | ^3.4 | System process execution |
 | `symfony/proxy-manager-bridge` | ~3.4 | Lazy service proxies |
 
-> **⚠️ Upgrade Target**: Symfony 3.4 is EOL. Planned migration to Symfony 6.x/7.x LTS.
+> **⚠️ Upgrade Target**: Symfony 3.4 is EOL. Target migration to **Symfony 8.x** (latest major, PHP 8.2+ required).
 
 #### Twig (1.x / 2.x — upgrade targeted)
 - **Version**: `^1.0 || ^2.0`
@@ -50,20 +50,22 @@ This document describes the technology choices and rationale for **phpBB Vibed**
 - **Rationale**: phpBB's default templating engine since major refactor. Twig 3.x is the upgrade target.
 
 ### Frontend
-- **No modern JS framework** — Vanilla JavaScript only (`styles/prosilver/template/ajax.js`, `forum_fn.js`)
-- **No bundler** — No webpack/Vite; all CSS/JS served as static files
-- **CSS**: Hand-crafted stylesheets in `styles/prosilver/theme/` (normalize.css, responsive.css, base.css)
-- **Icons**: Font Awesome (`assets/css/font-awesome.min.css`)
-- **File upload**: Plupload.js (`assets/plupload/`)
+- **React SPA** — full Single Page Application consuming REST API
+- **Vite** — build tooling (target)
+- **TypeScript** — type-safe frontend (target)
+- Complete break from legacy server-rendered views
+- No SSR — pure client-side React
+- Legacy Twig/prosilver templates fully retired
+- Prototype: `mocks/forum-index/` (React/Vite)
 
 ### Testing
 | Library | Version | Purpose |
 |---|---|---|
-| `phpunit/phpunit` | ^7.0 | Unit and integration testing |
-| `phpunit/dbunit` | ~4.0 | Database integration tests |
-| `fabpot/goutte` | ~3.2 | Functional testing (HTTP client) |
-| `php-webdriver/webdriver` | ~1.8 | E2E testing via Selenium WebDriver |
+| `phpunit/phpunit` | ^10.0 | Unit testing (PHP 8 attributes, AAA pattern) |
+| Playwright | latest | E2E testing (full user flows through React SPA + REST API) |
 | `squizlabs/php_codesniffer` | ~3.4 | Code style linting |
+
+> **Testing strategy**: Two layers only — isolated unit tests (PHPUnit) + full-stack E2E (Playwright). No integration-test grey area.
 
 ---
 
@@ -189,16 +191,16 @@ The following stack applies to all new `phpbb\{service}\*` code (see [services-a
 | Layer | Technology | Notes |
 |---|---|---|
 | **PHP** | 8.2+ (target 8.3) | `readonly` classes, enums, match, named args, fibers |
-| **DI** | Symfony 7.x DI Container | YAML service definitions, autowire disabled |
-| **Events** | Symfony EventDispatcher 7.x | All mutations → `DomainEventCollection`; controllers dispatch |
-| **HTTP** | Symfony HttpKernel 7.x | REST API, YAML routes, JWT bearer auth |
+| **DI** | Symfony 8.x DI Container | YAML service definitions, autowire disabled |
+| **Events** | Symfony EventDispatcher 8.x | All mutations → `DomainEventCollection`; controllers dispatch |
+| **HTTP** | Symfony HttpKernel 8.x | REST API, YAML routes, JWT bearer auth |
 | **Database** | PDO (prepared statements) | No DBAL, no ORM. Direct PDO with named params |
 | **Cache** | `TagAwareCacheInterface` | Pool per service (`cache.{service}`), filesystem-first |
 | **Auth** | JWT (firebase/php-jwt) | Argon2id password hashing, 5-layer ACL |
 | **Content** | s9e TextFormatter | XML default storage, `encoding_engine` column |
-| **Testing** | PHPUnit 10.x | Strict mode, no legacy mocks, `#[Test]` attributes |
+| **Testing** | PHPUnit 10.x + Playwright | Unit tests + E2E browser tests |
 | **Static Analysis** | PHPStan level 8 | Replaces PHP_CodeSniffer |
-| **Frontend** | React islands | `<NotificationBell>`, polling via Visibility API |
+| **Frontend** | React SPA | Full SPA consuming REST API, Vite + TypeScript |
 | **Extension model** | Event-based (macrokernel) | `RegisterXxxEvent` pattern, no tagged DI |
 
 ### Key Differences from Legacy

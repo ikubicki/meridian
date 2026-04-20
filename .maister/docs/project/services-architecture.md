@@ -12,11 +12,12 @@ Based on 10 completed research tasks (April 2026).
 Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\` namespace. Each service follows the **Repository → Service → Controller** layered pattern with:
 - PHP 8.2+ (readonly classes, enums, match expressions)
 - PDO prepared statements (no legacy DBAL)
-- Symfony DI Container (YAML-configured)
-- Symfony EventDispatcher for domain events
-- REST API via Symfony HttpKernel + bearer token auth
+- Symfony 8.x DI Container (YAML-configured)
+- Symfony 8.x EventDispatcher for domain events
+- REST API via Symfony HttpKernel + JWT bearer auth
+- React SPA frontend consuming REST API (full break from legacy templates)
 
-**Approach**: Full rewrite — legacy code treated as reference, not dependency.
+**Approach**: Full rewrite — big bang cutover, legacy code treated as reference, not dependency.
 
 ---
 
@@ -35,7 +36,7 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 | Service | Research | Purpose | Key Decision |
 |---------|----------|---------|--------------|
 | [Cache Service](../../tasks/research/2026-04-19-cache-service/) | Complete | PSR-16 tag-aware caching | TagAwareCacheInterface, filesystem-first, pool isolation |
-| [Auth Service](../../tasks/research/2026-04-18-auth-service/) | Complete | Authorization (ACL engine) | AuthZ only, 5-layer permission resolver, bitfield cache |
+| [Auth Unified Service](../../tasks/research/2026-04-19-auth-unified-service/) | Complete | AuthN + AuthZ (JWT, ACL engine) | Unified auth — login, tokens, 5-layer permission resolver, bitfield cache. **Supersedes** `2026-04-18-auth-service/`. |
 | [Hierarchy Service](../../tasks/research/2026-04-18-hierarchy-service/) | Complete | Forums, categories, subforums | 5-service decomposition, nested set, events+decorators |
 | [Threads Service](../../tasks/research/2026-04-18-threads-service/) | Complete | Topics, posts, content pipeline | Lean core + plugins, raw text storage, hybrid counters |
 | [Messaging Service](../../tasks/research/2026-04-19-messaging-service/) | Complete | Private messages | Thread-per-participant-set, pinned+archive, no folders |
@@ -99,13 +100,19 @@ Full assessment: [cross-cutting-assessment.md](../../tasks/research/cross-cuttin
 
 ### Gaps (research needed during implementation)
 
-- Search Service (Threads expects SearchPlugin)
 - Content Formatting Plugins (BBCode, Markdown, Smilies)
-- Migration Strategy (legacy data → new schemas)
-- Frontend Strategy (React islands? Full SPA?)
-- Session Management (token lifecycle)
 - Configuration Service (unified config access)
 - Moderation / Admin services
+
+### Resolved Decisions (2026-04-20)
+
+- ✅ **Auth Service**: Unified service (`2026-04-19-auth-unified-service/`) supersedes old auth (`2026-04-18-auth-service/`)
+- ✅ **Migration Strategy**: Big bang cutover, migration scripts for PM data + attachments
+- ✅ **Frontend Strategy**: React SPA consuming REST API (complete break from legacy)
+- ✅ **Testing Strategy**: PHPUnit unit tests + Playwright E2E
+- ✅ **Symfony version**: 8.x (latest major)
+- ✅ **Extension model**: Macrokernel (events + decorators, no tagged DI)
+- ✅ **Token type**: JWT bearer tokens
 
 ---
 
