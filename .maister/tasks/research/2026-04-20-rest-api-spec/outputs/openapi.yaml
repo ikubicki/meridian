@@ -35,6 +35,7 @@ info:
     | `f_search` | Registered users | Search within forums |
     | `f_report` | Registered users | Report posts to moderators |
     | `f_sticky` | Trusted users | Post sticky topics |
+    | `f_noapprove` | Trusted users | Posts and topics created by this user are auto-approved (skip moderation queue) |
 
     ### Moderator permissions (per-forum, assigned to users/groups)
     | Permission | Who can use it | Description |
