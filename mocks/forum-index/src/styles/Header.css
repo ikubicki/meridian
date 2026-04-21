@@ -49,7 +49,6 @@
   border-radius: 5px;
   height: 38px;
   padding: 8px 40px 8px 8px;
-  font-size: 1.2em;
   font-family: Verdana, Helvetica, Arial, sans-serif;
   background: #fff3;
   color: #fff;
@@ -58,6 +57,9 @@
 .header-search .inputbox:focus {
   background: #fffe;
   color: #333;
+}
+.header-search .inputbox:focus-visible {
+  outline: none;
 }
 
 .header-search .button-search {
@@ -114,6 +116,12 @@
 }
 .hamburger-btn:hover {
   background: rgba(255,255,255,0.25);
+}
+.hamburger-btn:focus,
+.hamburger-btn:focus-visible {
+  background: #fff;
+  color: #000;
+  outline: none;
 }
 
 /* ── Dropdown (Quick Links etc.) ───────────────────────── */

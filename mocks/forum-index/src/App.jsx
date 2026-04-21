@@ -10,6 +10,30 @@ import TopicView from './components/TopicView.jsx';
 export default function App() {
   const [view, setView] = useState('index'); // 'index' | 'topic'
 
+  useEffect(() => {
+    let ticking = false;
+
+    const updateParallax = () => {
+      const offset = Math.round(window.scrollY * 0.5);
+      document.documentElement.style.setProperty('--bg-parallax-y', `${offset}px`);
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(updateParallax);
+    };
+
+    updateParallax();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.documentElement.style.removeProperty('--bg-parallax-y');
+    };
+  }, []);
+
   return (
     <div id="wrap" className="wrap">
       <a href="#page-body" className="skip-link">Skip to content</a>

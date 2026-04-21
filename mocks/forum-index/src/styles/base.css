@@ -8,12 +8,16 @@
 
 html { font-size: 62.5%; height: 101%; }
 
+:root {
+  --bg-parallax-y: 0px;
+}
+
 body {
   font-family: 'Inter', Verdana, Helvetica, Arial, sans-serif;
   font-weight: 300;
   font-size: 1.3rem;
   line-height: normal;
-  color: #536482;
+  color: #537282;
   background-color: #F5F7FA;
   margin: 0;
   padding: 12px 0;
@@ -24,13 +28,13 @@ body {
 body::before {
   content: '';
   position: fixed;
-  top: -300px;
+  top: calc(-300px - var(--bg-parallax-y));
   left: -20%;
   width: 140%;
   z-index: -1;
   background: #f5f7fa linear-gradient(to bottom, #0076B1 150px, #12A3EB 400px, #F5F7FA 750px, #F5F7FA 100%) no-repeat;
   background-size: 100% 200%;
-  animation: gradient-flow 60s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: gradient-flow 120s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
   transform-origin: center center;
   min-height: 1000px;
 }
