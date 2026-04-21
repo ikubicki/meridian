@@ -115,6 +115,30 @@
   outline: none;
 }
 
+.sticky-notification-btn {
+  background: rgba(255,255,255,0.25);
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.sticky-notification-btn:hover {
+  background: rgba(255,255,255,0.35);
+}
+.sticky-notification-btn:focus,
+.sticky-notification-btn:focus-visible {
+  background: #fff;
+  color: #000;
+  outline: none;
+}
+
 .sticky-search-bar {
   max-width: 1152px;
   margin: 0 auto;

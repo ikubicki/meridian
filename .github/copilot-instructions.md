@@ -8,6 +8,7 @@ When generating or reviewing code for this project, apply the standards document
 
 - **General conventions** (naming, PHPDoc, file headers): [.maister/docs/standards/global/STANDARDS.md](.maister/docs/standards/global/STANDARDS.md)
 - **PHP / Backend standards** (namespacing, DI, SQL safety, security): [.maister/docs/standards/backend/STANDARDS.md](.maister/docs/standards/backend/STANDARDS.md)
+- **Frontend standards** (React SPA components, CSS organization, accessibility, icons): [.maister/docs/standards/frontend/STANDARDS.md](.maister/docs/standards/frontend/STANDARDS.md)
 - **Testing standards** (PHPUnit, test naming, mocking, isolation): [.maister/docs/standards/testing/STANDARDS.md](.maister/docs/standards/testing/STANDARDS.md)
 
 See the full index at [.maister/docs/INDEX.md](.maister/docs/INDEX.md).

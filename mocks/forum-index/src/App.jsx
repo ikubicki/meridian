@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import './styles/Header.css';
 import './styles/StickyHeader.css';
 import './styles/ActionBar.css';
-import { forums, stats, onlineUsers, birthdays, topic, posts, FORUM_TYPE_CAT, FORUM_TYPE_POST, FORUM_TYPE_LINK } from './data.js';
+import { forums, stats, onlineUsers, birthdays, topic, posts } from './data.js';
 import ForumList from './components/ForumList.jsx';
 import StatBlocks from './components/StatBlocks.jsx';
 import TopicView from './components/TopicView.jsx';
 
 export default function App() {
-  const [view, setView] = useState('index'); // 'index' | 'topic'
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isTopicView = location.pathname.startsWith('/topic');
 
   useEffect(() => {
     let ticking = false;
@@ -38,18 +41,26 @@ export default function App() {
     <div id="wrap" className="wrap">
       <a href="#page-body" className="skip-link">Skip to content</a>
       <Header />
-      <StickyHeader view={view} topic={topic} onBack={() => setView('index')} />
+      <StickyHeader view={isTopicView ? 'topic' : 'index'} topic={topic} onBack={() => navigate('/')} />
       <main id="page-body">
         <div className="page-body-inner">
-          {view === 'index' ? (
-            <>
-              <ActionBar />
-              <ForumList forums={forums} onTopicClick={() => setView('topic')} />
-              <StatBlocks stats={stats} onlineUsers={onlineUsers} birthdays={birthdays} />
-            </>
-          ) : (
-            <TopicView topic={topic} posts={posts} onBack={() => setView('index')} />
-          )}
+          <Routes>
+            <Route
+              path="/"
+              element={(
+                <>
+                  <ActionBar />
+                  <ForumList forums={forums} onTopicClick={() => navigate('/topic/1')} />
+                  <StatBlocks stats={stats} onlineUsers={onlineUsers} birthdays={birthdays} />
+                </>
+              )}
+            />
+            <Route
+              path="/topic/:topicId"
+              element={<TopicView topic={topic} posts={posts} onBack={() => navigate('/')} />}
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </div>
       </main>
       <Footer />
@@ -65,13 +76,13 @@ function Header() {
         <div className="inner headerbar-inner">
           {/* Left: logo */}
           <div className="header-logo">
-            <a href="#" title="Board index">
+            <Link to="/" title="Board index">
               <img
                 className="site-logo"
                 src="./site_logo.svg"
                 alt="phpBB"
               />
-            </a>
+            </Link>
           </div>
 
           {/* Center: search */}
@@ -93,8 +104,72 @@ function Header() {
             </form>
           </div>
 
-          {/* Right: hamburger menu */}
-          <HamburgerMenu />
+          <div className="header-right">
+            <NotificationsButton className="notification-btn" />
+            <HamburgerMenu />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const MOCK_NOTIFICATIONS = [
+  { id: 1, icon: 'reply', text: 'Jan Kowalski odpowiedział w temacie „Witaj świecie"', time: '2 min temu', unread: true },
+  { id: 2, icon: 'favorite', text: 'Ktoś polubił Twój post w „Ogólne dyskusje"', time: '15 min temu', unread: true },
+  { id: 3, icon: 'person_add', text: 'Masz nowego obserwującego', time: '1 godz. temu', unread: false },
+  { id: 4, icon: 'mark_chat_unread', text: 'Nowa wiadomość prywatna od Anna123', time: '3 godz. temu', unread: false },
+];
+
+function NotificationsButton({ className }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const onOutside = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onOutside);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onOutside);
+    };
+  }, [open]);
+
+  const unreadCount = MOCK_NOTIFICATIONS.filter(n => n.unread).length;
+
+  return (
+    <div className="notif-wrapper" ref={ref}>
+      <button
+        type="button"
+        className={className}
+        aria-label="Powiadomienia"
+        title="Powiadomienia"
+        aria-expanded={open}
+        onClick={() => setOpen(v => !v)}
+      >
+        <span className="material-symbols-outlined">mark_unread_chat_alt</span>
+        {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+      </button>
+      <div className={`notif-panel${open ? ' notif-panel--open' : ''}`}>
+        <div className="notif-panel-header">
+          <span>Powiadomienia</span>
+          <button className="notif-mark-all" type="button">Oznacz wszystkie jako przeczytane</button>
+        </div>
+        <ul className="notif-list">
+          {MOCK_NOTIFICATIONS.map(n => (
+            <li key={n.id} className={`notif-item${n.unread ? ' notif-item--unread' : ''}`}>
+              <span className="material-symbols-outlined notif-item-icon">{n.icon}</span>
+              <div className="notif-item-body">
+                <p className="notif-item-text">{n.text}</p>
+                <span className="notif-item-time">{n.time}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="notif-panel-footer">
+          <a href="#">Zobacz wszystkie</a>
         </div>
       </div>
     </div>
@@ -164,10 +239,10 @@ function StickyHeader({ view, topic, onBack }) {
     <div className={`sticky-header${visible ? ' sticky-visible' : ''}`}>
       <div className="sticky-inner">
         <div className="sticky-left">
-          <a href="#" className="sticky-logo" title="Board index">
-            <img src="/favicon.ico" alt="phpBB" className="sticky-ico" />
+          <Link to="/" className="sticky-logo" title="Board index">
+            <img src="./favicon.ico" alt="phpBB" className="sticky-ico" />
             <img src="./site_logo.svg" alt="phpBB" className="sticky-svg" />
-          </a>
+          </Link>
           <nav aria-label="Breadcrumb">
             <ul className="breadcrumbs">
               {view === 'topic' ? (
@@ -184,7 +259,7 @@ function StickyHeader({ view, topic, onBack }) {
                 </>
               ) : (
                 <li className="crumb">
-                  <a href="#" aria-current="page">Board index</a>
+                  <Link to="/" aria-current="page">Board index</Link>
                 </li>
               )}
             </ul>
@@ -199,6 +274,7 @@ function StickyHeader({ view, topic, onBack }) {
           >
             <span className="material-symbols-outlined">search</span>
           </button>
+          <NotificationsButton className="sticky-notification-btn" />
           <HamburgerMenu />
         </div>
       </div>

@@ -36,8 +36,8 @@ Domain event standard: all mutations return `DomainEventCollection`, controllers
 ### [Testing](standards/testing/STANDARDS.md)
 PHPUnit 10+ conventions: `#[Test]`, `#[DataProvider]`, `#[Before]`, `#[After]` PHP 8 attributes (no annotations), `PascalCase` test class names, `camelCase` method names, `setUp(): void`, `expectException()` over annotation, parameterized data providers, test isolation, DB integration testing patterns.
 
-### Frontend _(skipped)_
-> Frontend standards were not selected during initialization and are not included in this project.
+### [Frontend](standards/frontend/STANDARDS.md)
+React SPA conventions from `mocks/forum-index`: functional components + hooks, split CSS by feature (`src/styles/*.css`), component-level interactions, accessibility attributes (`aria-*`), Material Symbols usage, and mock data conventions compatible with phpBB field naming.
 
 ---
 
@@ -50,6 +50,7 @@ When generating or reviewing code, use this index to locate relevant standards:
 - For **REST API conventions, HTTP status codes, JWT auth, JSON response shapes** → read `standards/backend/REST_API.md`
 - For **denormalized counters, cache-to-DB flush, recalculation** → read `standards/backend/COUNTER_PATTERN.md`
 - For **domain events, DomainEventCollection, event naming** → read `standards/backend/DOMAIN_EVENTS.md`
+- For **React SPA patterns, component/CSS conventions, accessibility, icons** → read `standards/frontend/STANDARDS.md`
 - For **unit/integration tests, mocking, PHPUnit 10+** → read `standards/testing/STANDARDS.md`
 - For **project context, goals, architecture** → read the relevant `project/*.md` file
 
