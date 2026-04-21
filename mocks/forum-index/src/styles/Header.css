@@ -291,7 +291,6 @@
   visibility: hidden;
   transition: opacity 0.15s, visibility 0.15s;
 }
-.header-hamburger:hover > .dropdown,
 .dropdown.dropdown-open {
   opacity: 1;
   visibility: visible;
