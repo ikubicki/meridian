@@ -79,15 +79,15 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"phpbb\\core\\": "src/phpbb/core/",
-			"phpbb\\": "src/phpbb/forums/",
-			"phpbb\\admin\\": "src/phpbb/admin/",
-			"phpbb\\common\\": "src/phpbb/common/",
-			"phpbb\\api\\": "src/phpbb/api/",
-			"phpbb\\install\\": "src/phpbb/install/"
+			"phpbb3\\core\\": "src/phpbb3/core/",
+			"phpbb3\\": "src/phpbb3/forums/",
+			"phpbb3\\admin\\": "src/phpbb3/admin/",
+			"phpbb3\\common\\": "src/phpbb3/common/",
+			"phpbb3\\api\\": "src/phpbb3/api/",
+			"phpbb3\\install\\": "src/phpbb3/install/"
 		},
 		"files": [
-			"src/phpbb/install/redirect.php"
+			"src/phpbb3/install/redirect.php"
 		]
 	},
 	"config": {
