@@ -1,14 +1,10 @@
 /* ── Forum list – category block (.forabg) ─────────────── */
 .forabg {
-  background-color: #0076B1;
-  background-image: linear-gradient(to bottom,
-    #6ACEFF 0%,
-    #12A3EB 2px,
-    #0076B1 92px,
-    #0076B1 100%);
-  border-radius: 7px;
-  margin-bottom: 4px;
-  padding: 5px;
+  background-color: #fff;
+  background-image: none;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  padding: 8px;
 }
 .forabg .inner { padding: 0; }
 
@@ -21,10 +17,10 @@
 }
 li.header dt,
 li.header dd {
-  color: #FFFFFF;
+  color: #334155;
   line-height: 1.6em;
   font-size: 1em;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: inherit;
   text-transform: uppercase;
   margin: 2px 0 4px 0;
   padding-top: 2px;
@@ -37,26 +33,56 @@ li.header dd {
 }
 .topiclist .header dt {
   flex: 1;
-  font-weight: bold;
+  font-weight: 300;
 }
 .topiclist .header dt .list-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1em;
 }
+
+.category-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #334155;
+  cursor: pointer;
+}
+
+.category-toggle:hover {
+  background: #f1f5f9;
+}
+
+.category-toggle:focus,
+.category-toggle:focus-visible {
+  outline: none;
+  background: #e2e8f0;
+}
+
+.category-toggle .material-symbols-outlined {
+  font-size: 20px;
+}
 .topiclist .header dt a.category-title {
-  color: #FFFFFF;
-  font-weight: bold;
+  color: #334155;
+  font-weight: 300;
   text-decoration: none;
   text-transform: uppercase;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: inherit;
 }
 .topiclist .header dt a.category-title:hover {
-  color: #A8D8FF;
+  color: #105289;
   text-decoration: underline;
 }
 .topiclist .header dd {
   width: 95px;
   text-align: center;
-  font-weight: bold;
+  font-weight: 300;
   padding-left: 1px;
 }
 .topiclist .header dd.lastpost {
@@ -66,15 +92,16 @@ li.header dd {
 
 /* ── Forum list container ──────────────────────────────── */
 ul.topiclist.forums {
-  background-color: #EEF5F9;
-  background-image: linear-gradient(to bottom, #D2E0EB 0%, #EEF5F9 100%);
-  border-radius: 0 0 4px 4px;
+  background-color: #fff;
+  background-image: none;
+  border: none;
+  border-radius: 12px;
 }
 
 /* ── Forum rows ────────────────────────────────────────── */
 .topiclist.forums .row {
-  border-top: 1px solid #FFFFFF;
-  border-bottom: 1px solid #00608F;
+  border-top: none;
+  border-bottom: 1px solid #e2e8f0;
 }
 .topiclist.forums .row:last-child {
   border-bottom: none;
@@ -83,12 +110,12 @@ ul.topiclist.forums {
 .topiclist.forums .row-item {
   display: flex;
   align-items: center;
-  padding: 5px 10px;
+  padding: 8px 12px;
   min-height: 35px;
   transition: background-color 0.12s;
 }
 .topiclist.forums .row:hover .row-item {
-  background-color: #F6F4D0;
+  background-color: #f8fafc;
 }
 
 /* dt: icon + name + desc */
@@ -157,11 +184,11 @@ a.forumtitle:hover { color: #D31141; text-decoration: underline; }
   line-height: 2.2em;
   font-size: 1.2em;
   color: #536482;
-  border-left: 1px solid #FFFFFF;
+  border-left: 1px solid #e2e8f0;
   padding: 4px 0;
 }
 .topiclist.forums .row:hover dd {
-  border-left-color: #CCCCCC;
+  border-left-color: #cbd5e1;
 }
 
 /* ── Redirect column ───────────────────────────────────── */
@@ -171,7 +198,7 @@ a.forumtitle:hover { color: #D31141; text-decoration: underline; }
   font-size: 1.1em;
   color: #4C5D77;
   line-height: 2.2em;
-  border-left: 1px solid #FFFFFF;
+  border-left: 1px solid #e2e8f0;
   padding: 4px 0;
 }
 
@@ -182,7 +209,7 @@ a.forumtitle:hover { color: #D31141; text-decoration: underline; }
   color: #536482;
   padding: 4px 4px 4px 5px;
   line-height: 1.4;
-  border-left: 1px solid #FFFFFF;
+  border-left: 1px solid #e2e8f0;
 }
 
 .lastsubject { color: #105289; font-weight: bold; font-size: 1em; }
@@ -191,7 +218,30 @@ a.forumtitle:hover { color: #D31141; text-decoration: underline; }
 .last-post-link:hover { color: #D31141; }
 .no-posts { color: #666; font-style: italic; }
 
-.last-post-info { font-size: 1em; }
+.last-post-info {
+  font-size: 1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-post-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #105289;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.last-post-content {
+  min-width: 0;
+}
 
 time { color: #536482; font-size: 1em; }
 

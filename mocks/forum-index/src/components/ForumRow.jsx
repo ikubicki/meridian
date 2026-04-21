@@ -115,6 +115,10 @@ function LastPostInfo({ forum, onTopicClick }) {
   const date = ts ? new Date(ts * 1000).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   }) : '';
+  const posterInitial = (forum.forum_last_poster_name || '?').charAt(0).toUpperCase();
+  const avatarBg = forum.forum_last_poster_colour
+    ? `#${forum.forum_last_poster_colour}`
+    : stringToColour(forum.forum_last_poster_name || '');
 
   const posterStyle = forum.forum_last_poster_colour
     ? { color: `#${forum.forum_last_poster_colour}`, fontWeight: 'bold' }
@@ -122,21 +126,31 @@ function LastPostInfo({ forum, onTopicClick }) {
 
   return (
     <span className="last-post-info">
-      <a href="#" onClick={(e) => { e.preventDefault(); onTopicClick && onTopicClick(); }} className="lastsubject" aria-label={forum.forum_last_post_subject}>
-        {truncate(forum.forum_last_post_subject, 26)}
-      </a>
-      <br />
-      by{' '}
-      <a href={`#user-${forum.forum_last_poster_name}`} className="username" style={posterStyle}>
-        {forum.forum_last_poster_name}
-      </a>{' '}
-      <a href={`#post-${forum.forum_last_post_id}`} title="View latest post" className="last-post-link"><span className="material-symbols-outlined">chevron_right</span></a>
-      <br />
-      <time dateTime={new Date(ts * 1000).toISOString()}>{date}</time>
+      <span className="last-post-avatar" style={{ background: avatarBg }} aria-hidden="true">{posterInitial}</span>
+      <span className="last-post-content">
+        <a href="#" onClick={(e) => { e.preventDefault(); onTopicClick && onTopicClick(); }} className="lastsubject" aria-label={forum.forum_last_post_subject}>
+          {truncate(forum.forum_last_post_subject, 26)}
+        </a>
+        <br />
+        by{' '}
+        <a href={`#user-${forum.forum_last_poster_name}`} className="username" style={posterStyle}>
+          {forum.forum_last_poster_name}
+        </a>{' '}
+        <a href={`#post-${forum.forum_last_post_id}`} title="View latest post" className="last-post-link"><span className="material-symbols-outlined">chevron_right</span></a>
+        <br />
+        <time dateTime={new Date(ts * 1000).toISOString()}>{date}</time>
+      </span>
     </span>
   );
 }
 
 function truncate(str, len) {
   return str.length > len ? str.slice(0, len) + '…' : str;
+}
+
+function stringToColour(str = '') {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 45%, 52%)`;
 }

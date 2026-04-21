@@ -79,7 +79,6 @@ font-size: 3em;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 12px 30px rgba(10, 34, 68, 0.18);
 }
 
 .quick-reply-bubble:focus-within,
