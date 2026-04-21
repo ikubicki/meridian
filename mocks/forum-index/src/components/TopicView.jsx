@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import PostItem from './PostItem.jsx';
 import '../styles/TopicView.css';
 
 export default function TopicView({ topic, posts, onBack }) {
+  const [quickReplyValue, setQuickReplyValue] = useState('');
   const firstPost = posts[0];
   const replies = posts.slice(1);
   const postCount = topic.topic_posts_approved;
   const pageCount = 1;
+  const isQuickReplyExpanded = quickReplyValue.trim().length > 0;
 
   return (
     <div className="topic-view">
@@ -40,9 +43,9 @@ export default function TopicView({ topic, posts, onBack }) {
                 <a href={`#user-${firstPost.poster_id}`} className="topic-hero-author">
                   {firstPost.poster_name}
                 </a>
-                <span className="topic-hero-date">
+                <a href={`#p${firstPost.post_id}`} className="topic-hero-date">
                   {formatDate(firstPost.post_time)}
-                </span>
+                </a>
                 <span className="topic-hero-count">· {postCount} {postCount === 1 ? 'post' : 'posty/postów'}</span>
               </div>
             )}
@@ -82,14 +85,31 @@ export default function TopicView({ topic, posts, onBack }) {
         </ol>
       )}
 
-      {/* ── Bottom bar ── */}
-      <div className="action-bar compact action-bar-bottom">
-        <a href="#reply" className="button topic-reply-btn">
-          <span className="material-symbols-outlined icon-inline">reply</span> Odpowiedz
-        </a>
-        <a href="#" className="return-link" onClick={(e) => { e.preventDefault(); onBack(); }}>
-          &#8617; Wróć do „{topic.forum_name}"
-        </a>
+      <div className="quick-reply-anchor" id="reply">
+        <div className={`quick-reply-bubble${isQuickReplyExpanded ? ' quick-reply-bubble--expanded' : ''}`}>
+          <div className="quick-reply-toolbar" aria-hidden="true">
+            <button type="button" className="quick-reply-tool">B</button>
+            <button type="button" className="quick-reply-tool quick-reply-tool--italic">I</button>
+            <button type="button" className="quick-reply-tool">U</button>
+            <button type="button" className="quick-reply-tool">"</button>
+            <button type="button" className="quick-reply-tool">#</button>
+            <button type="button" className="quick-reply-tool">Link</button>
+          </div>
+          <div className="quick-reply-compose">
+            <textarea
+              className="quick-reply-input"
+              placeholder="Napisz odpowiedź..."
+              aria-label="Szybka odpowiedź"
+              value={quickReplyValue}
+              onChange={(e) => setQuickReplyValue(e.target.value)}
+            />
+            <div className="quick-reply-actions">
+              <button type="button" className="quick-reply-submit" aria-label="Wyślij" title="Wyślij">
+                <span className="material-symbols-outlined icon-inline">reply</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>

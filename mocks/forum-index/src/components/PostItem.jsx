@@ -14,7 +14,9 @@ export default function PostItem({ post }) {
               ? <span style={{ color: `#${post.poster_colour}` }}>{post.poster_name}</span>
               : post.poster_name}
           </a>
-          <span className="bubble-date">{formatDate(post.post_time)}</span>
+          <a href={`#p${post.post_id}`} className="bubble-date">
+            {formatDate(post.post_time)}
+          </a>
         </div>
       </div>
 
