@@ -345,3 +345,130 @@ File header (copyright/license block) required on every new PHP file — copy fr
 - **No `composer.json` changes**: `phpbb\threads\` maps to `src/phpbb/threads/` via the existing PSR-4 `phpbb\` → `src/phpbb/` rule
 - **Controller auto-wiring**: Controllers under `phpbb\api\Controller\` are already covered by the wildcard resource in `services.yaml` lines 7–9; no explicit controller entries needed in Group 6
 - **Anonymous user fallback**: The pattern `$user ?? $this->userRepository->findById(self::ANONYMOUS_USER_ID)` must be preserved in all three list/show actions across both controllers
+
+---
+
+## OpenAPI Gap Milestones (Categorized Backlog)
+
+Source comparison: OpenAPI spec vs implemented controller routes (snapshot from `outputs/openapi-missing-endpoints.txt`).
+
+### Milestone A: Conversations and Messaging (18)
+
+- [ ] Implement conversations and unread messaging API surface
+Endpoints:
+`delete /conversations/{conversationId}`
+`delete /conversations/{conversationId}/archive`
+`delete /conversations/{conversationId}/messages/{messageId}`
+`delete /conversations/{conversationId}/mute`
+`delete /conversations/{conversationId}/participants/{userId}`
+`delete /conversations/{conversationId}/pin`
+`get /conversations`
+`get /conversations/{conversationId}`
+`get /conversations/{conversationId}/messages`
+`get /messaging/unread`
+`patch /conversations/{conversationId}/messages/{messageId}`
+`post /conversations`
+`post /conversations/{conversationId}/archive`
+`post /conversations/{conversationId}/messages`
+`post /conversations/{conversationId}/mute`
+`post /conversations/{conversationId}/participants`
+`post /conversations/{conversationId}/pin`
+`post /conversations/{conversationId}/read`
+
+### Milestone B: User Management and Moderation (14)
+
+- [ ] Implement user lifecycle, typing, and user-ban endpoints
+Endpoints:
+`delete /users/{userId}/bans/{banId}`
+`get /users/check-email`
+`get /users/check-username`
+`get /users/{userId}/bans`
+`get /users/{userId}/type`
+`post /users`
+`post /users/{userId}/bans`
+`post /users/{userId}/delete`
+`post /users/{userId}/type`
+`delete /bans/{banId}`
+`get /bans`
+`get /bans/{banId}`
+`patch /bans/{banId}`
+`post /bans`
+
+### Milestone C: Groups and Permissions (13)
+
+- [ ] Implement groups CRUD and forum permission assignment endpoints
+Endpoints:
+`delete /groups/{groupId}`
+`delete /groups/{groupId}/members/{userId}`
+`get /groups`
+`get /groups/{groupId}`
+`get /groups/{groupId}/members`
+`patch /groups/{groupId}`
+`post /groups`
+`post /groups/{groupId}/members`
+`delete /forums/{forumId}/permissions/{groupId}`
+`get /forums/{forumId}/permissions/{groupId}`
+`post /forums/{forumId}/permissions/{groupId}`
+`patch /forums/{forumId}`
+`post /forums/{forumId}/move`
+
+### Milestone D: Topic/Post Advanced Moderation (13)
+
+- [ ] Implement advanced topic/post moderation and lifecycle endpoints
+Endpoints:
+`delete /topics/{topicId}`
+`patch /topics/{topicId}`
+`post /topics/{topicId}/approve`
+`post /topics/{topicId}/merge`
+`post /topics/{topicId}/move`
+`post /topics/{topicId}/restore`
+`post /topics/{topicId}/split`
+`delete /posts/{postId}`
+`get /posts/{postId}`
+`patch /posts/{postId}`
+`post /posts/{postId}/approve`
+`post /posts/{postId}/report`
+`post /posts/{postId}/restore`
+
+### Milestone E: Drafts, Files, and Notifications (13)
+
+- [ ] Implement drafts, storage, and notifications endpoints
+Endpoints:
+`delete /drafts/{draftId}`
+`get /drafts`
+`get /drafts/{draftId}`
+`patch /drafts/{draftId}`
+`post /drafts`
+`delete /files/{fileId}`
+`get /files/{fileId}`
+`get /files/{fileId}/download`
+`post /files`
+`get /notifications`
+`get /notifications/count`
+`post /notifications/read-all`
+`post /notifications/{notificationId}/read`
+
+### Milestone F: Auth, Profile, Config, Search (11)
+
+- [ ] Implement remaining auth/profile/system endpoints
+Endpoints:
+`get /auth/sso/{provider}/authorize`
+`post /auth/logout-all`
+`post /auth/sso/{provider}/callback`
+`patch /me`
+`put /me/password`
+`get /config`
+`post /config`
+`post /password-reset`
+`post /password-reset/confirm`
+`get /search`
+`post /search/rebuild`
+
+### Milestone G: Delivery and Verification Gate
+
+- [ ] Deliver each milestone with service/repository/controller split, unit+integration coverage, and OpenAPI conformance checks
+Acceptance criteria:
+`composer test` passes
+`composer test:e2e` passes
+`composer cs:fix` passes
+No route mismatch against OpenAPI for delivered category
