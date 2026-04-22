@@ -1,0 +1,12 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    phpbb\api\Controller\:
+        resource: '../api/Controller/'
+        tags: ['controller.service_arguments']
+
+    phpbb\api\EventSubscriber\:
+        resource: '../api/EventSubscriber/'

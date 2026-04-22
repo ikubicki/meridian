@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * This file is part of the phpBB Forum Software package.
@@ -11,16 +12,15 @@
  *
  */
 
-/**
- * Forum REST API entry point.
- *
- * No session_begin(), no acl() — authentication is handled exclusively
- * by api.auth_subscriber (Phase 1: returns 501 stub).
- */
+declare(strict_types=1);
 
-define('PHPBB_FILESYSTEM_ROOT', __DIR__ . '/../');
-$phpbb_root_path = './';
-include(PHPBB_FILESYSTEM_ROOT . 'src/phpbb/common/common.php');
+use phpbb\Kernel;
+use Symfony\Component\HttpFoundation\Request;
 
-/** @var \phpbb\core\Application $app */
-$phpbb_container->get('api.application')->run();
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$kernel   = new Kernel($_SERVER['PHPBB_APP_ENV'] ?? 'production', (bool) ($_SERVER['PHPBB_APP_DEBUG'] ?? false));
+$request  = Request::createFromGlobals();
+$response = $kernel->handle($request);
+$response->send();
+$kernel->terminate($request, $response);

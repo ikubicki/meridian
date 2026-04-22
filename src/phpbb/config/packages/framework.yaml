@@ -1,0 +1,10 @@
+framework:
+    secret: '%env(default:phpbb-api-secret-change-in-production:PHPBB_APP_SECRET)%'
+    http_method_override: false
+    handle_all_throwables: true
+    session:
+        enabled: false
+    router:
+        utf8: true
+    php_errors:
+        log: true

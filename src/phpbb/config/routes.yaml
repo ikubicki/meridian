@@ -1,0 +1,6 @@
+controllers:
+    resource:
+        path: '../api/Controller/'
+        namespace: phpbb\api\Controller
+    type: attribute
+    prefix: /api/v1

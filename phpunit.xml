@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         stopOnFailure="false">
+
+    <testsuites>
+        <testsuite name="phpbb4">
+            <directory>tests/phpbb</directory>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <env name="PHPBB_JWT_SECRET" value="test-secret-minimum-32-chars-ok!"/>
+        <env name="PHPBB_APP_ENV" value="test"/>
+        <env name="PHPBB_APP_DEBUG" value="0"/>
+    </php>
+
+    <source>
+        <include>
+            <directory>src/phpbb</directory>
+        </include>
+    </source>
+
+</phpunit>
