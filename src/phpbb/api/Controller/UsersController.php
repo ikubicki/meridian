@@ -16,55 +16,98 @@ declare(strict_types=1);
 
 namespace phpbb\api\Controller;
 
+use phpbb\user\DTO\UserSearchCriteria;
+use phpbb\user\Service\UserSearchService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 class UsersController
 {
-	/** @var array<int, array<string, mixed>> */
-	private const MOCK_USERS = [
-		1 => [
-			'id'           => 1,
-			'username'     => 'admin',
-			'email'        => 'admin@example.com',
-			'utype'        => 3,
-			'registeredAt' => '2026-01-01T00:00:00Z',
-		],
-		2 => [
-			'id'           => 2,
-			'username'     => 'alice',
-			'email'        => 'alice@example.com',
-			'utype'        => 0,
-			'registeredAt' => '2026-02-15T10:00:00Z',
-		],
-	];
+	public function __construct(
+		private readonly UserSearchService $userSearchService,
+	) {
+	}
 
 	#[Route('/me', name: 'api_v1_me_show', methods: ['GET'])]
 	public function me(Request $request): JsonResponse
 	{
-		// TODO: Replace with real UserService::getUser() using $token->sub
 		$token  = $request->attributes->get('_api_token');
-		$userId = $token?->sub ?? 2;
+		$userId = (int) ($token?->sub ?? 0);
 
-		$user = self::MOCK_USERS[(int) $userId] ?? self::MOCK_USERS[2];
+		if ($userId <= 0)
+		{
+			return new JsonResponse(['error' => 'Unauthorised', 'status' => 401], 401);
+		}
 
-		return new JsonResponse(['data' => $user]);
+		$user = $this->userSearchService->findById($userId);
+
+		if ($user === null)
+		{
+			return new JsonResponse(['error' => 'User not found', 'status' => 404], 404);
+		}
+
+		return new JsonResponse(['data' => [
+			'id'           => $user->id,
+			'username'     => $user->username,
+			'email'        => $user->email,
+			'type'         => $user->type->value,
+			'colour'       => $user->colour,
+			'avatarUrl'    => $user->avatarUrl,
+			'posts'        => $user->posts,
+			'registeredAt' => $user->registeredAt->format(\DateTimeInterface::ATOM),
+		]]);
+	}
+
+	#[Route('/users', name: 'api_v1_users_index', methods: ['GET'])]
+	public function index(Request $request): JsonResponse
+	{
+		$criteria = new UserSearchCriteria(
+			query: $request->query->get('q'),
+			page: max(1, (int) $request->query->get('page', 1)),
+			perPage: min(100, max(1, (int) $request->query->get('perPage', 25))),
+			sort: $request->query->get('sort', 'username'),
+			sortOrder: $request->query->get('order', 'asc'),
+		);
+
+		$paginated = $this->userSearchService->search($criteria);
+
+		$items = array_map(static fn ($user) => [
+			'id'       => $user->id,
+			'username' => $user->username,
+			'colour'   => $user->colour,
+			'posts'    => $user->posts,
+		], $paginated->items);
+
+		return new JsonResponse([
+			'data' => $items,
+			'meta' => [
+				'total'      => $paginated->total,
+				'page'       => $paginated->page,
+				'perPage'    => $paginated->perPage,
+				'totalPages' => $paginated->totalPages(),
+			],
+		]);
 	}
 
 	#[Route('/users/{userId}', name: 'api_v1_users_show', methods: ['GET'])]
 	public function show(int $userId): JsonResponse
 	{
-		// TODO: Replace with real UserService::getPublicProfile()
-		if (!isset(self::MOCK_USERS[$userId])) {
+		$user = $this->userSearchService->findById($userId);
+
+		if ($user === null)
+		{
 			return new JsonResponse(['error' => 'User not found', 'status' => 404], 404);
 		}
 
-		$user = self::MOCK_USERS[$userId];
-
-		// Public profile: omit email for non-admin display
-		unset($user['email']);
-
-		return new JsonResponse(['data' => $user]);
+		return new JsonResponse(['data' => [
+			'id'           => $user->id,
+			'username'     => $user->username,
+			'type'         => $user->type->value,
+			'colour'       => $user->colour,
+			'avatarUrl'    => $user->avatarUrl,
+			'posts'        => $user->posts,
+			'registeredAt' => $user->registeredAt->format(\DateTimeInterface::ATOM),
+		]]);
 	}
 }

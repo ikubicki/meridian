@@ -37,3 +37,45 @@ services:
     phpbb\cache\CachePoolFactoryInterface:
         alias: phpbb\cache\CachePoolFactory
         public: true
+
+    # ---------------------------------------------------------------------------
+    # Database connection (native PDO — no Doctrine DBAL)
+    # ---------------------------------------------------------------------------
+
+    PDO:
+        class: PDO
+        factory: ['phpbb\db\PdoFactory', 'create']
+        arguments:
+            $host:     '%env(PHPBB_DB_HOST)%'
+            $dbname:   '%env(PHPBB_DB_NAME)%'
+            $user:     '%env(PHPBB_DB_USER)%'
+            $password: '%env(PHPBB_DB_PASSWD)%'
+        public: false
+
+    # ---------------------------------------------------------------------------
+    # User module (M2)
+    # ---------------------------------------------------------------------------
+
+    phpbb\user\Repository\PdoUserRepository: ~
+
+    phpbb\user\Contract\UserRepositoryInterface:
+        alias: phpbb\user\Repository\PdoUserRepository
+        public: true
+
+    phpbb\user\Repository\PdoGroupRepository: ~
+
+    phpbb\user\Contract\GroupRepositoryInterface:
+        alias: phpbb\user\Repository\PdoGroupRepository
+        public: true
+
+    phpbb\user\Repository\PdoBanRepository: ~
+
+    phpbb\user\Contract\BanRepositoryInterface:
+        alias: phpbb\user\Repository\PdoBanRepository
+        public: true
+
+    phpbb\user\Service\UserSearchService: ~
+
+    phpbb\user\Service\UserDisplayService: ~
+
+    phpbb\user\Service\BanService: ~

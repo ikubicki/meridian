@@ -78,6 +78,40 @@ test('GET /me — returns authenticated user', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// 2b. /users — returns paginated user list
+// ---------------------------------------------------------------------------
+test('GET /users — returns paginated user list', async () => {
+	const res = await apiCtx.get(`${API}/users`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(Array.isArray(body.data)).toBe(true);
+	expect(body.meta).toMatchObject({
+		total:      expect.any(Number),
+		page:       1,
+		perPage:    expect.any(Number),
+		totalPages: expect.any(Number),
+	});
+	expect(body.meta.total).toBeGreaterThanOrEqual(1);
+});
+
+// ---------------------------------------------------------------------------
+// 2c. /users?q= — filtered user search
+// ---------------------------------------------------------------------------
+test('GET /users?q=admin — returns matching users', async () => {
+	const res = await apiCtx.get(`${API}/users?q=admin`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(Array.isArray(body.data)).toBe(true);
+	for (const user of body.data) {
+		expect(user.username.toLowerCase()).toContain('admin');
+	}
+});
+
+// ---------------------------------------------------------------------------
 // 3 & 4. /users/:id
 // ---------------------------------------------------------------------------
 test('GET /users/1 — public profile of user 1 (no email)', async () => {
