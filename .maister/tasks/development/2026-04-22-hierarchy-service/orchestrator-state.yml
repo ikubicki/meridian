@@ -1,0 +1,40 @@
+task:
+  id: 2026-04-22-hierarchy-service
+  description: "Implement phpbb\\hierarchy Service — forums, categories, subforums, nested set (HierarchyService facade, ForumRepository, TreeService, TrackingService, SubscriptionService)"
+  created_at: "2026-04-22"
+  task_path: ".maister/tasks/development/2026-04-22-hierarchy-service"
+  research_reference: ".maister/tasks/research/2026-04-18-hierarchy-service"
+
+current_phase: 8
+completed_phases: [1, 2, 5, 6, 7]
+
+task_context:
+  risk_level: high
+  clarifications_resolved: false
+  tech_clarified: false
+  architecture_decision: null
+  scope_expanded: false
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: false
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  tdd_red_passed: false
+  tdd_green_passed: false
+
+options:
+  spec_audit_enabled: true
+  code_review_enabled: true
+  pragmatic_review_enabled: true
+  reality_check_enabled: true
+  production_check_enabled: true
+  e2e_enabled: false
+  user_docs_enabled: false
+  skip_test_suite: false
+
+phase_summaries:
+  codebase_analysis: "ForumsController exists with mock data; no repo/service/entity yet; DBAL 4 patterns clear; phpbb_forums schema has nested set (left_id/right_id/parent_id); 5 clarifications needed on scope/locking"
+  gap_analysis: "Wszystkie 5 serwisów w zakresie; SELECT FOR UPDATE dla lockingu; forum_parents → JSON; ADR-001..006 obowiązują; DBAL 4 zamiast PDO"
+  specification: "28 nowych plików; 5 serwisów (HierarchyService+ForumRepository+TreeService+TrackingService+SubscriptionService); przedwarunek: DomainEvent+DomainEventCollection w phpbb\\common\\Event; min 40 testów; spec.md zapisany"
+  implementation: null

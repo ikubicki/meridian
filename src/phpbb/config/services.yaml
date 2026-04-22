@@ -98,6 +98,50 @@ services:
         alias: phpbb\auth\Service\TokenService
         public: true
 
+    # ---------------------------------------------------------------------------
+    # Hierarchy module
+    # ---------------------------------------------------------------------------
+
+    phpbb\hierarchy\Repository\DbalForumRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\hierarchy\Contract\ForumRepositoryInterface:
+        alias: phpbb\hierarchy\Repository\DbalForumRepository
+
+    phpbb\hierarchy\Service\TreeService:
+        arguments:
+            $repository: '@phpbb\hierarchy\Contract\ForumRepositoryInterface'
+
+    phpbb\hierarchy\Contract\TreeServiceInterface:
+        alias: phpbb\hierarchy\Service\TreeService
+
+    phpbb\hierarchy\Service\TrackingService:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+            $repository: '@phpbb\hierarchy\Contract\ForumRepositoryInterface'
+
+    phpbb\hierarchy\Contract\TrackingServiceInterface:
+        alias: phpbb\hierarchy\Service\TrackingService
+
+    phpbb\hierarchy\Service\SubscriptionService:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\hierarchy\Contract\SubscriptionServiceInterface:
+        alias: phpbb\hierarchy\Service\SubscriptionService
+
+    phpbb\hierarchy\Plugin\ForumBehaviorRegistry: ~
+
+    phpbb\hierarchy\Service\HierarchyService:
+        arguments:
+            $repository: '@phpbb\hierarchy\Contract\ForumRepositoryInterface'
+            $treeService: '@phpbb\hierarchy\Contract\TreeServiceInterface'
+
+    phpbb\hierarchy\Contract\HierarchyServiceInterface:
+        alias: phpbb\hierarchy\Service\HierarchyService
+        public: true
+
     phpbb\auth\Service\RefreshTokenService: ~
 
     phpbb\auth\Contract\RefreshTokenServiceInterface:

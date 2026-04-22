@@ -20,6 +20,9 @@ const API = '/api/v1';
 let apiCtx: APIRequestContext;
 let accessToken: string;
 let refreshToken: string;
+let adminToken: string;
+let createdForumId: number;
+let createdForumId2: number;
 
 test.beforeAll(async () => {
 	apiCtx = await playwrightRequest.newContext({
@@ -344,4 +347,223 @@ test('GET /topics/4 without token — 401 (password required)', async () => {
 
 	const body = await res.json();
 	expect(body.error).toBeDefined();
+});
+
+// ---------------------------------------------------------------------------
+// 17. GET /health
+// ---------------------------------------------------------------------------
+test('GET /health — returns ok status', async () => {
+	const res = await apiCtx.get(`${API}/health`);
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.status).toBe('ok');
+});
+
+// ---------------------------------------------------------------------------
+// 18. Admin login (user_type=3 Founder — required for forum writes)
+// ---------------------------------------------------------------------------
+test('POST /auth/login as admin — returns admin token', async () => {
+	const res = await apiCtx.post(`${API}/auth/login`, {
+		data: { username: 'admin', password: 'admin' },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	adminToken = body.data.accessToken;
+	expect(adminToken.split('.').length).toBe(3);
+});
+
+// ---------------------------------------------------------------------------
+// 19. POST /forums — auth guards
+// ---------------------------------------------------------------------------
+test('POST /forums without token — 401', async () => {
+	const res = await apiCtx.post(`${API}/forums`, {
+		data: { name: 'Unauthorized Forum', type: 1, parent_id: 0 },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+test('POST /forums with non-admin token — 403', async () => {
+	const res = await apiCtx.post(`${API}/forums`, {
+		data: { name: 'Unauthorized Forum', type: 1, parent_id: 0 },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(403);
+});
+
+// ---------------------------------------------------------------------------
+// 20. POST /forums — create
+// ---------------------------------------------------------------------------
+test('POST /forums as admin — creates forum and returns 201', async () => {
+	const res = await apiCtx.post(`${API}/forums`, {
+		data: { name: 'E2E Test Forum', type: 1, parent_id: 0, description: 'Created by e2e test' },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(201);
+
+	const body = await res.json();
+	expect(body.status).toBe('created');
+});
+
+test('GET /forums — created forum appears in list', async () => {
+	const res = await apiCtx.get(`${API}/forums`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	const found = body.data.find((f: { title: string; id: number }) => f.title === 'E2E Test Forum');
+	expect(found).toBeDefined();
+	createdForumId = found.id;
+});
+
+// ---------------------------------------------------------------------------
+// 21. PUT /forums/{id}
+// ---------------------------------------------------------------------------
+test('PUT /forums/{id} without token — 401', async () => {
+	const res = await apiCtx.put(`${API}/forums/${createdForumId}`, {
+		data: { name: 'Hacked' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+test('PUT /forums/{id} as admin — updates forum name', async () => {
+	const res = await apiCtx.put(`${API}/forums/${createdForumId}`, {
+		data: { name: 'E2E Test Forum (Updated)' },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.status).toBe('updated');
+});
+
+test('GET /forums/{id} — reflects updated name', async () => {
+	const res = await apiCtx.get(`${API}/forums/${createdForumId}`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	expect(data.title).toBe('E2E Test Forum (Updated)');
+});
+
+// ---------------------------------------------------------------------------
+// 22. PATCH /forums/{id}/move
+// ---------------------------------------------------------------------------
+test('POST /forums as admin — creates category for move target', async () => {
+	const res = await apiCtx.post(`${API}/forums`, {
+		data: { name: 'E2E Move Target Category', type: 0, parent_id: 0 },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(201);
+
+	const listRes = await apiCtx.get(`${API}/forums`, { headers: { Authorization: `Bearer ${adminToken}` } });
+	const body = await listRes.json();
+	const found = body.data.find((f: { title: string; id: number }) => f.title === 'E2E Move Target Category');
+	expect(found).toBeDefined();
+	createdForumId2 = found.id;
+});
+
+test('PATCH /forums/{id}/move without token — 401', async () => {
+	const res = await apiCtx.patch(`${API}/forums/${createdForumId}/move`, {
+		data: { new_parent_id: createdForumId2 },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+test('PATCH /forums/{id}/move as admin — moves forum under category', async () => {
+	const res = await apiCtx.patch(`${API}/forums/${createdForumId}/move`, {
+		data: { new_parent_id: createdForumId2 },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.status).toBe('moved');
+});
+
+test('GET /forums/{id} — reflects new parentId after move', async () => {
+	const res = await apiCtx.get(`${API}/forums/${createdForumId}`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	expect(data.parentId).toBe(createdForumId2);
+});
+
+// ---------------------------------------------------------------------------
+// 23. DELETE /forums/{id}
+// ---------------------------------------------------------------------------
+test('DELETE /forums/{id} without token — 401', async () => {
+	const res = await apiCtx.delete(`${API}/forums/${createdForumId}`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('DELETE /forums/{id} with children — 400', async () => {
+	// createdForumId2 is a parent of createdForumId — deleting it must fail
+	const res = await apiCtx.delete(`${API}/forums/${createdForumId2}`, {
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(400);
+});
+
+test('DELETE /forums/{id} as admin — deletes leaf forum', async () => {
+	const res = await apiCtx.delete(`${API}/forums/${createdForumId}`, {
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.status).toBe('deleted');
+});
+
+test('GET /forums/{id} — 404 after delete', async () => {
+	const res = await apiCtx.get(`${API}/forums/${createdForumId}`, { headers: auth() });
+
+	expect(res.status()).toBe(404);
+});
+
+test('DELETE /forums/{id} as admin — deletes second forum (cleanup)', async () => {
+	const res = await apiCtx.delete(`${API}/forums/${createdForumId2}`, {
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(200);
+});
+
+// ---------------------------------------------------------------------------
+// 24. POST /auth/logout
+// ---------------------------------------------------------------------------
+test('POST /auth/logout without token — 401', async () => {
+	const res = await apiCtx.post(`${API}/auth/logout`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('POST /auth/logout — returns 204 and invalidates session', async () => {
+	// Use a fresh admin login to avoid invalidating the shared accessToken
+	const loginRes = await apiCtx.post(`${API}/auth/login`, {
+		data: { username: 'admin', password: 'admin' },
+	});
+	const { data } = await loginRes.json();
+	const tempToken = data.accessToken;
+
+	const res = await apiCtx.post(`${API}/auth/logout`, {
+		headers: { Authorization: `Bearer ${tempToken}` },
+	});
+
+	expect(res.status()).toBe(204);
 });
