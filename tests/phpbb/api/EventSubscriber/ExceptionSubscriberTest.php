@@ -19,6 +19,7 @@ namespace phpbb\Tests\api\EventSubscriber;
 use phpbb\api\EventSubscriber\ExceptionSubscriber;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -31,7 +32,7 @@ class ExceptionSubscriberTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->subscriber = new ExceptionSubscriber();
+		$this->subscriber = new ExceptionSubscriber($this->createMock(LoggerInterface::class));
 		$this->kernel     = $this->createMock(HttpKernelInterface::class);
 	}
 
