@@ -22,7 +22,6 @@ use phpbb\hierarchy\DTO\ForumDTO;
 use phpbb\hierarchy\DTO\UpdateForumRequest;
 use phpbb\hierarchy\Entity\ForumType;
 use phpbb\user\Entity\User;
-use phpbb\user\Enum\UserType;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,7 +35,7 @@ class ForumsController
 	) {
 	}
 
-	#[Route('/forums', name: 'api_v1_forums_index', methods: ['GET'])]
+	#[Route('/forums', name: 'api_v1_forums_index', methods: ['GET'], defaults: ['_allow_anonymous' => true])]
 	public function index(Request $request): JsonResponse
 	{
 		$parentId = $request->query->has('parent_id')
@@ -53,7 +52,7 @@ class ForumsController
 		]);
 	}
 
-	#[Route('/forums/{forumId}', name: 'api_v1_forums_show', methods: ['GET'])]
+	#[Route('/forums/{forumId}', name: 'api_v1_forums_show', methods: ['GET'], defaults: ['_allow_anonymous' => true])]
 	public function show(int $forumId): JsonResponse
 	{
 		try {
@@ -197,12 +196,8 @@ class ForumsController
 		/** @var User|null $user */
 		$user = $request->attributes->get('_api_user');
 
-		if ($user === null) {
-			return new JsonResponse(['error' => 'Unauthorised', 'status' => 401], 401);
-		}
-
-		if ($user->type !== UserType::Founder) {
-			return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+		if ($user === null || $request->attributes->get('_api_elevated') !== true) {
+			return new JsonResponse(['error' => 'Elevated token required', 'status' => 401], 401);
 		}
 
 		return null;

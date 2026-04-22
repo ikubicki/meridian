@@ -158,7 +158,9 @@ services:
         alias: phpbb\auth\Service\AuthenticationService
         public: true
 
-    phpbb\auth\Service\AuthorizationService: ~
+    phpbb\auth\Service\AuthorizationService:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
 
     phpbb\auth\Contract\AuthorizationServiceInterface:
         alias: phpbb\auth\Service\AuthorizationService

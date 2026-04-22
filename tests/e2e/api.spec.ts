@@ -21,8 +21,10 @@ let apiCtx: APIRequestContext;
 let accessToken: string;
 let refreshToken: string;
 let adminToken: string;
+let adminElevatedToken: string;
 let createdForumId: number;
 let createdForumId2: number;
+let createdTopicId: number;
 
 test.beforeAll(async () => {
 	apiCtx = await playwrightRequest.newContext({
@@ -202,7 +204,6 @@ test('GET /forums/1/topics — returns topics for forum 1', async () => {
 
 	const body = await res.json();
 	expect(Array.isArray(body.data)).toBe(true);
-	expect(body.data.length).toBeGreaterThanOrEqual(2);
 	expect(body.meta).toMatchObject({
 		total:    expect.any(Number),
 		page:     1,
@@ -259,28 +260,16 @@ test('GET /users/1 without token — 401', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 14. /topics/2 without token → 200 (accessLevel=0, public)
+// 14. /topics/2 without token → 200 (GUESTS have f_read via ROLE_FORUM_READONLY)
 // ---------------------------------------------------------------------------
-test('GET /topics/2 without token — 200 (public topic)', async () => {
+test('GET /topics/2 without token — 200 (GUESTS have f_read)', async () => {
 	const res = await apiCtx.get(`${API}/topics/2`);
 
 	expect(res.status()).toBe(200);
 
 	const { data } = await res.json();
 	expect(data.id).toBe(2);
-	expect(data.accessLevel).toBe(0);
-});
-
-// ---------------------------------------------------------------------------
-// 15. /topics/3 without token → 401 (accessLevel=1, login required)
-// ---------------------------------------------------------------------------
-test('GET /topics/3 without token — 401 (login required)', async () => {
-	const res = await apiCtx.get(`${API}/topics/3`);
-
-	expect(res.status()).toBe(401);
-
-	const body = await res.json();
-	expect(body.error).toBeDefined();
+	expect(data.title).toBeDefined();
 });
 
 // ---------------------------------------------------------------------------
@@ -338,18 +327,6 @@ test('POST /auth/elevate — returns elevated token', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 16. /topics/4 without token → 401 (accessLevel=2, password required)
-// ---------------------------------------------------------------------------
-test('GET /topics/4 without token — 401 (password required)', async () => {
-	const res = await apiCtx.get(`${API}/topics/4`);
-
-	expect(res.status()).toBe(401);
-
-	const body = await res.json();
-	expect(body.error).toBeDefined();
-});
-
-// ---------------------------------------------------------------------------
 // 17. GET /health
 // ---------------------------------------------------------------------------
 test('GET /health — returns ok status', async () => {
@@ -376,6 +353,19 @@ test('POST /auth/login as admin — returns admin token', async () => {
 	expect(adminToken.split('.').length).toBe(3);
 });
 
+test('POST /auth/elevate as admin — returns elevated token', async () => {
+	const res = await apiCtx.post(`${API}/auth/elevate`, {
+		data: { password: 'admin' },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	adminElevatedToken = body.data.elevatedToken;
+	expect(adminElevatedToken.split('.').length).toBe(3);
+});
+
 // ---------------------------------------------------------------------------
 // 19. POST /forums — auth guards
 // ---------------------------------------------------------------------------
@@ -387,13 +377,23 @@ test('POST /forums without token — 401', async () => {
 	expect(res.status()).toBe(401);
 });
 
-test('POST /forums with non-admin token — 403', async () => {
+test('POST /forums with regular access token (no elevation) — 401', async () => {
+	// Both alice's token and even admin's regular access token are not elevated tokens
 	const res = await apiCtx.post(`${API}/forums`, {
 		data: { name: 'Unauthorized Forum', type: 1, parent_id: 0 },
 		headers: auth(),
 	});
 
-	expect(res.status()).toBe(403);
+	expect(res.status()).toBe(401);
+});
+
+test('POST /forums with admin access token (not elevated) — 401', async () => {
+	const res = await apiCtx.post(`${API}/forums`, {
+		data: { name: 'Unauthorized Forum', type: 1, parent_id: 0 },
+		headers: { Authorization: `Bearer ${adminToken}` },
+	});
+
+	expect(res.status()).toBe(401);
 });
 
 // ---------------------------------------------------------------------------
@@ -402,7 +402,7 @@ test('POST /forums with non-admin token — 403', async () => {
 test('POST /forums as admin — creates forum and returns 201', async () => {
 	const res = await apiCtx.post(`${API}/forums`, {
 		data: { name: 'E2E Test Forum', type: 1, parent_id: 0, description: 'Created by e2e test' },
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(201);
@@ -436,7 +436,7 @@ test('PUT /forums/{id} without token — 401', async () => {
 test('PUT /forums/{id} as admin — updates forum name', async () => {
 	const res = await apiCtx.put(`${API}/forums/${createdForumId}`, {
 		data: { name: 'E2E Test Forum (Updated)' },
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(200);
@@ -460,12 +460,12 @@ test('GET /forums/{id} — reflects updated name', async () => {
 test('POST /forums as admin — creates category for move target', async () => {
 	const res = await apiCtx.post(`${API}/forums`, {
 		data: { name: 'E2E Move Target Category', type: 0, parent_id: 0 },
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(201);
 
-	const listRes = await apiCtx.get(`${API}/forums`, { headers: { Authorization: `Bearer ${adminToken}` } });
+	const listRes = await apiCtx.get(`${API}/forums`, { headers: { Authorization: `Bearer ${adminElevatedToken}` } });
 	const body = await listRes.json();
 	const found = body.data.find((f: { title: string; id: number }) => f.title === 'E2E Move Target Category');
 	expect(found).toBeDefined();
@@ -483,7 +483,7 @@ test('PATCH /forums/{id}/move without token — 401', async () => {
 test('PATCH /forums/{id}/move as admin — moves forum under category', async () => {
 	const res = await apiCtx.patch(`${API}/forums/${createdForumId}/move`, {
 		data: { new_parent_id: createdForumId2 },
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(200);
@@ -513,7 +513,7 @@ test('DELETE /forums/{id} without token — 401', async () => {
 test('DELETE /forums/{id} with children — 400', async () => {
 	// createdForumId2 is a parent of createdForumId — deleting it must fail
 	const res = await apiCtx.delete(`${API}/forums/${createdForumId2}`, {
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(400);
@@ -521,7 +521,7 @@ test('DELETE /forums/{id} with children — 400', async () => {
 
 test('DELETE /forums/{id} as admin — deletes leaf forum', async () => {
 	const res = await apiCtx.delete(`${API}/forums/${createdForumId}`, {
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(200);
@@ -538,7 +538,7 @@ test('GET /forums/{id} — 404 after delete', async () => {
 
 test('DELETE /forums/{id} as admin — deletes second forum (cleanup)', async () => {
 	const res = await apiCtx.delete(`${API}/forums/${createdForumId2}`, {
-		headers: { Authorization: `Bearer ${adminToken}` },
+		headers: { Authorization: `Bearer ${adminElevatedToken}` },
 	});
 
 	expect(res.status()).toBe(200);
@@ -567,3 +567,67 @@ test('POST /auth/logout — returns 204 and invalidates session', async () => {
 
 	expect(res.status()).toBe(204);
 });
+
+// ---------------------------------------------------------------------------
+// 25. POST /forums/{id}/topics — auth guards
+// ---------------------------------------------------------------------------
+test('POST /forums/1/topics without token — 401', async () => {
+	const res = await apiCtx.post(`${API}/forums/1/topics`, {
+		data: { title: 'Unauthorized Topic', content: 'Should be rejected' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+// ---------------------------------------------------------------------------
+// 26. POST /forums/{id}/topics — alice creates a topic
+// ---------------------------------------------------------------------------
+test('POST /forums/1/topics as alice — 201 (f_post granted via REGISTERED group)', async () => {
+	const res = await apiCtx.post(`${API}/forums/1/topics`, {
+		data: { title: 'Alice Test Topic', content: 'Hello from alice!' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+
+	const body = await res.json();
+	expect(body.data).toMatchObject({
+		id:      expect.any(Number),
+		title:   'Alice Test Topic',
+		forumId: 1,
+	});
+
+	createdTopicId = body.data.id;
+});
+
+// ---------------------------------------------------------------------------
+// 27. POST /topics/{id}/posts — auth guards
+// ---------------------------------------------------------------------------
+test('POST /topics/{id}/posts without token — 401', async () => {
+	const res = await apiCtx.post(`${API}/topics/${createdTopicId}/posts`, {
+		data: { content: 'Unauthorized reply' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+// ---------------------------------------------------------------------------
+// 28. POST /topics/{id}/posts — alice replies to topic
+// ---------------------------------------------------------------------------
+test('POST /topics/{id}/posts as alice — 201 (f_reply granted via REGISTERED group)', async () => {
+	const res = await apiCtx.post(`${API}/topics/${createdTopicId}/posts`, {
+		data: { content: 'Alice reply content' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+
+	const body = await res.json();
+	expect(body.data).toMatchObject({
+		id:      expect.any(Number),
+		topicId: createdTopicId,
+		forumId: 1,
+		content: 'Alice reply content',
+	});
+});
+

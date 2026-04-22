@@ -53,13 +53,13 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 2.1 | Research user service | ✅ | `tasks/research/2026-04-19-users-service/` |
-| 2.2 | Implementation plan | ⏳ | — |
-| 2.3 | User entity + value objects | ⏳ | — |
-| 2.4 | UserRepository (PDO, phpbb_users schema) | ⏳ | — |
-| 2.5 | UserService (profile, groups, bans) | ⏳ | — |
-| 2.6 | REST API controller (`/api/v1/users/`) | ⏳ | — |
-| 2.7 | PHPUnit tests | ⏳ | — |
-| 2.8 | Playwright E2E tests (`/api/v1/users/`) | ⏳ | — |
+| 2.2 | Implementation plan | ✅ | — |
+| 2.3 | User entity + value objects | ✅ | `df82bb3` |
+| 2.4 | UserRepository (DbalUserRepository + Group/Ban) | ✅ | `df82bb3` |
+| 2.5 | UserSearchService, UserDisplayService, BanService | ✅ | `df82bb3` |
+| 2.6 | REST API controller (`/api/v1/users/`) | ✅ | `df82bb3` |
+| 2.7 | PHPUnit tests | ✅ | `df82bb3` |
+| 2.8 | Playwright E2E tests (`/api/v1/users/`) | ✅ | `df82bb3` |
 
 ---
 
@@ -69,19 +69,19 @@ Related plans: `.maister/plans/`
 |---|------|--------|---------------|
 | 3.1 | Research auth — AuthN | ✅ | `tasks/research/2026-04-19-auth-unified-service/` |
 | 3.2 | Research auth — AuthZ / ACL | ✅ | `tasks/research/2026-04-19-auth-unified-service/` |
-| 3.3 | Implementation plan | ⏳ | — |
-| 3.4 | JWT issuance + Argon2id password | ⏳ | — |
-| 3.5 | 5-layer permission resolver + bitfield cache | ⏳ | — |
-| 3.6 | AuthSubscriber (JWT bearer) | ⏳ | — |
-| 3.7 | REST API: login, logout, refresh | ⏳ | — |
-| 3.8 | PHPUnit tests | ⏳ | — |
-| 3.9 | Playwright E2E tests (auth flow, token validation) | ⏳ | — |
+| 3.3 | Implementation plan | ✅ | — |
+| 3.4 | JWT issuance (TokenService) + Argon2id + elevated token | ✅ | `df82bb3` |
+| 3.5 | DBAL ACL resolver (AuthorizationService, groups + roles) | ✅ | `df82bb3` |
+| 3.6 | AuthenticationSubscriber (JWT bearer + `_allow_anonymous`) | ✅ | `df82bb3` |
+| 3.7 | REST API: login, logout, refresh, elevate | ✅ | `df82bb3` |
+| 3.8 | PHPUnit tests | ✅ | `df82bb3` |
+| 3.9 | Playwright E2E tests (auth flow, token validation) | ✅ | `df82bb3` |
 
 ---
 
 ## S.1 — Security Review: Auth Layer (post-M3)
 
-> Trigger: after M3 (Auth Unified Service) is complete.  
+> Trigger: after M3 (Auth Unified Service) is complete. **M3 done — review pending.**  
 > Focus: authentication + authorisation surface — highest risk area.  
 > Tool: OWASP ZAP (automated) + manual review of ACL resolver and JWT logic.
 
@@ -103,11 +103,11 @@ Related plans: `.maister/plans/`
 |---|------|--------|---------------|
 | 4.1 | Research REST API | ✅ | `tasks/research/2026-04-16-phpbb-rest-api/` |
 | 4.2 | Symfony HttpKernel + YAML routes | ✅ | `ac4aeda` |
-| 4.3 | JWT AuthSubscriber (mock) | ✅ | `ac4aeda` |
-| 4.4 | Mock controllers (health, auth, forums, topics, users) | ✅ | `ac4aeda` |
-| 4.5 | Playwright E2E (16 tests) | ✅ | `ac4aeda` |
-| 4.6 | Wire real controllers (M2/M3 → M4) | ⏳ | — |
-| 4.7 | Update E2E tests after real controllers wired | ⏳ | — |
+| 4.3 | AuthenticationSubscriber (real JWT, `_allow_anonymous`) | ✅ | `df82bb3` |
+| 4.4 | Real controllers (health, auth, forums, users) | ✅ | `df82bb3` |
+| 4.5 | Playwright E2E (47 tests) | ✅ | `df82bb3` |
+| 4.6 | Wire topics/posts controllers (`phpbb\threads`) | 🔄 | — |
+| 4.7 | Update E2E tests po wdrożeniu `phpbb\threads` | 🔄 | — |
 
 ---
 
@@ -116,13 +116,13 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 5a.1 | Research hierarchy | ✅ | `tasks/research/2026-04-18-hierarchy-service/` |
-| 5a.2 | Implementation plan | ⏳ | — |
-| 5a.3 | Forum/category entities (nested set) | ⏳ | — |
-| 5a.4 | HierarchyRepository (PDO, phpbb_forums schema) | ⏳ | — |
-| 5a.5 | HierarchyService (5-service decomposition) | ⏳ | — |
-| 5a.6 | REST API controller (`/api/v1/forums/`) | ⏳ | — |
-| 5a.7 | PHPUnit tests | ⏳ | — |
-| 5a.8 | Playwright E2E tests (`/api/v1/forums/`) | ⏳ | — |
+| 5a.2 | Implementation plan | ✅ | — |
+| 5a.3 | Forum/category entities (nested set) | ✅ | `df82bb3` |
+| 5a.4 | DbalForumRepository + TreeService + TrackingService + SubscriptionService | ✅ | `df82bb3` |
+| 5a.5 | HierarchyService (CRUD + move + delete) | ✅ | `df82bb3` |
+| 5a.6 | REST API controller (`/api/v1/forums/`) + elevated token | ✅ | `df82bb3` |
+| 5a.7 | PHPUnit tests (238 total) | ✅ | `df82bb3` |
+| 5a.8 | Playwright E2E tests (`/api/v1/forums/`) | ✅ | `df82bb3` |
 
 ---
 
@@ -148,12 +148,12 @@ Related plans: `.maister/plans/`
 | 6.1 | Research threads | ✅ | `tasks/research/2026-04-18-threads-service/` |
 | 6.2 | Implementation plan | ⏳ | — |
 | 6.3 | Topic/post entities + content pipeline | ⏳ | — |
-| 6.4 | ThreadsRepository (PDO, phpbb_topics / phpbb_posts) | ⏳ | — |
-| 6.5 | ThreadsService + s9e ContentPipeline | ⏳ | — |
+| 6.4 | TopicRepository + PostRepository (DBAL) | ⏳ | — |
+| 6.5 | ThreadsService (facade) | ⏳ | — |
 | 6.6 | Hybrid counters (Tiered Counter Pattern) | ⏳ | — |
-| 6.7 | REST API controllers | ⏳ | — |
-| 6.8 | PHPUnit tests | ⏳ | — |
-| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | ⏳ | — |
+| 6.7 | REST API controllers (TopicsController, PostsController) | 🔄 | DBAL tymczasowo w kontrolerze; przeniesienie do `phpbb\threads` |
+| 6.8 | PHPUnit tests | 🔄 | Częściowe — do aktualizacji |
+| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | 🔄 | Częściowe — do aktualizacji |
 
 ---
 
@@ -253,7 +253,7 @@ Related plans: `.maister/plans/`
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| X.1 | Domain events (DomainEventCollection) | ⏳ | Standard: `DOMAIN_EVENTS.md` |
+| X.1 | Domain events (DomainEventCollection) | ✅ | `phpbb\common\Event\DomainEventCollection` |
 | X.2 | Tiered Counter Pattern (cron flush) | ⏳ | Standard: `COUNTER_PATTERN.md` |
 | X.3 | Common exceptions (`phpbb\common\Exception\*`) | ⏳ | — |
 | X.4 | Database migration scripts (PM + attachments) | ⏳ | — |
@@ -263,9 +263,14 @@ Related plans: `.maister/plans/`
 
 ## Current Focus
 
-**🔄 Next up: M2 — User Service**
+**🔄 M6 — Threads Service (`phpbb\threads`)**
 
-Previous: Cache Service ✅ (`1abc94b`, 2026-04-22)
+Previous: M5a Hierarchy Service ✅ (`df82bb3`) · M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`)
+
+Bezpośrednie zadania:
+1. Napraw testy `TopicsControllerTest` (nowa sygnatura konstruktora)
+2. Napraw testy e2e `api.spec.ts` (usunięto mock-based assertions)
+3. Zaplanuj implementację `phpbb\threads` (M6.2)
 
 ---
 

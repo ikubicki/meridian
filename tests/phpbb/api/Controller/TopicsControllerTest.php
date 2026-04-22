@@ -16,23 +16,70 @@ declare(strict_types=1);
 
 namespace phpbb\Tests\api\Controller;
 
+use Doctrine\DBAL\Connection;
 use phpbb\api\Controller\TopicsController;
+use phpbb\auth\Contract\AuthorizationServiceInterface;
+use phpbb\user\Contract\UserRepositoryInterface;
+use phpbb\user\Entity\User;
+use phpbb\user\Enum\UserType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 class TopicsControllerTest extends TestCase
 {
+	private Connection $connection;
+	private AuthorizationServiceInterface $authService;
+	private UserRepositoryInterface $userRepository;
 	private TopicsController $controller;
 
 	protected function setUp(): void
 	{
-		$this->controller = new TopicsController();
+		$this->connection     = $this->createMock(Connection::class);
+		$this->authService    = $this->createMock(AuthorizationServiceInterface::class);
+		$this->userRepository = $this->createMock(UserRepositoryInterface::class);
+
+		$this->controller = new TopicsController(
+			$this->connection,
+			$this->authService,
+			$this->userRepository,
+		);
+	}
+
+	private function makeUser(int $id = 1): User
+	{
+		return new User(
+			id: $id,
+			type: UserType::Normal,
+			username: 'anonymous',
+			usernameClean: 'anonymous',
+			email: '',
+			passwordHash: '',
+			colour: '',
+			defaultGroupId: 1,
+			avatarUrl: '',
+			registeredAt: new \DateTimeImmutable('2020-01-01'),
+			lastmark: new \DateTimeImmutable('2020-01-01'),
+			posts: 0,
+			lastPostTime: null,
+			isNew: false,
+			rank: 0,
+			registrationIp: '127.0.0.1',
+			loginAttempts: 0,
+			inactiveReason: null,
+			formSalt: '',
+			activationKey: '',
+		);
 	}
 
 	#[Test]
 	public function indexByForumReturnsDataEnvelopeWithMeta(): void
 	{
+		$this->userRepository->method('findById')->willReturn($this->makeUser());
+		$this->authService->method('isGranted')->willReturn(true);
+		$this->connection->method('fetchOne')->willReturn('0');
+		$this->connection->method('fetchAllAssociative')->willReturn([]);
+
 		$request  = Request::create('/api/v1/forums/1/topics');
 		$response = $this->controller->indexByForum(1, $request);
 
@@ -50,6 +97,11 @@ class TopicsControllerTest extends TestCase
 	#[Test]
 	public function indexByForumReturnsEmptyDataForUnknownForum(): void
 	{
+		$this->userRepository->method('findById')->willReturn($this->makeUser());
+		$this->authService->method('isGranted')->willReturn(true);
+		$this->connection->method('fetchOne')->willReturn('0');
+		$this->connection->method('fetchAllAssociative')->willReturn([]);
+
 		$request  = Request::create('/api/v1/forums/999/topics');
 		$response = $this->controller->indexByForum(999, $request);
 
@@ -61,8 +113,36 @@ class TopicsControllerTest extends TestCase
 	}
 
 	#[Test]
+	public function indexByForumReturns403WhenGuestHasNoReadPermission(): void
+	{
+		$this->userRepository->method('findById')->willReturn($this->makeUser());
+		$this->authService->method('isGranted')->willReturn(false);
+
+		$request  = Request::create('/api/v1/forums/99/topics');
+		$response = $this->controller->indexByForum(99, $request);
+
+		self::assertSame(403, $response->getStatusCode());
+	}
+
+	#[Test]
 	public function showReturnsTopicDataForExistingId(): void
 	{
+		$topicRow = [
+			'topic_id'              => 1,
+			'forum_id'              => 2,
+			'topic_title'           => 'Test topic',
+			'topic_poster'          => 200,
+			'topic_time'            => 1700000000,
+			'topic_posts_approved'  => 3,
+			'topic_last_post_time'  => 1700001000,
+			'topic_last_poster_name' => 'alice',
+			'topic_visibility'      => 1,
+		];
+
+		$this->connection->method('fetchAssociative')->willReturn($topicRow);
+		$this->userRepository->method('findById')->willReturn($this->makeUser());
+		$this->authService->method('isGranted')->willReturn(true);
+
 		$request  = Request::create('/api/v1/topics/1');
 		$response = $this->controller->show(1, $request);
 
@@ -77,6 +157,8 @@ class TopicsControllerTest extends TestCase
 	#[Test]
 	public function showReturns404ForNonExistingTopic(): void
 	{
+		$this->connection->method('fetchAssociative')->willReturn(false);
+
 		$request  = Request::create('/api/v1/topics/999');
 		$response = $this->controller->show(999, $request);
 
@@ -87,26 +169,27 @@ class TopicsControllerTest extends TestCase
 	}
 
 	#[Test]
-	public function showReturns401ForLoginRequiredTopicWithoutToken(): void
+	public function showReturns403WhenGuestHasNoReadPermission(): void
 	{
-		$request  = Request::create('/api/v1/topics/3');
-		$response = $this->controller->show(3, $request);
+		$topicRow = [
+			'topic_id'              => 5,
+			'forum_id'              => 10,
+			'topic_title'           => 'Restricted',
+			'topic_poster'          => 1,
+			'topic_time'            => 1700000000,
+			'topic_posts_approved'  => 1,
+			'topic_last_post_time'  => 1700000000,
+			'topic_last_poster_name' => 'anonymous',
+			'topic_visibility'      => 1,
+		];
 
-		self::assertSame(401, $response->getStatusCode());
+		$this->connection->method('fetchAssociative')->willReturn($topicRow);
+		$this->userRepository->method('findById')->willReturn($this->makeUser());
+		$this->authService->method('isGranted')->willReturn(false);
 
-		$body = json_decode($response->getContent(), true);
-		self::assertSame(401, $body['status']);
-	}
+		$request  = Request::create('/api/v1/topics/5');
+		$response = $this->controller->show(5, $request);
 
-	#[Test]
-	public function showReturns401ForPasswordRequiredTopicWithoutToken(): void
-	{
-		$request  = Request::create('/api/v1/topics/4');
-		$response = $this->controller->show(4, $request);
-
-		self::assertSame(401, $response->getStatusCode());
-
-		$body = json_decode($response->getContent(), true);
-		self::assertSame(401, $body['status']);
+		self::assertSame(403, $response->getStatusCode());
 	}
 }

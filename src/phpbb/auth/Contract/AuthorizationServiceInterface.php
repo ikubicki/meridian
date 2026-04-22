@@ -22,6 +22,8 @@ interface AuthorizationServiceInterface
 {
 	/**
 	 * Returns true if the given user holds the specified permission.
+	 *
+	 * @param int $forumId Forum scope (0 = global)
 	 */
-	public function isGranted(User $user, string $permission): bool;
+	public function isGranted(User $user, string $permission, int $forumId = 0): bool;
 }

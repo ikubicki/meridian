@@ -49,14 +49,7 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 		'/auth/refresh',
 	];
 
-	/**
-	 * @var string[] Path prefixes where auth is optional: no token = allowed,
-	 *               valid token = sets _api_user, invalid token = 401.
-	 *               Controllers are responsible for per-resource access checks.
-	 */
-	private const OPTIONAL_AUTH_PREFIXES = [
-		'/api/v1/topics/',
-	];
+
 
 	public function __construct(
 		private readonly TokenServiceInterface $tokenService,
@@ -92,13 +85,11 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 
 		$authHeader = $request->headers->get('Authorization', '');
 
-		// Optional-auth paths: no token is fine, but a provided token must be valid
-		foreach (self::OPTIONAL_AUTH_PREFIXES as $prefix) {
-			if (str_starts_with($path, $prefix)) {
-				if (!str_starts_with($authHeader, 'Bearer ')) {
-					return; // unauthenticated access allowed — controller decides
-				}
-				break; // has a token: fall through to normal validation below
+		// Routes that declare _allow_anonymous => true permit unauthenticated access.
+		// A provided token is still validated and sets _api_user; no token = skip.
+		if ($request->attributes->get('_allow_anonymous') === true) {
+			if (!str_starts_with($authHeader, 'Bearer ')) {
+				return;
 			}
 		}
 
@@ -114,11 +105,18 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 		$rawToken = substr($authHeader, strlen('Bearer '));
 
 		try {
-			$payload = $this->tokenService->decodeToken($rawToken, 'phpbb-api');
+			$payload  = $this->tokenService->decodeToken($rawToken, 'phpbb-api');
+			$elevated = false;
 		} catch (\UnexpectedValueException) {
-			$event->setResponse(new JsonResponse(['error' => 'Invalid token', 'status' => 401], 401));
+			// Try elevated token — forum admin operations send phpbb-admin audience
+			try {
+				$payload  = $this->tokenService->decodeToken($rawToken, 'phpbb-admin');
+				$elevated = true;
+			} catch (\UnexpectedValueException) {
+				$event->setResponse(new JsonResponse(['error' => 'Invalid token', 'status' => 401], 401));
 
-			return;
+				return;
+			}
 		}
 
 		$user = $this->userRepository->findById($payload->sub);
@@ -140,5 +138,6 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 		}
 
 		$request->attributes->set('_api_user', $user);
+		$request->attributes->set('_api_elevated', $elevated);
 	}
 }

@@ -3801,7 +3801,8 @@ INSERT INTO `phpbb_user_group` VALUES
 (6,0,0,0),
 (6,0,0,0),
 (6,0,0,0),
-(6,0,0,0);
+(6,0,0,0),
+(2,200,0,0);
 /*!40000 ALTER TABLE `phpbb_user_group` ENABLE KEYS */;
 UNLOCK TABLES;
 
