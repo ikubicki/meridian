@@ -61,6 +61,7 @@ class FilesystemBackend implements CacheBackendInterface
 
 		if ($expiry !== 0 && $expiry < time()) {
 			@unlink($file);
+
 			return null;
 		}
 
@@ -72,6 +73,7 @@ class FilesystemBackend implements CacheBackendInterface
 		// PSR-16: a TTL of 0 or negative means the item should not be stored (immediately expired).
 		if ($ttl !== null && $ttl <= 0) {
 			$this->delete($key);
+
 			return true;
 		}
 

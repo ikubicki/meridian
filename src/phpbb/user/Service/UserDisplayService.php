@@ -45,8 +45,7 @@ class UserDisplayService
 	 */
 	public function findDisplayByIds(array $ids): array
 	{
-		if ($ids === [])
-		{
+		if ($ids === []) {
 			return [];
 		}
 
@@ -54,28 +53,22 @@ class UserDisplayService
 		$result = [];
 		$missed = [];
 
-		foreach ($ids as $id)
-		{
+		foreach ($ids as $id) {
 			$cached = $pool->get((string) $id);
-			if ($cached !== null)
-			{
+			if ($cached !== null) {
 				$result[$id] = $cached;
-			}
-			else
-			{
+			} else {
 				$missed[] = $id;
 			}
 		}
 
-		if ($missed === [])
-		{
+		if ($missed === []) {
 			return $result;
 		}
 
 		$fresh = $this->userRepository->findDisplayByIds($missed);
 
-		foreach ($fresh as $id => $dto)
-		{
+		foreach ($fresh as $id => $dto) {
 			$pool->set((string) $id, $dto, self::TTL);
 			$result[$id] = $dto;
 		}

@@ -24,7 +24,6 @@ use phpbb\auth\Exception\AuthenticationFailedException;
 use phpbb\auth\Exception\InvalidRefreshTokenException;
 use phpbb\user\Contract\PasswordServiceInterface;
 use phpbb\user\Contract\UserRepositoryInterface;
-use phpbb\user\Exception\BannedException;
 use phpbb\user\Service\BanService;
 
 final class AuthenticationService implements AuthenticationServiceInterface
@@ -36,19 +35,18 @@ final class AuthenticationService implements AuthenticationServiceInterface
 		private readonly TokenServiceInterface $tokenService,
 		private readonly RefreshTokenServiceInterface $refreshTokenService,
 		private readonly RefreshTokenRepositoryInterface $refreshTokenRepository,
-	) {}
+	) {
+	}
 
 	public function login(string $username, string $password, string $ip): array
 	{
 		$user = $this->userRepository->findByUsername($username);
 
-		if ($user === null)
-		{
+		if ($user === null) {
 			throw new AuthenticationFailedException('Invalid credentials.');
 		}
 
-		if (!$this->passwordService->verifyPassword($password, $user->passwordHash))
-		{
+		if (!$this->passwordService->verifyPassword($password, $user->passwordHash)) {
 			throw new AuthenticationFailedException('Invalid credentials.');
 		}
 
@@ -75,27 +73,24 @@ final class AuthenticationService implements AuthenticationServiceInterface
 		$hash  = hash('sha256', $rawRefreshToken);
 		$token = $this->refreshTokenRepository->findByHash($hash);
 
-		if ($token === null)
-		{
+		if ($token === null) {
 			throw new InvalidRefreshTokenException('Refresh token not found.');
 		}
 
-		if ($token->isRevoked())
-		{
+		if ($token->isRevoked()) {
 			$this->refreshTokenRepository->revokeFamily($token->familyId);
+
 			throw new InvalidRefreshTokenException('Token reuse detected.');
 		}
 
-		if ($token->isExpired())
-		{
+		if ($token->isExpired()) {
 			throw new InvalidRefreshTokenException('Refresh token has expired.');
 		}
 
 		$result = $this->refreshTokenService->rotateFamily($token);
 		$user   = $this->userRepository->findById($token->userId);
 
-		if ($user === null)
-		{
+		if ($user === null) {
 			throw new InvalidRefreshTokenException('User not found.');
 		}
 
@@ -112,13 +107,11 @@ final class AuthenticationService implements AuthenticationServiceInterface
 	{
 		$user = $this->userRepository->findById($userId);
 
-		if ($user === null)
-		{
+		if ($user === null) {
 			throw new AuthenticationFailedException('User not found.');
 		}
 
-		if (!$this->passwordService->verifyPassword($password, $user->passwordHash))
-		{
+		if (!$this->passwordService->verifyPassword($password, $user->passwordHash)) {
 			throw new AuthenticationFailedException('Invalid credentials.');
 		}
 

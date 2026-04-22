@@ -29,7 +29,8 @@ final readonly class TokenPayload
 		public int $pv,
 		public int $utype,
 		public string $flags,
-	) {}
+	) {
+	}
 
 	/**
 	 * Constructs a TokenPayload from a decoded JWT claims stdClass object.

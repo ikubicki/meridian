@@ -16,11 +16,11 @@ declare(strict_types=1);
 
 namespace phpbb\Tests\user\Service;
 
+use phpbb\cache\backend\NullBackend;
 use phpbb\cache\CachePool;
 use phpbb\cache\CachePoolFactoryInterface;
 use phpbb\cache\marshaller\VarExportMarshaller;
 use phpbb\cache\TagVersionStore;
-use phpbb\cache\backend\NullBackend;
 use phpbb\user\Contract\UserRepositoryInterface;
 use phpbb\user\DTO\UserDisplayDTO;
 use phpbb\user\Service\UserDisplayService;
@@ -44,6 +44,7 @@ class InMemoryDisplayBackend extends NullBackend
 	public function set(string $key, string $value, ?int $ttl = null): bool
 	{
 		$this->store[$key] = $value;
+
 		return true;
 	}
 

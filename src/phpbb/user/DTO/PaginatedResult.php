@@ -36,10 +36,10 @@ final readonly class PaginatedResult
 
 	public function totalPages(): int
 	{
-		if ($this->perPage <= 0)
-		{
+		if ($this->perPage <= 0) {
 			return 0;
 		}
+
 		return (int) ceil($this->total / $this->perPage);
 	}
 }

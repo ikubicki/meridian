@@ -53,7 +53,7 @@ class TagVersionStore
 			return [];
 		}
 
-		$backendKeys = array_map(fn(string $t) => self::KEY_PREFIX . $t, $tags);
+		$backendKeys = array_map(fn (string $t) => self::KEY_PREFIX . $t, $tags);
 		$blobs = $this->backend->getMultiple($backendKeys);
 		$versions = [];
 

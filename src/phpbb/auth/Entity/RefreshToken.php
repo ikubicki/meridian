@@ -26,7 +26,8 @@ final readonly class RefreshToken
 		public \DateTimeImmutable $issuedAt,
 		public \DateTimeImmutable $expiresAt,
 		public ?\DateTimeImmutable $revokedAt,
-	) {}
+	) {
+	}
 
 	/**
 	 * Returns true if the token has been explicitly revoked.

@@ -335,7 +335,7 @@ The `includes/` layer contains procedural code that predates the OOP refactor. W
 - **Column names stay unchanged** — even if naming is inconsistent (`user_id` vs `poster_id` vs `topic_poster`), mirror the original column names in queries.
 - **Add columns** when needed (`ALTER TABLE ... ADD COLUMN`). Never drop or rename existing columns.
 - **New tables** only for genuinely new features that have no legacy equivalent (e.g., `phpbb_messaging_conversations`, `phpbb_stored_files`).
-- Table prefix (`phpbb_`) is configurable via `$table_prefix`. Use constants or config — never hardcode.
+- Table prefix (`phpbb_`) is a **fixed project convention** — not configurable at runtime. Use `private const TABLE = 'phpbb_banlist'` in each repository. Do not inject the prefix via DI or config: this is a rewrite with a single deployment target, not an installer. Multi-tenancy is handled via separate databases/schemas, not table prefixes.
 
 ```php
 // Correct — query uses original phpBB3 column names exactly:

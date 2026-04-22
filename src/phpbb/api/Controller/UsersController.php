@@ -35,8 +35,7 @@ class UsersController
 		/** @var \phpbb\user\Entity\User|null $user */
 		$user = $request->attributes->get('_api_user');
 
-		if ($user === null)
-		{
+		if ($user === null) {
 			return new JsonResponse(['error' => 'Unauthorised', 'status' => 401], 401);
 		}
 
@@ -81,8 +80,7 @@ class UsersController
 	{
 		$user = $this->userSearchService->findById($userId);
 
-		if ($user === null)
-		{
+		if ($user === null) {
 			return new JsonResponse(['error' => 'User not found', 'status' => 404], 404);
 		}
 

@@ -21,7 +21,6 @@ use Firebase\JWT\Key;
 use phpbb\auth\Entity\TokenPayload;
 use phpbb\auth\Service\TokenService;
 use phpbb\user\Entity\User;
-use phpbb\user\Enum\InactiveReason;
 use phpbb\user\Enum\UserType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

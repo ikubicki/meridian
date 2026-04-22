@@ -18,7 +18,6 @@ namespace phpbb\cache;
 
 use phpbb\cache\backend\CacheBackendInterface;
 use phpbb\cache\marshaller\MarshallerInterface;
-use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * Namespaced, tag-aware cache pool.
@@ -116,6 +115,7 @@ class CachePool implements TagAwareCacheInterface
 	public function set(string $key, mixed $value, \DateInterval|int|null $ttl = null): bool
 	{
 		$seconds = $this->normaliseTtl($ttl);
+
 		return $this->setTagged($key, $value, $seconds);
 	}
 
@@ -137,7 +137,7 @@ class CachePool implements TagAwareCacheInterface
 	public function getMultiple(iterable $keys, mixed $default = null): iterable
 	{
 		$keyList = $this->iterableToArray($keys);
-		$prefixed = array_map(fn(string $k) => $this->prefixKey($k), $keyList);
+		$prefixed = array_map(fn (string $k) => $this->prefixKey($k), $keyList);
 
 		$blobs = $this->backend->getMultiple($prefixed);
 		$result = [];
@@ -230,6 +230,7 @@ class CachePool implements TagAwareCacheInterface
 
 		if ($ttl instanceof \DateInterval) {
 			$now = new \DateTimeImmutable('now');
+
 			return (int) $now->add($ttl)->format('U') - (int) $now->format('U');
 		}
 

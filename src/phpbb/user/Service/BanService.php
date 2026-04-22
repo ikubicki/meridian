@@ -51,18 +51,15 @@ class BanService
 	 */
 	public function assertNotBanned(int $userId, string $ip, string $email): void
 	{
-		if ($this->banRepository->isUserBanned($userId))
-		{
+		if ($this->banRepository->isUserBanned($userId)) {
 			throw new BannedException('User account is banned.');
 		}
 
-		if ($this->banRepository->isIpBanned($ip))
-		{
+		if ($this->banRepository->isIpBanned($ip)) {
 			throw new BannedException('IP address is banned.');
 		}
 
-		if ($this->banRepository->isEmailBanned($email))
-		{
+		if ($this->banRepository->isEmailBanned($email)) {
 			throw new BannedException('Email address is banned.');
 		}
 	}

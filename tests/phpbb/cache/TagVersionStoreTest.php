@@ -30,7 +30,7 @@ class TagVersionStoreTest extends TestCase
 	protected function setUp(): void
 	{
 		// We need a real backend for meaningful state in these tests
-		$this->backend = new class extends NullBackend {
+		$this->backend = new class () extends NullBackend {
 			/** @var array<string, string> */
 			private array $data = [];
 
@@ -42,6 +42,7 @@ class TagVersionStoreTest extends TestCase
 			public function set(string $key, string $value, ?int $ttl = null): bool
 			{
 				$this->data[$key] = $value;
+
 				return true;
 			}
 
@@ -51,6 +52,7 @@ class TagVersionStoreTest extends TestCase
 				foreach ($keys as $key) {
 					$result[$key] = $this->data[$key] ?? null;
 				}
+
 				return $result;
 			}
 		};

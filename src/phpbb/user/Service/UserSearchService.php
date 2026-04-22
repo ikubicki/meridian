@@ -20,7 +20,6 @@ use phpbb\user\Contract\UserRepositoryInterface;
 use phpbb\user\DTO\PaginatedResult;
 use phpbb\user\DTO\UserSearchCriteria;
 use phpbb\user\Entity\User;
-use phpbb\user\Enum\GroupType;
 
 /**
  * Primary read-facing entry point for user lookups.

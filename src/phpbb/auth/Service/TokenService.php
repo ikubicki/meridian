@@ -28,7 +28,8 @@ final class TokenService implements TokenServiceInterface
 		private readonly string $jwtSecret,
 		private readonly int $accessTtl = 900,
 		private readonly int $elevatedTtl = 300,
-	) {}
+	) {
+	}
 
 	private function deriveKey(string $context): string
 	{
@@ -89,8 +90,7 @@ final class TokenService implements TokenServiceInterface
 
 	public function decodeToken(string $rawToken, string $expectedAud): TokenPayload
 	{
-		$context = match ($expectedAud)
-		{
+		$context = match ($expectedAud) {
 			'phpbb-api'   => 'jwt-access-v1',
 			'phpbb-admin' => 'jwt-elevated-v1',
 			default       => throw new \UnexpectedValueException("Unknown audience: $expectedAud"),
@@ -99,8 +99,7 @@ final class TokenService implements TokenServiceInterface
 		$key    = new Key($this->deriveKey($context), 'HS256');
 		$claims = JWT::decode($rawToken, $key);
 
-		if ($claims->aud !== $expectedAud)
-		{
+		if ($claims->aud !== $expectedAud) {
 			throw new \UnexpectedValueException(
 				"Expected audience '$expectedAud', got '{$claims->aud}'"
 			);

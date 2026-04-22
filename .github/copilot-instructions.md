@@ -14,11 +14,23 @@ When generating or reviewing code for this project, apply the standards document
 
 See the full index at [.maister/docs/INDEX.md](.maister/docs/INDEX.md).
 
+## After Every PHP File Edit
+
+Run these three commands (in order) after any change to PHP files:
+
+```bash
+composer test
+composer test:e2e
+composer cs:fix
+```
+
+All three must pass before considering the change complete.
+
 ## Key Reminders
 
 - This is a **phpBB rewrite** targeting **Symfony 8.x**, **PHP 8.2+**, **React SPA** frontend.
 - Follow phpBB naming and formatting conventions (tabs for indentation, no closing PHP tag, camelCase in OOP classes).
-- Always use PDO prepared statements — never interpolate raw user input into SQL.
+- Always use PDO prepared statements / Doctrine DBAL — never interpolate raw user input into SQL.
 - New code must live under the `phpbb\` namespace (PSR-4).
 - Use dependency injection via the Symfony 8.x container; avoid `global` in OOP code.
 - Frontend is a React SPA consuming the REST API — no server-rendered views.

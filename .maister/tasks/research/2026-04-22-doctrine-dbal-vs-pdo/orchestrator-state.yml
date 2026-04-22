@@ -1,0 +1,49 @@
+orchestrator:
+  task_name: 2026-04-22-doctrine-dbal-vs-pdo
+  skill: research
+  created: 2026-04-22
+  updated: 2026-04-22
+  started_phase: phase-1
+  current_phase: phase-6
+  completed_phases: [phase-1, phase-6]
+  status: complete
+  decision: "Adopt Doctrine DBAL 4.x (DBAL-only). Skip phases 2-5 per user confirmation."
+  user_answers:
+    roadmap_growth: yes
+    tests_to_sqlite_integration: yes
+    postgres_future: yes
+
+research_context:
+  research_question: "Should we adopt Doctrine DBAL over raw PDO in the phpbb\\ namespace?"
+  research_type: technical
+  scope:
+    included:
+      - "src/phpbb/db/PdoFactory.php"
+      - "src/phpbb/auth/Repository/PdoRefreshTokenRepository.php"
+      - "src/phpbb/user/Repository/PdoUserRepository.php"
+      - "src/phpbb/user/Repository/PdoBanRepository.php"
+      - "src/phpbb/user/Repository/PdoGroupRepository.php"
+      - "Symfony DI bindings (services.yaml)"
+      - "Cross-DB compatibility (MySQL / PostgreSQL / SQLite)"
+      - "Testability and migration effort"
+    excluded:
+      - "Legacy src/phpbb3/* (uses phpBB's own driver, not in rewrite scope)"
+      - "Doctrine ORM adoption (entities remain readonly VOs)"
+  constraints:
+    - "PHP 8.2+ / Symfony 8.x"
+    - "Readonly value-object entities (no ActiveRecord)"
+    - "Existing *RepositoryInterface contracts in phpbb\\*\\Contract"
+    - "Must preserve prepared-statement safety"
+  success_criteria:
+    - "Evidence-based recommendation (adopt / don't adopt / hybrid)"
+    - "Migration effort estimate with LOC touched"
+    - "Trade-off matrix (PDO vs DBAL)"
+    - "Impact on existing 145 unit + 21 E2E tests"
+
+artifacts:
+  research_brief: planning/research-brief.md
+  research_plan: planning/research-plan.md
+  sources: planning/sources.md
+  findings_dir: analysis/findings/
+  synthesis: analysis/synthesis.md
+  research_report: outputs/research-report.md

@@ -39,12 +39,13 @@ services:
         public: true
 
     # ---------------------------------------------------------------------------
-    # Database connection (native PDO — no Doctrine DBAL)
+    # Database connection (Doctrine DBAL 4 — no ORM, no DoctrineBundle)
     # ---------------------------------------------------------------------------
 
-    PDO:
-        class: PDO
-        factory: ['phpbb\db\PdoFactory', 'create']
+    phpbb\db\DbalConnectionFactory: ~
+
+    Doctrine\DBAL\Connection:
+        factory: ['@phpbb\db\DbalConnectionFactory', 'create']
         arguments:
             $host:     '%env(PHPBB_DB_HOST)%'
             $dbname:   '%env(PHPBB_DB_NAME)%'
@@ -56,22 +57,22 @@ services:
     # User module (M2)
     # ---------------------------------------------------------------------------
 
-    phpbb\user\Repository\PdoUserRepository: ~
+    phpbb\user\Repository\DbalUserRepository: ~
 
     phpbb\user\Contract\UserRepositoryInterface:
-        alias: phpbb\user\Repository\PdoUserRepository
+        alias: phpbb\user\Repository\DbalUserRepository
         public: true
 
-    phpbb\user\Repository\PdoGroupRepository: ~
+    phpbb\user\Repository\DbalGroupRepository: ~
 
     phpbb\user\Contract\GroupRepositoryInterface:
-        alias: phpbb\user\Repository\PdoGroupRepository
+        alias: phpbb\user\Repository\DbalGroupRepository
         public: true
 
-    phpbb\user\Repository\PdoBanRepository: ~
+    phpbb\user\Repository\DbalBanRepository: ~
 
     phpbb\user\Contract\BanRepositoryInterface:
-        alias: phpbb\user\Repository\PdoBanRepository
+        alias: phpbb\user\Repository\DbalBanRepository
         public: true
 
     phpbb\user\Service\UserSearchService: ~
@@ -102,10 +103,10 @@ services:
     phpbb\auth\Contract\RefreshTokenServiceInterface:
         alias: phpbb\auth\Service\RefreshTokenService
 
-    phpbb\auth\Repository\PdoRefreshTokenRepository: ~
+    phpbb\auth\Repository\DbalRefreshTokenRepository: ~
 
     phpbb\auth\Contract\RefreshTokenRepositoryInterface:
-        alias: phpbb\auth\Repository\PdoRefreshTokenRepository
+        alias: phpbb\auth\Repository\DbalRefreshTokenRepository
 
     phpbb\auth\Service\AuthenticationService: ~
 

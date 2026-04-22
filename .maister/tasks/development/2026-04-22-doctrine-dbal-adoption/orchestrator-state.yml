@@ -1,0 +1,99 @@
+orchestrator:
+  started_phase: phase-1
+  current_phase: phase-10
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8]
+  failed_phases: []
+
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: true        # E2E tests already exist (21 passing); run after migration
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+
+  created: 2026-04-22
+  updated: 2026-04-22
+  task_path: .maister/tasks/development/2026-04-22-doctrine-dbal-adoption
+
+task:
+  title: "M4 — Adopt Doctrine DBAL 4 in phpbb namespace"
+  description: "Replace raw PDO (PdoFactory + 4 repositories) with Doctrine DBAL 4.x (DBAL-only, no ORM). Add SQLite-in-memory integration test harness. Implement platform-switched upsert (MySQL ON DUPLICATE KEY / Postgres ON CONFLICT). Delete PdoFactory. Keep *RepositoryInterface contracts unchanged."
+  status: in_progress
+  tags: [doctrine, dbal, repository, pdo, migration, testing]
+  priority: high
+
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  scope_expanded: false
+  architecture_decision: "doctrine/dbal ONLY (no DoctrineBundle). DbalConnectionFactory registered as Doctrine\\DBAL\\Connection. Upsert: Platform branch — MySQL ON DUPLICATE KEY UPDATE / else DELETE+INSERT in transaction."
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true     # DoctrineXxxRepository classes
+    involves_data_operations: true # full repository layer migration
+    ui_heavy: false
+
+  research_reference:
+    path: .maister/tasks/research/2026-04-22-doctrine-dbal-vs-pdo
+    research_question: "Should we adopt Doctrine DBAL over raw PDO in the phpbb\\ namespace?"
+    research_type: technical
+    confidence_level: high
+
+  phase_summaries:
+    research:
+      summary: "Research concluded: adopt Doctrine DBAL 4.x now (DBAL-only). Small surface (5 files, ~720 LOC), Symfony-native autowiring, ArrayParameterType fixes IN-list, Connection::update/insert removes dynamic SET builder, SQLite-in-memory integration tests replace brittle PDO mocks. PostgreSQL planned in future — makes DBAL platform abstraction required, not optional. ON DUPLICATE KEY UPDATE needs platform-switched upsert."
+      key_findings:
+        - "764 LOC total; 36 SQL ops; no JOINs/subqueries/transactions"
+        - "One MySQL-specific construct: ON DUPLICATE KEY UPDATE in PdoGroupRepository::addMember"
+        - "Current tests mock PDO/PDOStatement (brittle); DBAL enables SQLite-in-memory integration tests"
+        - "DBAL 4.x: PHP 8.2+; 4 runtime deps; MIT; first-class Symfony via DoctrineBundle"
+        - "ArrayParameterType::INTEGER replaces manual IN-list placeholder expansion"
+        - "Schema/Platform APIs churn but we stay in Connection+QueryBuilder territory (stable)"
+        - "PostgreSQL support planned -> upsert must NOT remain MySQL-only"
+      recommended_approach: "Phased: A=foundation deps+config, B=integration test harness (pilot RefreshToken), C=port remaining repos, D=cleanup PdoFactory"
+
+    codebase_analysis:
+      key_files:
+        - src/phpbb/db/PdoFactory.php
+        - src/phpbb/auth/Repository/PdoRefreshTokenRepository.php
+        - src/phpbb/user/Repository/PdoUserRepository.php
+        - src/phpbb/user/Repository/PdoBanRepository.php
+        - src/phpbb/user/Repository/PdoGroupRepository.php
+        - src/phpbb/config/services.yaml
+        - src/phpbb/config/bundles.php
+      primary_language: PHP
+      summary: "5 files to migrate (47+112+166+104+330 LOC). 4 RepositoryInterface contracts unchangeable. 6 consumers inject via interface (zero changes). 2 existing mock-based tests (RefreshToken, User) must be replaced with SQLite-in-memory. Ban+Group have no tests yet. ON DUPLICATE KEY UPDATE in GroupRepository::addMember is the only MySQL-specific risk. DoctrineBundle not installed; no doctrine.yaml; env vars are PHPBB_DB_* not DATABASE_URL."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - "services.yaml: PDO service → Connection service"
+        - "bundles.php: add DoctrineBundle (if option A) or DbalConnectionFactory (option B)"
+        - "config/packages/doctrine.yaml (option A) or manually wired factory (option B)"
+        - "4× Pdo*Repository → 4× Doctrine*Repository swapped via alias in services.yaml"
+        - "phpunit.xml: add PHPBB_DB_* env vars for SQLite test connection (or use kernel bootstrap)"
+      summary: "Migration is straightforward (all paths isolated behind interfaces); two architectural sub-decisions needed: connection wiring strategy and upsert implementation. Neither DoctrineBundle nor DBAL package are installed yet."
+    scope_clarifications: {scope_expanded: false, summary: "Scope confirmed: 5 files in src/phpbb, RepositoryInterfaces unchanged, no ORM, no legacy phpbb3 layer, no schema migrations tool."}
+    ui_mockups: {components_designed: [], summary: null}
+    specification: {summary: null}
+    architecture_decision:
+      decision: "doctrine/dbal only, no DoctrineBundle; upsert via platform branch"
+      summary: "User chose minimal-dep approach: own factory wiring DBAL Connection + platform-switched upsert for Group repo"
+
+verification_context:
+  last_status: null
+  issues_found: []
+  fixes_applied: []
+  decisions_made: []
+  reverify_count: 0

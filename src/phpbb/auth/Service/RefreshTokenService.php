@@ -25,7 +25,8 @@ final class RefreshTokenService implements RefreshTokenServiceInterface
 	public function __construct(
 		private readonly RefreshTokenRepositoryInterface $refreshTokenRepository,
 		private readonly int $refreshTtlDays = 30,
-	) {}
+	) {
+	}
 
 	private function uuid4(): string
 	{

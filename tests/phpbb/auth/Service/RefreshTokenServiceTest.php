@@ -52,8 +52,7 @@ final class RefreshTokenServiceTest extends TestCase
 		$this->repo
 			->expects(self::once())
 			->method('save')
-			->willReturnCallback(function (RefreshToken $token) use (&$savedToken): void
-			{
+			->willReturnCallback(function (RefreshToken $token) use (&$savedToken): void {
 				$savedToken = $token;
 			});
 
@@ -107,8 +106,7 @@ final class RefreshTokenServiceTest extends TestCase
 		$this->repo
 			->expects(self::once())
 			->method('save')
-			->willReturnCallback(function (RefreshToken $token) use (&$savedToken): void
-			{
+			->willReturnCallback(function (RefreshToken $token) use (&$savedToken): void {
 				$savedToken = $token;
 			});
 

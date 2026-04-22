@@ -39,12 +39,14 @@ class InMemoryBackend extends NullBackend
 	public function set(string $key, string $value, ?int $ttl = null): bool
 	{
 		$this->store[$key] = $value;
+
 		return true;
 	}
 
 	public function delete(string $key): bool
 	{
 		unset($this->store[$key]);
+
 		return true;
 	}
 
@@ -57,6 +59,7 @@ class InMemoryBackend extends NullBackend
 	{
 		if ($prefix === '') {
 			$this->store = [];
+
 			return true;
 		}
 
@@ -75,6 +78,7 @@ class InMemoryBackend extends NullBackend
 		foreach ($keys as $key) {
 			$result[$key] = $this->store[$key] ?? null;
 		}
+
 		return $result;
 	}
 }
@@ -204,6 +208,7 @@ class CachePoolTest extends TestCase
 		$calls = 0;
 		$result = $this->pool->getOrCompute('computed', function () use (&$calls) {
 			$calls++;
+
 			return 'new-value';
 		});
 
@@ -214,7 +219,7 @@ class CachePoolTest extends TestCase
 	#[\PHPUnit\Framework\Attributes\Test]
 	public function getOrComputeComputesAndCachesOnMiss(): void
 	{
-		$result = $this->pool->getOrCompute('fresh', fn() => 'computed-value', 60, ['t']);
+		$result = $this->pool->getOrCompute('fresh', fn () => 'computed-value', 60, ['t']);
 		self::assertSame('computed-value', $result);
 		self::assertSame('computed-value', $this->pool->get('fresh'));
 	}
