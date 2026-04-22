@@ -16,19 +16,59 @@ declare(strict_types=1);
 
 namespace phpbb\api\Controller;
 
-use Doctrine\DBAL\Connection;
+use phpbb\api\DTO\PaginationContext;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
+use phpbb\threads\Contract\ThreadsServiceInterface;
+use phpbb\threads\DTO\CreatePostRequest;
+use phpbb\threads\DTO\PostDTO;
+use phpbb\user\Contract\UserRepositoryInterface;
 use phpbb\user\Entity\User;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 class PostsController
 {
+	private const ANONYMOUS_USER_ID = 1;
+
 	public function __construct(
-		private readonly Connection $connection,
+		private readonly ThreadsServiceInterface $threadsService,
 		private readonly AuthorizationServiceInterface $authorizationService,
+		private readonly UserRepositoryInterface $userRepository,
+		private readonly EventDispatcherInterface $dispatcher,
 	) {
+	}
+
+	#[Route('/topics/{topicId}/posts', name: 'api_v1_topics_posts_index', methods: ['GET'], defaults: ['_allow_anonymous' => true])]
+	public function index(int $topicId, Request $request): JsonResponse
+	{
+		try {
+			$topic = $this->threadsService->getTopic($topicId);
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
+		}
+
+		/** @var User|null $user */
+		$user    = $request->attributes->get('_api_user');
+		$checker = $user ?? $this->userRepository->findById(self::ANONYMOUS_USER_ID);
+
+		if ($checker === null || !$this->authorizationService->isGranted($checker, 'f_read', $topic->forumId)) {
+			return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+		}
+
+		$ctx    = PaginationContext::fromQuery($request->query);
+		$result = $this->threadsService->listPosts($topicId, $ctx);
+
+		return new JsonResponse([
+			'data' => array_map([$this, 'postToArray'], $result->items),
+			'meta' => [
+				'total'    => $result->total,
+				'page'     => $result->page,
+				'perPage'  => $result->perPage,
+				'lastPage' => max(1, $result->totalPages()),
+			],
+		]);
 	}
 
 	#[Route('/topics/{topicId}/posts', name: 'api_v1_topics_posts_create', methods: ['POST'])]
@@ -41,18 +81,13 @@ class PostsController
 			return new JsonResponse(['error' => 'Authentication required', 'status' => 401], 401);
 		}
 
-		$topic = $this->connection->fetchAssociative(
-			'SELECT topic_id, forum_id, topic_status FROM phpbb_topics WHERE topic_id = ?',
-			[$topicId],
-		);
-
-		if ($topic === false) {
+		try {
+			$topic = $this->threadsService->getTopic($topicId);
+		} catch (\InvalidArgumentException) {
 			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
 		}
 
-		$forumId = (int) $topic['forum_id'];
-
-		if (!$this->authorizationService->isGranted($user, 'f_reply', $forumId)) {
+		if (!$this->authorizationService->isGranted($user, 'f_reply', $topic->forumId)) {
 			return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
 		}
 
@@ -63,48 +98,54 @@ class PostsController
 			return new JsonResponse(['error' => 'Content is required', 'status' => 400], 400);
 		}
 
-		$now = time();
-
-		$this->connection->beginTransaction();
-
 		try {
-			$this->connection->insert('phpbb_posts', [
-				'topic_id'        => $topicId,
-				'forum_id'        => $forumId,
-				'poster_id'       => $user->id,
-				'post_time'       => $now,
-				'post_text'       => $content,
-				'post_subject'    => 'Re: post',
-				'post_username'   => $user->username,
-				'poster_ip'       => $request->getClientIp() ?? '127.0.0.1',
-				'post_visibility' => 1,
-			]);
+			$events = $this->threadsService->createPost(new CreatePostRequest(
+				topicId: $topicId,
+				content: $content,
+				actorId: $user->id,
+				actorUsername: $user->username,
+				actorColour: $user->colour,
+				posterIp: $request->getClientIp() ?? '127.0.0.1',
+			));
+			$events->dispatch($this->dispatcher);
+			$event = $events->first();
 
-			$postId = (int) $this->connection->lastInsertId();
+			if ($event === null) {
+				throw new \RuntimeException('Missing post-created event');
+			}
 
-			$this->connection->update('phpbb_topics', [
-				'topic_last_post_id'      => $postId,
-				'topic_last_poster_id'    => $user->id,
-				'topic_last_poster_name'  => $user->username,
-				'topic_last_poster_colour' => $user->colour,
-				'topic_last_post_time'    => $now,
-			], ['topic_id' => $topicId]);
+			$posts = $this->threadsService->listPosts($topicId, new PaginationContext(page: 1, perPage: 1));
+			$dto   = $posts->items[0] ?? null;
 
-			$this->connection->commit();
-		} catch (\Throwable $e) {
-			$this->connection->rollBack();
+			if ($dto === null || $dto->id !== $event->entityId) {
+				$dto = new PostDTO(
+					id: $event->entityId,
+					topicId: $topicId,
+					forumId: $topic->forumId,
+					authorId: $user->id,
+					content: $content,
+				);
+			}
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
+		} catch (\Throwable) {
 
 			return new JsonResponse(['error' => 'Internal server error', 'status' => 500], 500);
 		}
 
 		return new JsonResponse([
-			'data' => [
-				'id'       => $postId,
-				'topicId'  => $topicId,
-				'forumId'  => $forumId,
-				'authorId' => $user->id,
-				'content'  => $content,
-			],
+			'data' => $this->postToArray($dto),
 		], 201);
+	}
+
+	private function postToArray(PostDTO $dto): array
+	{
+		return [
+			'id'       => $dto->id,
+			'topicId'  => $dto->topicId,
+			'forumId'  => $dto->forumId,
+			'authorId' => $dto->authorId,
+			'content'  => $dto->content,
+		];
 	}
 }

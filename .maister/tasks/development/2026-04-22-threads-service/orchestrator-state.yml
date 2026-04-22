@@ -1,0 +1,106 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: [phase-1, phase-2, phase-5, phase-6, phase-7, phase-8, phase-10, phase-11, phase-12, phase-14]
+  failed_phases: []
+
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-7: 0
+    phase-8: 0
+    phase-9: 0
+    phase-11: 0
+
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: true
+    e2e_enabled: null
+    user_docs_enabled: null
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+
+  created: "2026-04-22T19:30:00Z"
+  updated: "2026-04-22T22:00:00Z"
+  task_path: .maister/tasks/development/2026-04-22-threads-service
+
+  task_ids:
+    phase-1: null
+    phase-2: null
+    phase-3: null
+    phase-4: null
+    phase-5: null
+    phase-6: null
+    phase-7: null
+    phase-8: null
+    phase-9: null
+    phase-10: null
+    phase-11: null
+    phase-12: null
+    phase-13: null
+    phase-14: null
+
+task:
+  title: Threads Service
+  description: "Implement a threads service for the phpBB vibed project"
+  status: completed
+  tags: []
+  priority: null
+
+task_context:
+  risk_level: low-medium
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: true
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: null
+    research_question: null
+    research_type: null
+    confidence_level: null
+  phase_summaries:
+    research:
+      summary: null
+      key_findings: []
+      recommended_approach: null
+    codebase_analysis:
+      key_files:
+        - src/phpbb/api/Controller/TopicsController.php
+        - src/phpbb/hierarchy/Service/HierarchyService.php
+        - src/phpbb/hierarchy/Repository/DbalForumRepository.php
+        - src/phpbb/hierarchy/Contract/HierarchyServiceInterface.php
+        - src/phpbb/config/services.yaml
+      primary_language: PHP
+      summary: "Project uses PHP 8.4+/Symfony 8.0/Doctrine DBAL 4 with clean hierarchy module as best template. TopicsController already has 3 topic routes but with anti-patterns (raw SQL in controller, no service layer). Task is primarily extracting TopicsController logic into a new src/phpbb/topics/ module following the hierarchy module pattern."
+    clarifications: []
+    gap_analysis:
+      integration_points:
+        - "src/phpbb/config/services.yaml — new threads module section"
+        - "TopicsController constructor — swap Connection for ThreadsServiceInterface"
+        - "PostsController constructor — swap Connection for ThreadsServiceInterface"
+      summary: "Pure architectural extraction: create phpbb\\threads\\ module with Topic+Post entities, DTOs, repos, service, events; refactor TopicsController+PostsController to delegate. Transaction owned by service. Full test coverage included."
+    scope_clarifications:
+      scope_expanded: false
+      summary: "Transaction in service layer (Option A), full test coverage (Option A), single ThreadsServiceInterface (Option A). Routes and response shapes unchanged."
+    ui_mockups:
+      components_designed: []
+      summary: null
+    specification:
+      summary: "Create phpbb\\threads\\ module with 13 new files (entities, DTOs, contracts, repositories, service, events); refactor TopicsController+PostsController; add GET /topics/{topicId}/posts endpoint; POST create returns full TopicDTO; DomainEventCollection pattern; full test coverage. 16 core requirements."
+    architecture_decision:
+      decision: null
+      summary: null
+
+verification_context:
+  last_status: passed
+  issues_found: []
+  fixes_applied: []
+  decisions_made: []
+  reverify_count: 0

@@ -164,3 +164,31 @@ services:
 
     phpbb\auth\Contract\AuthorizationServiceInterface:
         alias: phpbb\auth\Service\AuthorizationService
+
+    # ---------------------------------------------------------------------------
+    # Threads module (M6)
+    # ---------------------------------------------------------------------------
+
+    phpbb\threads\Repository\DbalTopicRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\threads\Contract\TopicRepositoryInterface:
+        alias: phpbb\threads\Repository\DbalTopicRepository
+
+    phpbb\threads\Repository\DbalPostRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\threads\Contract\PostRepositoryInterface:
+        alias: phpbb\threads\Repository\DbalPostRepository
+
+    phpbb\threads\ThreadsService:
+        arguments:
+            $topicRepository: '@phpbb\threads\Contract\TopicRepositoryInterface'
+            $postRepository: '@phpbb\threads\Contract\PostRepositoryInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\threads\Contract\ThreadsServiceInterface:
+        alias: phpbb\threads\ThreadsService
+        public: true
