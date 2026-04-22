@@ -10,3 +10,30 @@ services:
 
     phpbb\api\EventSubscriber\:
         resource: '../api/EventSubscriber/'
+
+    # ---------------------------------------------------------------------------
+    # Cache layer
+    # ---------------------------------------------------------------------------
+
+    phpbb\cache\backend\FilesystemBackend:
+        arguments:
+            $cacheDir: '%kernel.cache_dir%/phpbb4'
+
+    phpbb\cache\backend\NullBackend: ~
+
+    phpbb\cache\marshaller\VarExportMarshaller: ~
+
+    phpbb\cache\TagVersionStore: ~
+
+    phpbb\cache\CachePoolFactory: ~
+
+    # Default backend alias — swap to NullBackend in test env via services_test.yaml
+    phpbb\cache\backend\CacheBackendInterface:
+        alias: phpbb\cache\backend\FilesystemBackend
+
+    phpbb\cache\marshaller\MarshallerInterface:
+        alias: phpbb\cache\marshaller\VarExportMarshaller
+
+    phpbb\cache\CachePoolFactoryInterface:
+        alias: phpbb\cache\CachePoolFactory
+        public: true

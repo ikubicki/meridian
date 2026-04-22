@@ -1,0 +1,5 @@
+services:
+    # In the test environment use the null backend so no files are written to disk
+    # by the Symfony container itself (individual tests use temp dirs directly).
+    phpbb\cache\backend\CacheBackendInterface:
+        alias: phpbb\cache\backend\NullBackend
