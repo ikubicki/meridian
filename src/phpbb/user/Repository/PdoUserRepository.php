@@ -140,16 +140,18 @@ class PdoUserRepository implements UserRepositoryInterface
 		}
 
 		$allowedColumns = [
-			'username'       => 'username',
-			'usernameClean'  => 'username_clean',
-			'email'          => 'user_email',
-			'passwordHash'   => 'user_password',
-			'colour'         => 'user_colour',
-			'avatarUrl'      => 'user_avatar',
-			'loginAttempts'  => 'user_login_attempts',
-			'inactiveReason' => 'user_inactive_reason',
-			'activationKey'  => 'user_actkey',
-			'type'           => 'user_type',
+			'username'        => 'username',
+			'usernameClean'   => 'username_clean',
+			'email'           => 'user_email',
+			'passwordHash'    => 'user_password',
+			'colour'          => 'user_colour',
+			'avatarUrl'       => 'user_avatar',
+			'loginAttempts'   => 'user_login_attempts',
+			'inactiveReason'  => 'user_inactive_reason',
+			'activationKey'   => 'user_actkey',
+			'type'            => 'user_type',
+			'tokenGeneration' => 'token_generation',
+			'permVersion'     => 'perm_version',
 		];
 
 		$setClauses = [];
@@ -284,9 +286,16 @@ class PdoUserRepository implements UserRepositoryInterface
 		return $result;
 	}
 
-	/** @param array<string, mixed> $row */
-	private function hydrate(array $row): User
+	public function incrementTokenGeneration(int $userId): void
 	{
+		$stmt = $this->pdo->prepare(
+			'UPDATE ' . self::TABLE . ' SET token_generation = token_generation + 1 WHERE user_id = :id',
+		);
+		$stmt->execute([':id' => $userId]);
+	}
+
+	/** @param array<string, mixed> $row */
+	private function hydrate(array $row): User	{
 		$lastPostTime = isset($row['user_lastpost_time']) && $row['user_lastpost_time'] > 0
 			? (new \DateTimeImmutable())->setTimestamp((int) $row['user_lastpost_time'])
 			: null;
@@ -315,6 +324,8 @@ class PdoUserRepository implements UserRepositoryInterface
 			inactiveReason: $inactiveReason,
 			formSalt: $row['user_form_salt'],
 			activationKey: $row['user_actkey'],
+			tokenGeneration: (int) ($row['token_generation'] ?? 0),
+			permVersion: (int) ($row['perm_version'] ?? 0),
 		);
 	}
 }

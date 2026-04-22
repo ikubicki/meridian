@@ -48,6 +48,8 @@ final readonly class User
 		public ?InactiveReason $inactiveReason,
 		public string $formSalt,
 		public string $activationKey,
+		public int $tokenGeneration = 0,
+		public int $permVersion = 0,
 	) {
 	}
 }

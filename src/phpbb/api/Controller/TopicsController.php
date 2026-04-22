@@ -95,7 +95,7 @@ class TopicsController
 		// TODO: Replace with real ThreadsService::getTopic() call
 		foreach (self::MOCK_TOPICS as $topic) {
 			if ($topic['id'] === $topicId) {
-				if ($topic['accessLevel'] > 0 && $request->attributes->get('_api_token') === null) {
+				if ($topic['accessLevel'] > 0 && $request->attributes->get('_api_user') === null) {
 					return new JsonResponse(
 						['error' => 'Authentication required', 'status' => 401],
 						401,

@@ -57,4 +57,6 @@ interface UserRepositoryInterface
 	 * @return array<int, UserDisplayDTO> keyed by user id
 	 */
 	public function findDisplayByIds(array $ids): array;
+
+	public function incrementTokenGeneration(int $userId): void;
 }

@@ -74,14 +74,10 @@ class UsersControllerTest extends TestCase
 	#[Test]
 	public function meReturnsCurrentUserDataEnvelope(): void
 	{
-		$user  = $this->makeUser(1);
-		$token = new \stdClass();
-		$token->sub = 1;
-
-		$this->searchService->method('findById')->with(1)->willReturn($user);
+		$user = $this->makeUser(1);
 
 		$request = Request::create('/api/v1/me');
-		$request->attributes->set('_api_token', $token);
+		$request->attributes->set('_api_user', $user);
 
 		$response = $this->controller->me($request);
 
@@ -96,19 +92,13 @@ class UsersControllerTest extends TestCase
 	}
 
 	#[Test]
-	public function meReturns404WhenUserNotFound(): void
+	public function meReturns401WhenNoApiUser(): void
 	{
-		$token = new \stdClass();
-		$token->sub = 99;
-
-		$this->searchService->method('findById')->willReturn(null);
-
 		$request = Request::create('/api/v1/me');
-		$request->attributes->set('_api_token', $token);
 
 		$response = $this->controller->me($request);
 
-		self::assertSame(404, $response->getStatusCode());
+		self::assertSame(401, $response->getStatusCode());
 	}
 
 	#[Test]

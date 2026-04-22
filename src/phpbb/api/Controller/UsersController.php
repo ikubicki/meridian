@@ -32,19 +32,12 @@ class UsersController
 	#[Route('/me', name: 'api_v1_me_show', methods: ['GET'])]
 	public function me(Request $request): JsonResponse
 	{
-		$token  = $request->attributes->get('_api_token');
-		$userId = (int) ($token?->sub ?? 0);
-
-		if ($userId <= 0)
-		{
-			return new JsonResponse(['error' => 'Unauthorised', 'status' => 401], 401);
-		}
-
-		$user = $this->userSearchService->findById($userId);
+		/** @var \phpbb\user\Entity\User|null $user */
+		$user = $request->attributes->get('_api_user');
 
 		if ($user === null)
 		{
-			return new JsonResponse(['error' => 'User not found', 'status' => 404], 404);
+			return new JsonResponse(['error' => 'Unauthorised', 'status' => 401], 401);
 		}
 
 		return new JsonResponse(['data' => [

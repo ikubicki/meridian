@@ -16,15 +16,12 @@ declare(strict_types=1);
 
 namespace phpbb\api\EventSubscriber;
 
-use Firebase\JWT\ExpiredException;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-use Firebase\JWT\SignatureInvalidException;
+use phpbb\auth\Contract\TokenServiceInterface;
+use phpbb\user\Contract\UserRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use UnexpectedValueException;
 
 /**
  * JWT Bearer token authentication middleware for the REST API.
@@ -32,18 +29,15 @@ use UnexpectedValueException;
  * Priority 16 — fires before routing resolution so that unauthenticated requests
  * are rejected before any controller is invoked.
  *
- * On successful validation, decoded JWT claims are stored as the request attribute
- * "_api_token" (stdClass). Controllers read identity via:
- *     $request->attributes->get('_api_token')->sub
+ * On successful validation, the resolved User entity is stored as the request
+ * attribute "_api_user". Controllers read identity via:
+ *     $request->attributes->get('_api_user')
  *
  * Public endpoints (no token required):
  *   - GET  /api/v1/health
  *   - POST /api/v1/auth/login
  *   - POST /api/v1/auth/signup
  *   - POST /api/v1/auth/refresh
- *
- * Security note: gen/pv counter validation against DB is deferred to the Auth
- * service implementation. The TODO below marks this gap explicitly.
  */
 class AuthenticationSubscriber implements EventSubscriberInterface
 {
@@ -57,7 +51,7 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 
 	/**
 	 * @var string[] Path prefixes where auth is optional: no token = allowed,
-	 *               valid token = sets _api_token, invalid token = 401.
+	 *               valid token = sets _api_user, invalid token = 401.
 	 *               Controllers are responsible for per-resource access checks.
 	 */
 	private const OPTIONAL_AUTH_PREFIXES = [
@@ -65,7 +59,8 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 	];
 
 	public function __construct(
-		private readonly string $jwtSecret = '',
+		private readonly TokenServiceInterface $tokenService,
+		private readonly UserRepositoryInterface $userRepository,
 	) {
 	}
 
@@ -117,32 +112,33 @@ class AuthenticationSubscriber implements EventSubscriberInterface
 		}
 
 		$rawToken = substr($authHeader, strlen('Bearer '));
-		$secret   = $this->resolveSecret();
 
 		try {
-			$claims = JWT::decode($rawToken, new Key($secret, 'HS256'));
-
-			// TODO: verify $claims->gen against phpbb_users.token_generation (requires DB)
-			// TODO: verify $claims->pv against phpbb_users.perm_version (requires DB)
-
-			$request->attributes->set('_api_token', $claims);
-		} catch (ExpiredException) {
-			$event->setResponse(new JsonResponse(['error' => 'Token expired', 'status' => 401], 401));
-		} catch (SignatureInvalidException) {
-			$event->setResponse(new JsonResponse(['error' => 'Invalid token signature', 'status' => 401], 401));
-		} catch (UnexpectedValueException) {
+			$payload = $this->tokenService->decodeToken($rawToken, 'phpbb-api');
+		} catch (\UnexpectedValueException) {
 			$event->setResponse(new JsonResponse(['error' => 'Invalid token', 'status' => 401], 401));
-		}
-	}
 
-	private function resolveSecret(): string
-	{
-		$secret = $this->jwtSecret !== '' ? $this->jwtSecret : (string) (getenv('PHPBB_JWT_SECRET') ?: $_SERVER['PHPBB_JWT_SECRET'] ?? '');
-
-		if ($secret === '') {
-			throw new \RuntimeException('PHPBB_JWT_SECRET environment variable is not set.');
+			return;
 		}
 
-		return $secret;
+		$user = $this->userRepository->findById($payload->sub);
+
+		if ($user === null) {
+			$event->setResponse(new JsonResponse(['error' => 'User not found', 'status' => 401], 401));
+
+			return;
+		}
+
+		if ($payload->gen < $user->tokenGeneration) {
+			$event->setResponse(new JsonResponse(['error' => 'Token revoked', 'status' => 401], 401));
+
+			return;
+		}
+
+		if ($payload->pv !== $user->permVersion) {
+			$request->attributes->set('_api_token_stale', true);
+		}
+
+		$request->attributes->set('_api_user', $user);
 	}
 }

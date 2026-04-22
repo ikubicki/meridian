@@ -16,8 +16,12 @@ declare(strict_types=1);
 
 namespace phpbb\Tests\api\EventSubscriber;
 
-use Firebase\JWT\JWT;
 use phpbb\api\EventSubscriber\AuthenticationSubscriber;
+use phpbb\auth\Contract\TokenServiceInterface;
+use phpbb\auth\Entity\TokenPayload;
+use phpbb\user\Contract\UserRepositoryInterface;
+use phpbb\user\Entity\User;
+use phpbb\user\Enum\UserType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,15 +30,17 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class AuthenticationSubscriberTest extends TestCase
 {
-	private const JWT_SECRET = 'test-secret-minimum-32-chars-ok!';
-
+	private TokenServiceInterface $tokenService;
+	private UserRepositoryInterface $userRepository;
 	private AuthenticationSubscriber $subscriber;
 	private HttpKernelInterface $kernel;
 
 	protected function setUp(): void
 	{
-		$this->subscriber = new AuthenticationSubscriber(self::JWT_SECRET);
-		$this->kernel     = $this->createMock(HttpKernelInterface::class);
+		$this->tokenService   = $this->createMock(TokenServiceInterface::class);
+		$this->userRepository = $this->createMock(UserRepositoryInterface::class);
+		$this->subscriber     = new AuthenticationSubscriber($this->tokenService, $this->userRepository);
+		$this->kernel         = $this->createMock(HttpKernelInterface::class);
 	}
 
 	#[Test]
@@ -112,31 +118,39 @@ class AuthenticationSubscriberTest extends TestCase
 	}
 
 	#[Test]
-	public function itSetsApiTokenAttributeForValidJwt(): void
+	public function itSets_api_userAttributeAfterSuccessfulValidation(): void
 	{
-		$payload = ['sub' => 2, 'username' => 'alice', 'gen' => 1, 'pv' => 0, 'utype' => 0, 'iat' => time(), 'exp' => time() + 900];
-		$token   = JWT::encode($payload, self::JWT_SECRET, 'HS256');
+		$payload = $this->makePayload(sub: 2, gen: 1, pv: 0);
+		$user    = $this->makeUser(id: 2, tokenGeneration: 1, permVersion: 0);
+
+		$this->tokenService
+			->method('decodeToken')
+			->willReturn($payload);
+
+		$this->userRepository
+			->method('findById')
+			->with(2)
+			->willReturn($user);
 
 		$request = Request::create('/api/v1/forums');
-		$request->headers->set('Authorization', 'Bearer ' . $token);
+		$request->headers->set('Authorization', 'Bearer valid.token.here');
 		$event = $this->makeEvent($request);
 
 		$this->subscriber->onKernelRequest($event);
 
 		self::assertNull($event->getResponse());
-		$claims = $request->attributes->get('_api_token');
-		self::assertNotNull($claims);
-		self::assertSame(2, $claims->sub);
+		self::assertSame($user, $request->attributes->get('_api_user'));
 	}
 
 	#[Test]
 	public function itReturns401ForExpiredToken(): void
 	{
-		$payload = ['sub' => 2, 'iat' => time() - 1000, 'exp' => time() - 100];
-		$token   = JWT::encode($payload, self::JWT_SECRET, 'HS256');
+		$this->tokenService
+			->method('decodeToken')
+			->willThrowException(new \UnexpectedValueException('Token expired'));
 
 		$request = Request::create('/api/v1/forums');
-		$request->headers->set('Authorization', 'Bearer ' . $token);
+		$request->headers->set('Authorization', 'Bearer expired.token.here');
 		$event = $this->makeEvent($request);
 
 		$this->subscriber->onKernelRequest($event);
@@ -146,17 +160,18 @@ class AuthenticationSubscriberTest extends TestCase
 		self::assertSame(401, $response->getStatusCode());
 
 		$body = json_decode($response->getContent(), true);
-		self::assertSame('Token expired', $body['error']);
+		self::assertSame('Invalid token', $body['error']);
 	}
 
 	#[Test]
 	public function itReturns401ForInvalidSignature(): void
 	{
-		$payload  = ['sub' => 2, 'iat' => time(), 'exp' => time() + 900];
-		$token    = JWT::encode($payload, 'wrong-secret-minimum-32-characters-x', 'HS256');
+		$this->tokenService
+			->method('decodeToken')
+			->willThrowException(new \UnexpectedValueException('Invalid signature'));
 
 		$request = Request::create('/api/v1/forums');
-		$request->headers->set('Authorization', 'Bearer ' . $token);
+		$request->headers->set('Authorization', 'Bearer bad.sig.token');
 		$event = $this->makeEvent($request);
 
 		$this->subscriber->onKernelRequest($event);
@@ -166,8 +181,145 @@ class AuthenticationSubscriberTest extends TestCase
 		self::assertSame(401, $response->getStatusCode());
 	}
 
+	#[Test]
+	public function itSets_api_userAttributeFromUserRepository(): void
+	{
+		$payload = $this->makePayload(sub: 2, gen: 1, pv: 0);
+		$user    = $this->makeUser(id: 2, tokenGeneration: 1, permVersion: 0);
+
+		$this->tokenService->method('decodeToken')->willReturn($payload);
+		$this->userRepository->method('findById')->with(2)->willReturn($user);
+
+		$request = Request::create('/api/v1/forums');
+		$request->headers->set('Authorization', 'Bearer token');
+		$event = $this->makeEvent($request);
+
+		$this->subscriber->onKernelRequest($event);
+
+		self::assertNull($event->getResponse());
+		self::assertSame($user, $request->attributes->get('_api_user'));
+	}
+
+	#[Test]
+	public function itReturns401WhenUserNotFound(): void
+	{
+		$payload = $this->makePayload(sub: 99, gen: 1, pv: 0);
+
+		$this->tokenService->method('decodeToken')->willReturn($payload);
+		$this->userRepository->method('findById')->with(99)->willReturn(null);
+
+		$request = Request::create('/api/v1/forums');
+		$request->headers->set('Authorization', 'Bearer token');
+		$event = $this->makeEvent($request);
+
+		$this->subscriber->onKernelRequest($event);
+
+		$response = $event->getResponse();
+		self::assertNotNull($response);
+		self::assertSame(401, $response->getStatusCode());
+
+		$body = json_decode($response->getContent(), true);
+		self::assertSame('User not found', $body['error']);
+	}
+
+	#[Test]
+	public function itReturns401WhenTokenGenerationStale(): void
+	{
+		$payload = $this->makePayload(sub: 2, gen: 0, pv: 0);
+		$user    = $this->makeUser(id: 2, tokenGeneration: 1, permVersion: 0);
+
+		$this->tokenService->method('decodeToken')->willReturn($payload);
+		$this->userRepository->method('findById')->willReturn($user);
+
+		$request = Request::create('/api/v1/forums');
+		$request->headers->set('Authorization', 'Bearer token');
+		$event = $this->makeEvent($request);
+
+		$this->subscriber->onKernelRequest($event);
+
+		$response = $event->getResponse();
+		self::assertNotNull($response);
+		self::assertSame(401, $response->getStatusCode());
+
+		$body = json_decode($response->getContent(), true);
+		self::assertSame('Token revoked', $body['error']);
+	}
+
+	#[Test]
+	public function itSets_api_token_staleWhenPermVersionMismatch(): void
+	{
+		$payload = $this->makePayload(sub: 2, gen: 1, pv: 0);
+		$user    = $this->makeUser(id: 2, tokenGeneration: 1, permVersion: 1);
+
+		$this->tokenService->method('decodeToken')->willReturn($payload);
+		$this->userRepository->method('findById')->willReturn($user);
+
+		$request = Request::create('/api/v1/forums');
+		$request->headers->set('Authorization', 'Bearer token');
+		$event = $this->makeEvent($request);
+
+		$this->subscriber->onKernelRequest($event);
+
+		self::assertNull($event->getResponse());
+		self::assertTrue($request->attributes->get('_api_token_stale'));
+		self::assertSame($user, $request->attributes->get('_api_user'));
+	}
+
+	#[Test]
+	public function itDoesNotSet_api_tokenAttribute(): void
+	{
+		$payload = $this->makePayload(sub: 2, gen: 1, pv: 0);
+		$user    = $this->makeUser(id: 2, tokenGeneration: 1, permVersion: 0);
+
+		$this->tokenService->method('decodeToken')->willReturn($payload);
+		$this->userRepository->method('findById')->willReturn($user);
+
+		$request = Request::create('/api/v1/forums');
+		$request->headers->set('Authorization', 'Bearer token');
+		$event = $this->makeEvent($request);
+
+		$this->subscriber->onKernelRequest($event);
+
+		self::assertNull($event->getResponse());
+		self::assertFalse($request->attributes->has('_api_token'));
+		self::assertNotNull($request->attributes->get('_api_user'));
+	}
+
 	private function makeEvent(Request $request): RequestEvent
 	{
 		return new RequestEvent($this->kernel, $request, HttpKernelInterface::MAIN_REQUEST);
+	}
+
+	private function makePayload(int $sub, int $gen, int $pv): TokenPayload
+	{
+		return new TokenPayload('phpbb4', $sub, 'phpbb-api', time(), time() + 900, 'jti-1', $gen, $pv, 0, '');
+	}
+
+	private function makeUser(int $id, int $tokenGeneration, int $permVersion): User
+	{
+		return new User(
+			id:              $id,
+			type:            UserType::Normal,
+			username:        'alice',
+			usernameClean:   'alice',
+			email:           'alice@example.com',
+			passwordHash:    '$argon2id$v=19$m=65536,t=4,p=1$fake',
+			colour:          '',
+			defaultGroupId:  2,
+			avatarUrl:       '',
+			registeredAt:    new \DateTimeImmutable(),
+			lastmark:        new \DateTimeImmutable(),
+			posts:           0,
+			lastPostTime:    null,
+			isNew:           false,
+			rank:            0,
+			registrationIp:  '127.0.0.1',
+			loginAttempts:   0,
+			inactiveReason:  null,
+			formSalt:        '',
+			activationKey:   '',
+			tokenGeneration: $tokenGeneration,
+			permVersion:     $permVersion,
+		);
 	}
 }

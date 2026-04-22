@@ -79,3 +79,41 @@ services:
     phpbb\user\Service\UserDisplayService: ~
 
     phpbb\user\Service\BanService: ~
+
+    # ---------------------------------------------------------------------------
+    # Auth module (M3)
+    # ---------------------------------------------------------------------------
+
+    phpbb\user\Service\PasswordService: ~
+
+    phpbb\user\Contract\PasswordServiceInterface:
+        alias: phpbb\user\Service\PasswordService
+
+    phpbb\auth\Service\TokenService:
+        arguments:
+            $jwtSecret: '%env(PHPBB_JWT_SECRET)%'
+
+    phpbb\auth\Contract\TokenServiceInterface:
+        alias: phpbb\auth\Service\TokenService
+        public: true
+
+    phpbb\auth\Service\RefreshTokenService: ~
+
+    phpbb\auth\Contract\RefreshTokenServiceInterface:
+        alias: phpbb\auth\Service\RefreshTokenService
+
+    phpbb\auth\Repository\PdoRefreshTokenRepository: ~
+
+    phpbb\auth\Contract\RefreshTokenRepositoryInterface:
+        alias: phpbb\auth\Repository\PdoRefreshTokenRepository
+
+    phpbb\auth\Service\AuthenticationService: ~
+
+    phpbb\auth\Contract\AuthenticationServiceInterface:
+        alias: phpbb\auth\Service\AuthenticationService
+        public: true
+
+    phpbb\auth\Service\AuthorizationService: ~
+
+    phpbb\auth\Contract\AuthorizationServiceInterface:
+        alias: phpbb\auth\Service\AuthorizationService

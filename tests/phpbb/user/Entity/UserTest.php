@@ -49,6 +49,8 @@ class UserTest extends TestCase
 			'activationKey'  => '',
 		];
 
+		$defaults['tokenGeneration'] = 0;
+		$defaults['permVersion']     = 0;
 		$args = array_merge($defaults, $overrides);
 
 		return new User(
@@ -72,6 +74,8 @@ class UserTest extends TestCase
 			inactiveReason: $args['inactiveReason'],
 			formSalt: $args['formSalt'],
 			activationKey: $args['activationKey'],
+			tokenGeneration: $args['tokenGeneration'],
+			permVersion: $args['permVersion'],
 		);
 	}
 
@@ -124,5 +128,35 @@ class UserTest extends TestCase
 		$dt   = new \DateTimeImmutable('2026-05-10');
 		$user = $this->makeUser(['lastPostTime' => $dt]);
 		self::assertSame($dt, $user->lastPostTime);
+	}
+
+	#[Test]
+	public function itHasTokenGenerationDefaultZero(): void
+	{
+		$user = $this->makeUser();
+		self::assertSame(0, $user->tokenGeneration);
+	}
+
+	#[Test]
+	public function itHasPermVersionDefaultZero(): void
+	{
+		$user = $this->makeUser();
+		self::assertSame(0, $user->permVersion);
+	}
+
+	#[Test]
+	public function itExposesTokenGenerationAsInt(): void
+	{
+		$user = $this->makeUser(['tokenGeneration' => 5]);
+		self::assertIsInt($user->tokenGeneration);
+		self::assertSame(5, $user->tokenGeneration);
+	}
+
+	#[Test]
+	public function itExposesPermVersionAsInt(): void
+	{
+		$user = $this->makeUser(['permVersion' => 3]);
+		self::assertIsInt($user->permVersion);
+		self::assertSame(3, $user->permVersion);
 	}
 }

@@ -16,7 +16,11 @@ declare(strict_types=1);
 
 namespace phpbb\api\Controller;
 
-use Firebase\JWT\JWT;
+use phpbb\auth\Contract\AuthenticationServiceInterface;
+use phpbb\auth\Exception\AuthenticationFailedException;
+use phpbb\auth\Exception\InvalidRefreshTokenException;
+use phpbb\user\Entity\User;
+use phpbb\user\Exception\BannedException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,10 +28,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AuthController
 {
+	public function __construct(
+		private readonly AuthenticationServiceInterface $authService,
+	) {
+	}
+
 	#[Route('/auth/login', name: 'api_v1_auth_login', methods: ['POST'])]
 	public function login(Request $request): JsonResponse
 	{
-		$body = json_decode($request->getContent(), true) ?? [];
+		$body   = json_decode($request->getContent(), true) ?? [];
 		$errors = [];
 
 		if (empty($body['username'])) {
@@ -42,33 +51,29 @@ class AuthController
 			return new JsonResponse(['errors' => $errors], 422);
 		}
 
-		// TODO: Replace with real AuthenticationService::login() call
-		$now    = time();
-		$secret = (string) (getenv('PHPBB_JWT_SECRET') ?: $_SERVER['PHPBB_JWT_SECRET'] ?? '');
-		$payload = [
-			'sub'   => 2,
-			'gen'   => 1,
-			'pv'    => 0,
-			'utype' => 0,
-			'flags' => 0,
-			'iat'   => $now,
-			'exp'   => $now + 900,
-			'jti'   => bin2hex(random_bytes(8)),
-		];
+		try {
+			$tokens = $this->authService->login(
+				$body['username'],
+				$body['password'],
+				$request->getClientIp() ?? '0.0.0.0',
+			);
+		} catch (AuthenticationFailedException $e) {
+			return new JsonResponse(['error' => $e->getMessage(), 'status' => 401], 401);
+		} catch (BannedException $e) {
+			return new JsonResponse(['error' => $e->getMessage(), 'status' => 403], 403);
+		}
 
-		return new JsonResponse([
-			'data' => [
-				'accessToken'  => JWT::encode($payload, $secret, 'HS256'),
-				'refreshToken' => 'mock-refresh-token',
-				'expiresIn'    => 900,
-			],
-		], 200);
+		return new JsonResponse(['data' => $tokens], 200);
 	}
 
 	#[Route('/auth/logout', name: 'api_v1_auth_logout', methods: ['POST'])]
-	public function logout(): Response
+	public function logout(Request $request): Response
 	{
-		// TODO: Replace with real AuthenticationService::logout() call (JTI deny-list)
+		/** @var User $user */
+		$user = $request->attributes->get('_api_user');
+
+		$this->authService->logout($user->id);
+
 		return new Response(null, 204);
 	}
 
@@ -81,12 +86,33 @@ class AuthController
 			return new JsonResponse(['errors' => [['field' => 'refreshToken', 'message' => 'refreshToken is required']]], 422);
 		}
 
-		// TODO: Replace with real TokenService::refresh() call
-		return new JsonResponse([
-			'data' => [
-				'accessToken' => 'mock.access.token.refreshed',
-				'expiresIn'   => 900,
-			],
-		], 200);
+		try {
+			$tokens = $this->authService->refresh($body['refreshToken']);
+		} catch (InvalidRefreshTokenException $e) {
+			return new JsonResponse(['error' => $e->getMessage(), 'status' => 401], 401);
+		}
+
+		return new JsonResponse(['data' => $tokens], 200);
+	}
+
+	#[Route('/auth/elevate', name: 'api_v1_auth_elevate', methods: ['POST'])]
+	public function elevate(Request $request): JsonResponse
+	{
+		$body = json_decode($request->getContent(), true) ?? [];
+
+		if (empty($body['password'])) {
+			return new JsonResponse(['errors' => [['field' => 'password', 'message' => 'Password is required']]], 422);
+		}
+
+		/** @var User $user */
+		$user = $request->attributes->get('_api_user');
+
+		try {
+			$tokens = $this->authService->elevate($user->id, $body['password']);
+		} catch (AuthenticationFailedException $e) {
+			return new JsonResponse(['error' => $e->getMessage(), 'status' => 401], 401);
+		}
+
+		return new JsonResponse(['data' => $tokens], 200);
 	}
 }

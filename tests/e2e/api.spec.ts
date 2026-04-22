@@ -19,6 +19,7 @@ const API = '/api/v1';
 
 let apiCtx: APIRequestContext;
 let accessToken: string;
+let refreshToken: string;
 
 test.beforeAll(async () => {
 	apiCtx = await playwrightRequest.newContext({
@@ -57,7 +58,8 @@ test('POST /auth/login — returns access token', async () => {
 	});
 
 	// Persist token for subsequent tests
-	accessToken = body.data.accessToken;
+	accessToken  = body.data.accessToken;
+	refreshToken = body.data.refreshToken;
 	expect(accessToken.split('.').length).toBe(3); // valid JWT structure
 });
 
@@ -276,6 +278,60 @@ test('GET /topics/3 without token — 401 (login required)', async () => {
 
 	const body = await res.json();
 	expect(body.error).toBeDefined();
+});
+
+// ---------------------------------------------------------------------------
+// M3-1. POST /auth/login with wrong credentials → 401
+// ---------------------------------------------------------------------------
+test('POST /auth/login — 401 on wrong password', async () => {
+	const res = await apiCtx.post(`${API}/auth/login`, {
+		data: { username: 'alice', password: 'wrongpassword' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+// ---------------------------------------------------------------------------
+// M3-2. POST /auth/refresh — rotates tokens
+// ---------------------------------------------------------------------------
+test('POST /auth/refresh — returns new tokens', async () => {
+	const res = await apiCtx.post(`${API}/auth/refresh`, {
+		data: { refreshToken },
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.data).toMatchObject({
+		accessToken:  expect.any(String),
+		refreshToken: expect.any(String),
+		expiresIn:    900,
+	});
+
+	// Update tokens for subsequent tests
+	accessToken  = body.data.accessToken;
+	refreshToken = body.data.refreshToken;
+});
+
+// ---------------------------------------------------------------------------
+// M3-3. POST /auth/elevate — issues elevated token
+// ---------------------------------------------------------------------------
+test('POST /auth/elevate — returns elevated token', async () => {
+	const res = await apiCtx.post(`${API}/auth/elevate`, {
+		data: { password: 'testpass' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body.data).toMatchObject({
+		elevatedToken: expect.any(String),
+		expiresIn:     300,
+	});
+
+	// Validate JWT structure
+	expect(body.data.elevatedToken.split('.').length).toBe(3);
 });
 
 // ---------------------------------------------------------------------------
