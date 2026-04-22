@@ -59,6 +59,7 @@ Related plans: `.maister/plans/`
 | 2.5 | UserService (profile, groups, bans) | ⏳ | — |
 | 2.6 | REST API controller (`/api/v1/users/`) | ⏳ | — |
 | 2.7 | PHPUnit tests | ⏳ | — |
+| 2.8 | Playwright E2E tests (`/api/v1/users/`) | ⏳ | — |
 
 ---
 
@@ -74,6 +75,7 @@ Related plans: `.maister/plans/`
 | 3.6 | AuthSubscriber (JWT bearer) | ⏳ | — |
 | 3.7 | REST API: login, logout, refresh | ⏳ | — |
 | 3.8 | PHPUnit tests | ⏳ | — |
+| 3.9 | Playwright E2E tests (auth flow, token validation) | ⏳ | — |
 
 ---
 
@@ -87,6 +89,7 @@ Related plans: `.maister/plans/`
 | 4.4 | Mock controllers (health, auth, forums, topics, users) | ✅ | `ac4aeda` |
 | 4.5 | Playwright E2E (16 tests) | ✅ | `ac4aeda` |
 | 4.6 | Wire real controllers (M2/M3 → M4) | ⏳ | — |
+| 4.7 | Update E2E tests after real controllers wired | ⏳ | — |
 
 ---
 
@@ -101,6 +104,7 @@ Related plans: `.maister/plans/`
 | 5a.5 | HierarchyService (5-service decomposition) | ⏳ | — |
 | 5a.6 | REST API controller (`/api/v1/forums/`) | ⏳ | — |
 | 5a.7 | PHPUnit tests | ⏳ | — |
+| 5a.8 | Playwright E2E tests (`/api/v1/forums/`) | ⏳ | — |
 
 ---
 
@@ -115,6 +119,7 @@ Related plans: `.maister/plans/`
 | 5b.5 | StorageService | ⏳ | — |
 | 5b.6 | REST API controller (`/api/v1/files/`) | ⏳ | — |
 | 5b.7 | PHPUnit tests | ⏳ | — |
+| 5b.8 | Playwright E2E tests (`/api/v1/files/`) | ⏳ | — |
 
 ---
 
@@ -130,6 +135,7 @@ Related plans: `.maister/plans/`
 | 6.6 | Hybrid counters (Tiered Counter Pattern) | ⏳ | — |
 | 6.7 | REST API controllers | ⏳ | — |
 | 6.8 | PHPUnit tests | ⏳ | — |
+| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | ⏳ | — |
 
 ---
 
@@ -145,6 +151,7 @@ Related plans: `.maister/plans/`
 | 7.6 | Migration: phpbb_privmsgs* → messaging | ⏳ | — |
 | 7.7 | REST API controllers | ⏳ | — |
 | 7.8 | PHPUnit tests | ⏳ | — |
+| 7.9 | Playwright E2E tests (`/api/v1/messages/`) | ⏳ | — |
 
 ---
 
@@ -158,6 +165,7 @@ Related plans: `.maister/plans/`
 | 8.4 | Tag-aware cache integration | ⏳ | — |
 | 8.5 | React frontend (polling component) | ⏳ | — |
 | 8.6 | PHPUnit tests | ⏳ | — |
+| 8.7 | Playwright E2E tests (`/api/v1/notifications/`, polling) | ⏳ | — |
 
 ---
 
@@ -169,6 +177,7 @@ Related plans: `.maister/plans/`
 | 9.2 | Implementation plan | ⏳ | — |
 | 9.3 | ISP architecture + backends | ⏳ | — |
 | 9.4 | PHPUnit tests | ⏳ | — |
+| 9.5 | Playwright E2E tests (`/api/v1/search/`) | ⏳ | — |
 
 ---
 
