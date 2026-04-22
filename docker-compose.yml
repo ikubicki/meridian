@@ -24,6 +24,7 @@ services:
       - ./files:/var/www/phpbb/files
       - ./cache:/var/www/phpbb/cache
       - ./store:/var/www/phpbb/store
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/phpbb.ini:ro
     networks:
       - phpbb
 

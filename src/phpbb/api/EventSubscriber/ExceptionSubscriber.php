@@ -54,6 +54,12 @@ class ExceptionSubscriber implements EventSubscriberInterface
 			$status  = 500;
 			$headers = [];
 			$message = 'An unexpected error occurred.';
+			phpbb_log('error', $exception->getMessage(), [
+				'exception' => get_class($exception),
+				'file'      => $exception->getFile(),
+				'line'      => $exception->getLine(),
+				'trace'     => $exception->getTraceAsString(),
+			]);
 		}
 
 		$response = new JsonResponse(['error' => $message, 'status' => $status], $status, $headers);
