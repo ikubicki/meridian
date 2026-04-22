@@ -79,6 +79,24 @@ Related plans: `.maister/plans/`
 
 ---
 
+## S.1 — Security Review: Auth Layer (post-M3)
+
+> Trigger: after M3 (Auth Unified Service) is complete.  
+> Focus: authentication + authorisation surface — highest risk area.  
+> Tool: OWASP ZAP (automated) + manual review of ACL resolver and JWT logic.
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| S1.1 | JWT attack surface: alg:none, weak secret, expiry bypass | ⏳ | Manual review |
+| S1.2 | Brute-force / rate-limiting on `POST /api/v1/auth/login` | ⏳ | OWASP ZAP + manual |
+| S1.3 | ACL bypass: horizontal privilege escalation (user → user) | ⏳ | Manual review |
+| S1.4 | ACL bypass: vertical privilege escalation (user → admin) | ⏳ | Manual review |
+| S1.5 | Session fixation / token reuse after logout | ⏳ | Manual review |
+| S1.6 | Argon2id config audit (memory, iterations, parallelism) | ⏳ | Compare vs OWASP recommendations |
+| S1.7 | Document findings + remediation | ⏳ | — |
+
+---
+
 ## M4 — REST API Framework (`phpbb\api`)
 
 | # | Task | Status | Plan / Commit |
@@ -152,6 +170,26 @@ Related plans: `.maister/plans/`
 | L.4 | `GET /api/v1/topics/{id}/posts` — post fetch | ⏳ | Target: p95 < 200ms @ 50 VU |
 | L.5 | Cache hit/miss ratio baseline (FilesystemBackend) | ⏳ | Decide if Redis needed earlier |
 | L.6 | Add `composer test:load` script + CI gate (optional) | ⏳ | — |
+
+---
+
+## S.2 — Security Review: Full API Surface (post-M6.x)
+
+> Trigger: after M6.x load tests — all core read/write paths exist.  
+> Focus: full OWASP Top 10 sweep across the REST API surface.  
+> Tool: OWASP ZAP automated scan + manual spot checks per finding.
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| S2.1 | OWASP ZAP automated scan: full API surface | ⏳ | Run against local Docker stack |
+| S2.2 | IDOR on resource endpoints (forums, topics, posts, files) | ⏳ | Manual: cross-user access |
+| S2.3 | XSS via content pipeline (s9e BBCode/Markdown output) | ⏳ | Manual + ZAP active scan |
+| S2.4 | Insecure file upload (Storage Service: type, size, path) | ⏳ | Manual review |
+| S2.5 | SQL injection smoke test (prepared statements audit) | ⏳ | OWASP ZAP + grep for raw interpolation |
+| S2.6 | Mass assignment / over-posting on POST/PATCH endpoints | ⏳ | Manual review |
+| S2.7 | Sensitive data exposure in error responses | ⏳ | Manual review |
+| S2.8 | Security headers audit (CORS, CSP, X-Frame-Options) | ⏳ | OWASP ZAP passive scan |
+| S2.9 | Document findings + remediation, update CREDITS security section | ⏳ | — |
 
 ---
 
