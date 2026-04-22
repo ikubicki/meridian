@@ -139,6 +139,22 @@ Related plans: `.maister/plans/`
 
 ---
 
+## M6.x — Load Tests (post-M6 checkpoint)
+
+> Trigger: after M6 (Threads) is done. Tests critical read paths with realistic concurrency.  
+> Tool: [k6](https://k6.io/) — scriptable, CI-friendly, outputs p95/p99 latency + RPS.
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| L.1 | k6 scaffolding (`tests/load/`) + docker-compose profile | ⏳ | Reuse existing app container |
+| L.2 | `GET /api/v1/forums` — forum index read path | ⏳ | Target: p95 < 100ms @ 50 VU |
+| L.3 | `GET /api/v1/forums/{id}/topics` — topic list | ⏳ | Target: p95 < 150ms @ 50 VU |
+| L.4 | `GET /api/v1/topics/{id}/posts` — post fetch | ⏳ | Target: p95 < 200ms @ 50 VU |
+| L.5 | Cache hit/miss ratio baseline (FilesystemBackend) | ⏳ | Decide if Redis needed earlier |
+| L.6 | Add `composer test:load` script + CI gate (optional) | ⏳ | — |
+
+---
+
 ## M7 — Messaging Service (`phpbb\messaging`)
 
 | # | Task | Status | Plan / Commit |
