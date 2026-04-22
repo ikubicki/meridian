@@ -7,7 +7,8 @@ This project uses a structured documentation system for coding standards and pro
 When generating or reviewing code for this project, apply the standards documented in `.maister/docs/`:
 
 - **General conventions** (naming, PHPDoc, file headers): [.maister/docs/standards/global/STANDARDS.md](.maister/docs/standards/global/STANDARDS.md)
-- **PHP / Backend standards** (namespacing, DI, SQL safety, security): [.maister/docs/standards/backend/STANDARDS.md](.maister/docs/standards/backend/STANDARDS.md)
+- **PHP / Backend standards** (namespacing, DI, SQL safety, security, controller design): [.maister/docs/standards/backend/STANDARDS.md](.maister/docs/standards/backend/STANDARDS.md)
+- **REST API conventions** (controller conventions, pagination context, HTTP status codes, JWT auth): [.maister/docs/standards/backend/REST_API.md](.maister/docs/standards/backend/REST_API.md)
 - **Frontend standards** (React SPA components, CSS organization, accessibility, icons): [.maister/docs/standards/frontend/STANDARDS.md](.maister/docs/standards/frontend/STANDARDS.md)
 - **Testing standards** (PHPUnit, test naming, mocking, isolation): [.maister/docs/standards/testing/STANDARDS.md](.maister/docs/standards/testing/STANDARDS.md)
 

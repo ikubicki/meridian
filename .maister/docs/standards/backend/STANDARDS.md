@@ -212,6 +212,40 @@ throw new \phpbb\exception\runtime_exception('CRON_LOCK_ERROR', [], null, 1);
 trigger_error($user->lang('OPERATION_FAILED'), E_USER_ERROR);
 ```
 
+## Controller Design
+
+Controllers (REST API or otherwise) are **thin routing layers** — they must not contain business logic.
+
+### Responsibilities of a controller
+1. Parse and validate the incoming request (input shape, required fields)
+2. Build the appropriate DTO or context object
+3. Call the relevant service method
+4. Map the result or exception to a response (JSON, redirect, etc.)
+
+### What does NOT belong in a controller
+- Database queries or repository calls (use a service)
+- Filtering, sorting, or transforming data beyond serialisation (use a service)
+- Caching (use a service)
+- Conditional logic that represents a business rule (use a service)
+
+### Pagination — always use `PaginationContext`
+
+All list/search controller actions must build a `phpbb\api\DTO\PaginationContext` (or a domain-specific DTO with the same fields) and pass it to the service. Never forward raw `$page` / `$perPage` integers:
+
+```php
+// ✅ Correct
+$ctx    = PaginationContext::fromQuery($request->query);
+$result = $this->service->listAll($ctx);   // PaginatedResult
+
+// ❌ Wrong
+$result = $this->service->listAll(
+    page: (int) $request->query->get('page', 1),
+    perPage: (int) $request->query->get('perPage', 25),
+);
+```
+
+Service methods that return lists consume `PaginationContext` (or a subtype) — never bare integers. See `REST_API.md` for the full pagination contract.
+
 ## SQL Safety
 
 ### Always use the DBAL

@@ -62,14 +62,7 @@ class UsersController
 	#[Route('/users', name: 'api_v1_users_index', methods: ['GET'])]
 	public function index(Request $request): JsonResponse
 	{
-		$criteria = new UserSearchCriteria(
-			query: $request->query->get('q'),
-			page: max(1, (int) $request->query->get('page', 1)),
-			perPage: min(100, max(1, (int) $request->query->get('perPage', 25))),
-			sort: $request->query->get('sort', 'username'),
-			sortOrder: $request->query->get('order', 'asc'),
-		);
-
+		$criteria  = UserSearchCriteria::fromQuery($request->query);
 		$paginated = $this->userSearchService->search($criteria);
 
 		$items = array_map(static fn ($user) => [

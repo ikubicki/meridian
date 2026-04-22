@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace phpbb\user\DTO;
 
 use phpbb\user\Enum\UserType;
+use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
  * Encapsulates all filtering, sorting, and pagination parameters
@@ -33,5 +34,22 @@ final readonly class UserSearchCriteria
 		public string $sort = 'username',
 		public string $sortOrder = 'asc',
 	) {
+	}
+
+	/**
+	 * Build from a Symfony Request query string.
+	 * Use this in controllers instead of constructing manually.
+	 */
+	public static function fromQuery(ParameterBag $query): self
+	{
+		return new self(
+			query: $query->get('q'),
+			page: max(1, (int) $query->get('page', 1)),
+			perPage: min(100, max(1, (int) $query->get('perPage', 25))),
+			sort: $query->get('sort', 'username'),
+			sortOrder: in_array(strtolower((string) $query->get('order', 'asc')), ['asc', 'desc'], true)
+				? strtolower((string) $query->get('order', 'asc'))
+				: 'asc',
+		);
 	}
 }

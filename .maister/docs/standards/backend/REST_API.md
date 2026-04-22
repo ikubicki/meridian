@@ -151,15 +151,55 @@ public function signup(Request $request): JsonResponse
 
 ## Controller Conventions
 
+### Thin-layer rule (enforced for all controllers)
+
+Controllers **must not** implement any business logic. Their sole responsibilities are:
+
+1. Parse and validate the request (input shape, required fields)
+2. Build the appropriate DTO / context object
+3. Call the relevant service method
+4. Map the service result or caught exception to a `JsonResponse`
+
+If you find yourself writing an `if` that is not about request validation or HTTP response mapping, the logic belongs in a service.
+
+```php
+// ✅ Correct — controller is a thin router/mapper
+public function index(Request $request): JsonResponse
+{
+    $ctx    = PaginationContext::fromQuery($request->query);
+    $result = $this->forumService->listAll($ctx);
+
+    return new JsonResponse([
+        'data' => array_map(fn ($f) => $this->serialize($f), $result->items),
+        'meta' => [
+            'total'      => $result->total,
+            'page'       => $result->page,
+            'perPage'    => $result->perPage,
+            'totalPages' => $result->totalPages(),
+        ],
+    ]);
+}
+
+// ❌ Wrong — business logic leaking into controller
+public function index(Request $request): JsonResponse
+{
+    $forums = $this->forumService->listAll();
+    $forums = array_filter($forums, fn ($f) => $f->isVisible()); // ← belongs in service
+    // ...
+}
+```
+
+### Other controller rules
+
 - Controllers are plain PHP classes — no base class required for simple controllers
 - Constructor injection via Symfony DI; use `readonly` constructor promotion for dependencies
 - One public action method per route (not `__invoke` unless the controller has only one route)
 - Method names must match the route action: `index()`, `show(int $id)`, `create()`, `update()`, `delete()`
-- Controllers must not contain business logic — delegate to service classes when logic grows
 
 ```php
-namespace phpbb\api\v1\controller;
+namespace phpbb\api\Controller;
 
+use phpbb\api\DTO\PaginationContext;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -167,17 +207,22 @@ class ForumsController
 {
     public function __construct(
         private readonly ForumService $forumService,
-    ) {}
+    ) {
+    }
 
     public function index(Request $request): JsonResponse
     {
-        ['items' => $forums, 'total' => $total] = $this->forumService->listAll(
-            page: (int) $request->query->get('page', 1),
-            perPage: (int) $request->query->get('perPage', 25),
-        );
+        $ctx    = PaginationContext::fromQuery($request->query);
+        $result = $this->forumService->listAll($ctx);
+
         return new JsonResponse([
-            'data' => $forums,
-            'meta' => ['total' => $total, 'page' => 1, 'perPage' => 25, 'lastPage' => (int) ceil($total / 25)],
+            'data' => $result->items,
+            'meta' => [
+                'total'      => $result->total,
+                'page'       => $result->page,
+                'perPage'    => $result->perPage,
+                'totalPages' => $result->totalPages(),
+            ],
         ]);
     }
 
@@ -191,6 +236,61 @@ class ForumsController
     }
 }
 ```
+
+## Pagination Context
+
+All list/search endpoints must use `phpbb\api\DTO\PaginationContext` (or a domain-specific DTO that embeds it) — never pass raw `$page` / `$perPage` integers as separate arguments to service methods.
+
+### `PaginationContext` fields
+
+| Field | Type | Default | Source query param |
+|-------|---------|---------|--------------------|
+| `page` | `int` | `1` | `?page=` |
+| `perPage` | `int` | `25` (max 100) | `?perPage=` |
+| `sort` | `?string` | `null` | `?sort=` |
+| `sortOrder` | `string` | `'asc'` | `?order=` |
+
+### Controller usage
+
+Build the context using the named constructor — never construct manually in a controller action:
+
+```php
+$ctx = PaginationContext::fromQuery($request->query);
+$result = $this->someService->list($ctx);  // $result is PaginatedResult<T>
+```
+
+### Service method signature
+
+Service methods that return paginated data accept `PaginationContext` as their first (or only) parameter — never raw integers:
+
+```php
+// ✅ Correct
+public function listAll(PaginationContext $ctx): PaginatedResult { ... }
+public function search(UserSearchCriteria $criteria): PaginatedResult { ... }
+
+// ❌ Wrong — raw pagination arguments
+public function listAll(int $page, int $perPage, string $sort = 'name'): array { ... }
+```
+
+Domain-specific filter DTOs (e.g. `UserSearchCriteria`) must include their own pagination fields following the same names (`page`, `perPage`, `sort`, `sortOrder`) and default values, or embed `PaginationContext` directly.
+
+### `PaginatedResult<T>` response meta
+
+Every paginated response must include the full `meta` block:
+
+```json
+{
+    "data": [...],
+    "meta": {
+        "total":      100,
+        "page":       1,
+        "perPage":    25,
+        "totalPages": 4
+    }
+}
+```
+
+Use `PaginatedResult::totalPages()` — never compute `ceil($total / $perPage)` inline in a controller.
 
 ## Input Handling
 
