@@ -1,6 +1,9 @@
 /**
 *
+* phpBB4 "Meridian" — a ground-up rewrite of phpBB
+*
 * phpBB © Copyright phpBB Limited 2003-2021
+* phpBB4 Meridian © Copyright Irek Kubicki / Codebuilders 2026
 * https://www.phpbb.com
 *
 * phpBB is free software. You can redistribute it and/or modify it
@@ -17,6 +20,37 @@
 *
 */
 
+
+-- phpBB4 "Meridian" Rewrite --
+
+This is a ground-up rewrite of the phpBB forum software.
+The original phpBB codebase has been retired. What remains from the
+legacy system is the database schema and parts of the data-access logic
+tied to it. Everything else — the HTTP layer, authentication, REST API,
+frontend, service architecture — has been written from scratch.
+
+Codename:                Meridian
+
+Rewrite Author:          Irek Kubicki <phpbb@codebuilders.pl>
+                         https://codebuilders.pl
+
+Tech stack:              PHP 8.4+, Symfony 8.x, React SPA, REST API
+
+What was kept from phpBB3:
+  - MariaDB/MySQL database schema (phpbb_* tables)
+  - Parts of the DB-access and forum-structure logic
+  - Compatible user, forum, topic, post data model
+
+What was rewritten from scratch:
+  - HTTP kernel & routing (Symfony 8.x FrameworkBundle)
+  - Authentication (JWT Bearer, unified auth service)
+  - REST API (OpenAPI-specified, versioned /api/v1/)
+  - Frontend (React SPA consuming the REST API)
+  - Dependency injection (Symfony DI container)
+  - Test infrastructure (PHPUnit 10, Playwright E2E)
+  - Docker / deployment configuration
+
+-- Original phpBB Project --
 
 phpBB Project Manager:   Marshalrusty (Yuriy Rusko)
 
@@ -83,28 +117,46 @@ Visual Confirmation:   Xore (Robert Hetzler)
 
 prosilver by subBlue Design, Tom Beddard, (c) 2004 phpBB Limited
 
-phpBB contains code from the following applications:
-
-LGPL licensed:
-Smarty (c) 2001, 2002 by ispi of Lincoln, Inc, http://smarty.php.net/
-
-GPL licensed:
-phpMyAdmin (c) 2001, 2003 phpMyAdmin Devel team, http://www.phpmyadmin.net/
-Jabber Class (c) 2006 Flyspray.org, http://www.flyspray.org/
-Chora (c) 2000-2006, The Horde Project. http://horde.org/chora/
-Horde Project (c) 2000-2006, The Horde Project. http://horde.org/
-jQuery (c) 2011, John Resig. http://jquery.com/
-Sphinx Technologies Inc (c) 2001-2012 Andrew Aksyonoff, http://sphinxsearch.com/
-Plupload (c) 2010-2013 Moxiecode Systems AB, http://www.plupload.com/
-
-PHP License, version 3.0:
-Pear (c) 2001-2004 PHP Group, http://pear.php.net
-
-Text_Diff-0.2.1 http://pear.php.net/package/Text_Diff
+phpBB4 Meridian contains code from the following applications:
 
 MIT licensed:
-Symfony2 (c) 2004-2011 Fabien Potencier, https://symfony.com/
-Cookie Consent (c) 2015 Silktide Ltd, https://cookieconsent.insites.com
+Symfony 8.x (c) 2004-2026 Fabien Potencier, https://symfony.com/
+  symfony/config, symfony/console, symfony/dependency-injection,
+  symfony/event-dispatcher, symfony/filesystem, symfony/finder,
+  symfony/framework-bundle, symfony/http-foundation, symfony/http-kernel,
+  symfony/process, symfony/routing, symfony/twig-bridge, symfony/yaml
+
+Twig (c) 2009-2026 Fabien Potencier, https://twig.symfony.com/
+GuzzleHTTP (c) 2011-2026 Michael Dowling, https://guzzlephp.org/
+React (c) 2013-2026 Meta Platforms, Inc., https://react.dev/
+react-router-dom (c) 2015-2026 Remix Software Inc., https://reactrouter.com/
+
+BSD-3-Clause licensed:
+Firebase PHP-JWT (c) 2011, Neuman Vong; 2013, Anant Narayanan,
+  https://github.com/firebase/php-jwt
+PHPUnit (c) 2001-2026 Sebastian Bergmann, https://phpunit.de/
+
+Apache-2.0 licensed:
+Playwright (c) 2024 Microsoft Corporation, https://playwright.dev/
+
+LGPL licensed:
+Zend Code (c) 2005-2026 Laminas Project, https://getlaminas.org/
+
+Other licenses:
+google/recaptcha (BSD-3-Clause) (c) 2015 Google Inc.,
+  https://github.com/google/recaptcha
+bantu/ini-get-wrapper (MIT) (c) Andreas Fischer,
+  https://github.com/bantu/ini-get-wrapper
+carlos-mg89/oauth (MIT) (c) Andy Smith, Carlos Mafra,
+  https://github.com/carlos-mg89/PHPoAuthLib
+marc1706/fast-image-size (MIT) (c) Marc Alexander,
+  https://github.com/marc1706/fast-image-size
+s9e/text-formatter (MIT) (c) 2010-2026 JoshyPHP,
+  https://github.com/s9e/TextFormatter
+squizlabs/php_codesniffer (BSD-3-Clause) (c) Squiz Labs,
+  https://github.com/squizlabs/PHP_CodeSniffer
+friendsofphp/php-cs-fixer (MIT) (c) Fabien Potencier, Dariusz Ruminski,
+  https://github.com/PHP-CS-Fixer/PHP-CS-Fixer
 
 Emoji by:
 Twemoji (c) 2018 Twitter, Inc, https://twemoji.twitter.com/

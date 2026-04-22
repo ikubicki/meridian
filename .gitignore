@@ -6,4 +6,8 @@ store/*
 !store/index.htm
 files/*
 !files/index.htm
-node_modules
+node_modules.php-cs-fixer.cache
+.phpunit.result.cache
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+tests/e2e/node_modules/

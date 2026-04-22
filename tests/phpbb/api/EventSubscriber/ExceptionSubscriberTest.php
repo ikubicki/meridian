@@ -2,9 +2,9 @@
 
 /**
  *
- * This file is part of the phpBB Forum Software package.
+ * This file is part of the phpBB4 "Meridian" package.
  *
- * @copyright (c) phpBB Limited <https://www.phpbb.com>
+ * @copyright (c) Irek Kubicki <phpbb@codebuilders.pl>
  * @license GNU General Public License, version 2 (GPL-2.0)
  *
  * For full copyright and license information, please see
