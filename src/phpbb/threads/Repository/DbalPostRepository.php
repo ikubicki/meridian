@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace phpbb\threads\Repository;
 
-use Doctrine\DBAL\ParameterType;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\db\Exception\RepositoryException;
 use phpbb\threads\Contract\PostRepositoryInterface;
@@ -36,14 +35,25 @@ class DbalPostRepository implements PostRepositoryInterface
 	public function findById(int $id): ?Post
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT post_id, topic_id, forum_id, poster_id, post_time,
-                        post_text, post_subject, post_username, poster_ip, post_visibility
-                 FROM ' . self::TABLE . '
-                 WHERE post_id = :id
-                 LIMIT 1',
-				['id' => $id],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select(
+				'post_id',
+				'topic_id',
+				'forum_id',
+				'poster_id',
+				'post_time',
+				'post_text',
+				'post_subject',
+				'post_username',
+				'poster_ip',
+				'post_visibility'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('post_id', ':id'))
+				->setParameter('id', $id)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -54,32 +64,36 @@ class DbalPostRepository implements PostRepositoryInterface
 	public function findByTopic(int $topicId, PaginationContext $ctx): PaginatedResult
 	{
 		try {
-			$total = (int) $this->connection->executeQuery(
-				'SELECT COUNT(*) FROM ' . self::TABLE . '
-                 WHERE topic_id = :topicId AND post_visibility = 1',
-				['topicId' => $topicId],
-			)->fetchOne();
+			$base = $this->connection->createQueryBuilder()
+				->from(self::TABLE)
+				->where('topic_id = :topicId')
+				->andWhere('post_visibility = 1')
+				->setParameter('topicId', $topicId);
+
+			$total = (int) (clone $base)->select('COUNT(*)')
+				->executeQuery()
+				->fetchOne();
 
 			$offset = ($ctx->page - 1) * $ctx->perPage;
 
-			$rows = $this->connection->executeQuery(
-				'SELECT post_id, topic_id, forum_id, poster_id, post_time,
-                        post_text, post_subject, post_username, poster_ip, post_visibility
-                 FROM ' . self::TABLE . '
-                 WHERE topic_id = :topicId AND post_visibility = 1
-                 ORDER BY post_time ASC
-                 LIMIT :limit OFFSET :offset',
-				[
-					'topicId' => $topicId,
-					'limit'   => $ctx->perPage,
-					'offset'  => $offset,
-				],
-				[
-					'topicId' => ParameterType::INTEGER,
-					'limit'   => ParameterType::INTEGER,
-					'offset'  => ParameterType::INTEGER,
-				],
-			)->fetchAllAssociative();
+			$rows = (clone $base)
+				->select(
+					'post_id',
+					'topic_id',
+					'forum_id',
+					'poster_id',
+					'post_time',
+					'post_text',
+					'post_subject',
+					'post_username',
+					'poster_ip',
+					'post_visibility'
+				)
+				->orderBy('post_time', 'ASC')
+				->setMaxResults($ctx->perPage)
+				->setFirstResult($offset)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$items = array_map(
 				fn (array $row) => PostDTO::fromEntity($this->hydrate($row)),
@@ -109,25 +123,29 @@ class DbalPostRepository implements PostRepositoryInterface
 		int $visibility,
 	): int {
 		try {
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-                    (topic_id, forum_id, poster_id, post_time,
-                     post_text, post_subject, post_username, poster_ip, post_visibility)
-                 VALUES
-                    (:topicId, :forumId, :posterId, :now,
-                     :content, :subject, :posterUsername, :posterIp, :visibility)',
-				[
-					'topicId'        => $topicId,
-					'forumId'        => $forumId,
-					'posterId'       => $posterId,
-					'now'            => $now,
-					'content'        => $content,
-					'subject'        => $subject,
-					'posterUsername' => $posterUsername,
-					'posterIp'       => $posterIp,
-					'visibility'     => $visibility,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'topic_id'        => ':topicId',
+					'forum_id'        => ':forumId',
+					'poster_id'       => ':posterId',
+					'post_time'       => ':now',
+					'post_text'       => ':content',
+					'post_subject'    => ':subject',
+					'post_username'   => ':posterUsername',
+					'poster_ip'       => ':posterIp',
+					'post_visibility' => ':visibility',
+				])
+				->setParameter('topicId', $topicId)
+				->setParameter('forumId', $forumId)
+				->setParameter('posterId', $posterId)
+				->setParameter('now', $now)
+				->setParameter('content', $content)
+				->setParameter('subject', $subject)
+				->setParameter('posterUsername', $posterUsername)
+				->setParameter('posterIp', $posterIp)
+				->setParameter('visibility', $visibility)
+				->executeStatement();
 
 			return (int) $this->connection->lastInsertId();
 		} catch (\Doctrine\DBAL\Exception $e) {

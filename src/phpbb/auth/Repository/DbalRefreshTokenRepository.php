@@ -32,17 +32,23 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function save(RefreshToken $token): void
 	{
 		try {
-			$sql = 'INSERT INTO ' . self::TABLE . ' (user_id, family_id, token_hash, issued_at, expires_at, revoked_at)'
-				. ' VALUES (:userId, :familyId, :tokenHash, :issuedAt, :expiresAt, :revokedAt)';
-
-			$this->connection->executeStatement($sql, [
-				'userId'    => $token->userId,
-				'familyId'  => $token->familyId,
-				'tokenHash' => $token->tokenHash,
-				'issuedAt'  => $token->issuedAt->getTimestamp(),
-				'expiresAt' => $token->expiresAt->getTimestamp(),
-				'revokedAt' => $token->revokedAt?->getTimestamp(),
-			]);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'user_id'    => ':userId',
+					'family_id'  => ':familyId',
+					'token_hash' => ':tokenHash',
+					'issued_at'  => ':issuedAt',
+					'expires_at' => ':expiresAt',
+					'revoked_at' => ':revokedAt',
+				])
+				->setParameter('userId', $token->userId)
+				->setParameter('familyId', $token->familyId)
+				->setParameter('tokenHash', $token->tokenHash)
+				->setParameter('issuedAt', $token->issuedAt->getTimestamp())
+				->setParameter('expiresAt', $token->expiresAt->getTimestamp())
+				->setParameter('revokedAt', $token->revokedAt?->getTimestamp())
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to save refresh token.', previous: $e);
 		}
@@ -51,8 +57,14 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function findByHash(string $hash): ?RefreshToken
 	{
 		try {
-			$sql = 'SELECT * FROM ' . self::TABLE . ' WHERE token_hash = :hash LIMIT 1';
-			$row = $this->connection->executeQuery($sql, ['hash' => $hash])->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('token_hash', ':hash'))
+				->setParameter('hash', $hash)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			if ($row === false) {
 				return null;
@@ -67,11 +79,14 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function revokeByHash(string $hash): void
 	{
 		try {
-			$sql = 'UPDATE ' . self::TABLE . ' SET revoked_at = :now WHERE token_hash = :hash AND revoked_at IS NULL';
-			$this->connection->executeStatement($sql, [
-				'now'  => time(),
-				'hash' => $hash,
-			]);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('revoked_at', ':now')
+				->where($qb->expr()->eq('token_hash', ':hash'))
+				->andWhere($qb->expr()->isNull('revoked_at'))
+				->setParameter('now', time())
+				->setParameter('hash', $hash)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to revoke refresh token by hash.', previous: $e);
 		}
@@ -80,11 +95,14 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function revokeFamily(string $familyId): void
 	{
 		try {
-			$sql = 'UPDATE ' . self::TABLE . ' SET revoked_at = :now WHERE family_id = :familyId AND revoked_at IS NULL';
-			$this->connection->executeStatement($sql, [
-				'now'      => time(),
-				'familyId' => $familyId,
-			]);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('revoked_at', ':now')
+				->where($qb->expr()->eq('family_id', ':familyId'))
+				->andWhere($qb->expr()->isNull('revoked_at'))
+				->setParameter('now', time())
+				->setParameter('familyId', $familyId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to revoke refresh token family.', previous: $e);
 		}
@@ -93,11 +111,14 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function revokeAllForUser(int $userId): void
 	{
 		try {
-			$sql = 'UPDATE ' . self::TABLE . ' SET revoked_at = :now WHERE user_id = :userId AND revoked_at IS NULL';
-			$this->connection->executeStatement($sql, [
-				'now'    => time(),
-				'userId' => $userId,
-			]);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('revoked_at', ':now')
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->andWhere($qb->expr()->isNull('revoked_at'))
+				->setParameter('now', time())
+				->setParameter('userId', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to revoke all refresh tokens for user.', previous: $e);
 		}
@@ -106,10 +127,12 @@ final class DbalRefreshTokenRepository implements RefreshTokenRepositoryInterfac
 	public function deleteExpired(): void
 	{
 		try {
-			$sql = 'DELETE FROM ' . self::TABLE . ' WHERE expires_at < :now AND revoked_at IS NOT NULL';
-			$this->connection->executeStatement($sql, [
-				'now' => time(),
-			]);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE)
+				->where($qb->expr()->lt('expires_at', ':now'))
+				->andWhere($qb->expr()->isNotNull('revoked_at'))
+				->setParameter('now', time())
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete expired refresh tokens.', previous: $e);
 		}

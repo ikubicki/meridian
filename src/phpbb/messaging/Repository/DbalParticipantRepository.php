@@ -37,13 +37,24 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 	public function findByConversation(int $conversationId): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT conversation_id, user_id, role, state, joined_at, left_at,
-                        last_read_message_id, last_read_at, is_muted, is_blocked
-                 FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId',
-				['conversationId' => $conversationId],
-			)->fetchAllAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$rows = $qb->select(
+				'conversation_id',
+				'user_id',
+				'role',
+				'state',
+				'joined_at',
+				'left_at',
+				'last_read_message_id',
+				'last_read_at',
+				'is_muted',
+				'is_blocked'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':conversationId'))
+				->setParameter('conversationId', $conversationId)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			return array_map($this->hydrate(...), $rows);
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -54,13 +65,24 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 	public function findByUser(int $userId): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT conversation_id, user_id, role, state, joined_at, left_at,
-                        last_read_message_id, last_read_at, is_muted, is_blocked
-                 FROM ' . self::TABLE . '
-                 WHERE user_id = :userId',
-				['userId' => $userId],
-			)->fetchAllAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$rows = $qb->select(
+				'conversation_id',
+				'user_id',
+				'role',
+				'state',
+				'joined_at',
+				'left_at',
+				'last_read_message_id',
+				'last_read_at',
+				'is_muted',
+				'is_blocked'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('userId', $userId)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			return array_map($this->hydrate(...), $rows);
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -71,14 +93,27 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 	public function findByConversationAndUser(int $conversationId, int $userId): ?Participant
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT conversation_id, user_id, role, state, joined_at, left_at,
-                        last_read_message_id, last_read_at, is_muted, is_blocked
-                 FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId AND user_id = :userId
-                 LIMIT 1',
-				['conversationId' => $conversationId, 'userId' => $userId],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select(
+				'conversation_id',
+				'user_id',
+				'role',
+				'state',
+				'joined_at',
+				'left_at',
+				'last_read_message_id',
+				'last_read_at',
+				'is_muted',
+				'is_blocked'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':conversationId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('conversationId', $conversationId)
+				->setParameter('userId', $userId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -91,18 +126,22 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 		try {
 			$now = time();
 
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-                    (conversation_id, user_id, role, state, joined_at, is_muted, is_blocked)
-                 VALUES
-                    (:conversationId, :userId, :role, "active", :now, 0, 0)',
-				[
-					'conversationId' => $conversationId,
-					'userId'         => $userId,
-					'role'           => $role,
-					'now'            => $now,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'conversation_id' => ':conversationId',
+					'user_id'         => ':userId',
+					'role'            => ':role',
+					'state'           => '"active"',
+					'joined_at'       => ':now',
+					'is_muted'        => '0',
+					'is_blocked'      => '0',
+				])
+				->setParameter('conversationId', $conversationId)
+				->setParameter('userId', $userId)
+				->setParameter('role', $role)
+				->setParameter('now', $now)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to insert participant', previous: $e);
 		}
@@ -117,23 +156,22 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 				return;
 			}
 
-			$set = [];
-			$params = ['conversationId' => $conversationId, 'userId' => $userId];
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':conversationId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('conversationId', $conversationId)
+				->setParameter('userId', $userId);
 
 			foreach ($fields as $field => $value) {
 				if (!in_array($field, self::UPDATABLE_FIELDS, true)) {
 					throw new \InvalidArgumentException('Unknown field: ' . $field);
 				}
-				$set[] = $field . ' = :' . $field;
-				$params[$field] = $value;
+				$qb->set($field, ':' . $field)
+					->setParameter($field, $value);
 			}
 
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-                 SET ' . implode(', ', $set) . '
-                 WHERE conversation_id = :conversationId AND user_id = :userId',
-				$params,
-			);
+			$qb->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to update participant', previous: $e);
 		}
@@ -142,11 +180,13 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 	public function delete(int $conversationId, int $userId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId AND user_id = :userId',
-				['conversationId' => $conversationId, 'userId' => $userId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':conversationId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('conversationId', $conversationId)
+				->setParameter('userId', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete participant', previous: $e);
 		}

@@ -36,10 +36,14 @@ class DbalGroupRepository implements GroupRepositoryInterface
 	public function findById(int $id): ?Group
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE group_id = :id LIMIT 1',
-				['id' => $id],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('group_id', ':id'))
+				->setParameter('id', $id)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -50,16 +54,17 @@ class DbalGroupRepository implements GroupRepositoryInterface
 	public function findAll(?GroupType $type = null): array
 	{
 		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->select('*')
+				->from(self::TABLE)
+				->orderBy('group_name', 'ASC');
+
 			if ($type !== null) {
-				$rows = $this->connection->executeQuery(
-					'SELECT * FROM ' . self::TABLE . ' WHERE group_type = :type ORDER BY group_name ASC',
-					['type' => $type->value],
-				)->fetchAllAssociative();
-			} else {
-				$rows = $this->connection->executeQuery(
-					'SELECT * FROM ' . self::TABLE . ' ORDER BY group_name ASC',
-				)->fetchAllAssociative();
+				$qb->where($qb->expr()->eq('group_type', ':type'))
+					->setParameter('type', $type->value);
 			}
+
+			$rows = $qb->executeQuery()->fetchAllAssociative();
 
 			return array_map([$this, 'hydrate'], $rows);
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -70,10 +75,13 @@ class DbalGroupRepository implements GroupRepositoryInterface
 	public function getMembershipsForUser(int $userId): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE_PIVOT . ' WHERE user_id = :userId',
-				['userId' => $userId],
-			)->fetchAllAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$rows = $qb->select('*')
+				->from(self::TABLE_PIVOT)
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('userId', $userId)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$memberships = [];
 			foreach ($rows as $row) {
@@ -123,10 +131,13 @@ class DbalGroupRepository implements GroupRepositoryInterface
 	public function removeMember(int $groupId, int $userId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE_PIVOT . ' WHERE group_id = :groupId AND user_id = :userId',
-				['groupId' => $groupId, 'userId' => $userId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE_PIVOT)
+				->where($qb->expr()->eq('group_id', ':groupId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('groupId', $groupId)
+				->setParameter('userId', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to remove member from group', previous: $e);
 		}

@@ -34,13 +34,16 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function findByUserAndForum(int $userId, int $forumId): ?StorageQuota
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT user_id, forum_id, used_bytes, max_bytes, updated_at
-				 FROM ' . self::TABLE . '
-				 WHERE user_id = :user_id AND forum_id = :forum_id
-				 LIMIT 1',
-				['user_id' => $userId, 'forum_id' => $forumId],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select('user_id', 'forum_id', 'used_bytes', 'max_bytes', 'updated_at')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->andWhere($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('userId', $userId)
+				->setParameter('forumId', $forumId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -51,18 +54,18 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function incrementUsage(int $userId, int $forumId, int $bytes): bool
 	{
 		try {
-			$affected = $this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-				 SET used_bytes = used_bytes + :bytes, updated_at = :now
-				 WHERE user_id = :user_id AND forum_id = :forum_id
-				   AND used_bytes + :bytes <= max_bytes',
-				[
-					'bytes'    => $bytes,
-					'now'      => time(),
-					'user_id'  => $userId,
-					'forum_id' => $forumId,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$affected = $qb->update(self::TABLE)
+				->set('used_bytes', 'used_bytes + :bytes')
+				->set('updated_at', ':now')
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->andWhere($qb->expr()->eq('forum_id', ':forumId'))
+				->andWhere('used_bytes + :bytes <= max_bytes')
+				->setParameter('bytes', $bytes)
+				->setParameter('now', time())
+				->setParameter('userId', $userId)
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 
 			return $affected > 0;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -73,17 +76,18 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function decrementUsage(int $userId, int $forumId, int $bytes): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-				 SET used_bytes = GREATEST(0, used_bytes - :bytes), updated_at = :now
-				 WHERE user_id = :user_id AND forum_id = :forum_id',
-				[
-					'bytes'    => $bytes,
-					'now'      => time(),
-					'user_id'  => $userId,
-					'forum_id' => $forumId,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			// Portable replacement for GREATEST(0, used_bytes - :bytes) — MySQL-only scalar function
+			$qb->update(self::TABLE)
+				->set('used_bytes', 'CASE WHEN used_bytes >= :bytes THEN used_bytes - :bytes ELSE 0 END')
+				->set('updated_at', ':now')
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->andWhere($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('bytes', $bytes)
+				->setParameter('now', time())
+				->setParameter('userId', $userId)
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to decrement storage usage', previous: $e);
 		}
@@ -92,17 +96,17 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function reconcile(int $userId, int $forumId, int $actualBytes): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-				 SET used_bytes = :actual_bytes, updated_at = :now
-				 WHERE user_id = :user_id AND forum_id = :forum_id',
-				[
-					'actual_bytes' => $actualBytes,
-					'now'          => time(),
-					'user_id'      => $userId,
-					'forum_id'     => $forumId,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('used_bytes', ':actualBytes')
+				->set('updated_at', ':now')
+				->where($qb->expr()->eq('user_id', ':userId'))
+				->andWhere($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('actualBytes', $actualBytes)
+				->setParameter('now', time())
+				->setParameter('userId', $userId)
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to reconcile storage quota', previous: $e);
 		}
@@ -111,9 +115,12 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function findAllUserForumPairs(): array
 	{
 		try {
-			return $this->connection->executeQuery(
-				'SELECT user_id, forum_id FROM ' . self::TABLE,
-			)->fetchAllAssociative();
+			$qb = $this->connection->createQueryBuilder();
+
+			return $qb->select('user_id', 'forum_id')
+				->from(self::TABLE)
+				->executeQuery()
+				->fetchAllAssociative();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to find user/forum quota pairs', previous: $e);
 		}
@@ -122,17 +129,20 @@ final class DbalStorageQuotaRepository implements StorageQuotaRepositoryInterfac
 	public function initDefault(int $userId, int $forumId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-				 (user_id, forum_id, used_bytes, max_bytes, updated_at)
-				 VALUES (:user_id, :forum_id, 0, :max_bytes, :now)',
-				[
-					'user_id'   => $userId,
-					'forum_id'  => $forumId,
-					'max_bytes' => \PHP_INT_MAX,
-					'now'       => time(),
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'user_id'    => ':userId',
+					'forum_id'   => ':forumId',
+					'used_bytes' => '0',
+					'max_bytes'  => ':maxBytes',
+					'updated_at' => ':now',
+				])
+				->setParameter('userId', $userId)
+				->setParameter('forumId', $forumId)
+				->setParameter('maxBytes', \PHP_INT_MAX)
+				->setParameter('now', time())
+				->executeStatement();
 		} catch (UniqueConstraintViolationException) {
 			// Row already exists — no-op, which is the intended behaviour
 		} catch (\Doctrine\DBAL\Exception $e) {

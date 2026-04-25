@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace phpbb\messaging\Repository;
 
-use Doctrine\DBAL\ParameterType;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\db\Exception\RepositoryException;
 use phpbb\messaging\Contract\ConversationRepositoryInterface;
@@ -43,14 +42,24 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 	public function findById(int $conversationId): ?Conversation
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT conversation_id, participant_hash, title, created_by, created_at,
-                        last_message_id, last_message_at, message_count, participant_count
-                 FROM ' . self::TABLE . '
-                 WHERE conversation_id = :id
-                 LIMIT 1',
-				['id' => $conversationId],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select(
+				'conversation_id',
+				'participant_hash',
+				'title',
+				'created_by',
+				'created_at',
+				'last_message_id',
+				'last_message_at',
+				'message_count',
+				'participant_count'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':id'))
+				->setParameter('id', $conversationId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -61,14 +70,24 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 	public function findByParticipantHash(string $hash): ?Conversation
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT conversation_id, participant_hash, title, created_by, created_at,
-                        last_message_id, last_message_at, message_count, participant_count
-                 FROM ' . self::TABLE . '
-                 WHERE participant_hash = :hash
-                 LIMIT 1',
-				['hash' => $hash],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select(
+				'conversation_id',
+				'participant_hash',
+				'title',
+				'created_by',
+				'created_at',
+				'last_message_id',
+				'last_message_at',
+				'message_count',
+				'participant_count'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('participant_hash', ':hash'))
+				->setParameter('hash', $hash)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -79,48 +98,42 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 	public function listByUser(int $userId, ?string $state, PaginationContext $ctx): PaginatedResult
 	{
 		try {
-			// Count total conversations for user
-			$countSql = '
-				SELECT COUNT(*) FROM ' . self::TABLE . ' c
-				INNER JOIN ' . self::PARTICIPANTS_TABLE . ' p ON c.conversation_id = p.conversation_id
-				WHERE p.user_id = :userId AND p.left_at IS NULL
-			';
-			$countParams = ['userId' => $userId];
+			$base = $this->connection->createQueryBuilder()
+				->from(self::TABLE, 'c')
+				->innerJoin('c', self::PARTICIPANTS_TABLE, 'p', 'c.conversation_id = p.conversation_id')
+				->where('p.user_id = :userId')
+				->andWhere($this->connection->createQueryBuilder()->expr()->isNull('p.left_at'))
+				->setParameter('userId', $userId);
 
 			if ($state !== null) {
-				$countSql .= ' AND p.state = :state';
-				$countParams['state'] = $state;
+				$base->andWhere('p.state = :state')
+					->setParameter('state', $state);
 			}
 
-			$total = (int) $this->connection->executeQuery($countSql, $countParams)->fetchOne();
+			$total = (int) (clone $base)->select('COUNT(*)')
+				->executeQuery()
+				->fetchOne();
 
-			// Fetch paginated results
 			$offset = ($ctx->page - 1) * $ctx->perPage;
 
-			$sql = '
-				SELECT c.conversation_id, c.participant_hash, c.title, c.created_by, c.created_at,
-					   c.last_message_id, c.last_message_at, c.message_count, c.participant_count
-				FROM ' . self::TABLE . ' c
-				INNER JOIN ' . self::PARTICIPANTS_TABLE . ' p ON c.conversation_id = p.conversation_id
-				WHERE p.user_id = :userId AND p.left_at IS NULL
-			';
-			$params = ['userId' => $userId];
-
-			if ($state !== null) {
-				$sql .= ' AND p.state = :state';
-				$params['state'] = $state;
-			}
-
-			$sql .= ' ORDER BY c.last_message_at DESC, c.created_at DESC
-					 LIMIT :limit OFFSET :offset';
-			$params['limit'] = $ctx->perPage;
-			$params['offset'] = $offset;
-
-			$rows = $this->connection->executeQuery(
-				$sql,
-				$params,
-				['limit' => ParameterType::INTEGER, 'offset' => ParameterType::INTEGER],
-			)->fetchAllAssociative();
+			$rows = (clone $base)
+				->select(
+					'c.conversation_id',
+					'c.participant_hash',
+					'c.title',
+					'c.created_by',
+					'c.created_at',
+					'c.last_message_id',
+					'c.last_message_at',
+					'c.message_count',
+					'c.participant_count'
+				)
+				->orderBy('c.last_message_at', 'DESC')
+				->addOrderBy('c.created_at', 'DESC')
+				->setMaxResults($ctx->perPage)
+				->setFirstResult($offset)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$items = array_map(
 				fn (array $row) => ConversationDTO::fromEntity($this->hydrate($row)),
@@ -148,19 +161,22 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 
 			$now = time();
 
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-                    (participant_hash, title, created_by, created_at, message_count, participant_count)
-                 VALUES
-                    (:hash, :title, :createdBy, :now, 0, :participantCount)',
-				[
-					'hash'             => $hash,
-					'title'            => $request->title,
-					'createdBy'        => $createdBy,
-					'now'              => $now,
-					'participantCount' => count($participantIds),
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'participant_hash'  => ':hash',
+					'title'             => ':title',
+					'created_by'        => ':createdBy',
+					'created_at'        => ':now',
+					'message_count'     => '0',
+					'participant_count' => ':participantCount',
+				])
+				->setParameter('hash', $hash)
+				->setParameter('title', $request->title)
+				->setParameter('createdBy', $createdBy)
+				->setParameter('now', $now)
+				->setParameter('participantCount', count($participantIds))
+				->executeStatement();
 
 			return (int) $this->connection->lastInsertId();
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -175,24 +191,22 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 				return;
 			}
 
-			$set = [];
-			$params = ['conversationId' => $conversationId];
-
 			$allowed = ['title', 'last_message_id', 'last_message_at', 'message_count', 'participant_count', 'participant_hash'];
+
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':conversationId'))
+				->setParameter('conversationId', $conversationId);
+
 			foreach ($fields as $field => $value) {
 				if (!in_array($field, $allowed, true)) {
 					throw new RepositoryException("Invalid field: {$field}");
 				}
-				$set[] = $field . ' = :' . $field;
-				$params[$field] = $value;
+				$qb->set($field, ':' . $field)
+					->setParameter($field, $value);
 			}
 
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-                 SET ' . implode(', ', $set) . '
-                 WHERE conversation_id = :conversationId',
-				$params,
-			);
+			$qb->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to update conversation', previous: $e);
 		}
@@ -201,10 +215,11 @@ class DbalConversationRepository implements ConversationRepositoryInterface
 	public function delete(int $conversationId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE . ' WHERE conversation_id = :id',
-				['id' => $conversationId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE)
+				->where($qb->expr()->eq('conversation_id', ':id'))
+				->setParameter('id', $conversationId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete conversation', previous: $e);
 		}

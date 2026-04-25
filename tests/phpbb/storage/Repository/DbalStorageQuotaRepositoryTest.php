@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace phpbb\Tests\storage\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Result;
 use phpbb\storage\Entity\StorageQuota;
 use phpbb\storage\Repository\DbalStorageQuotaRepository;
@@ -31,6 +32,8 @@ final class DbalStorageQuotaRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->connection = $this->createMock(Connection::class);
+		$this->connection->method('createQueryBuilder')
+			->willReturnCallback(fn () => new QueryBuilder($this->connection));
 		$this->repository = new DbalStorageQuotaRepository($this->connection);
 	}
 
@@ -101,7 +104,7 @@ final class DbalStorageQuotaRepositoryTest extends TestCase
 	{
 		$this->connection->expects($this->once())
 			->method('executeStatement')
-			->with($this->stringContains('SET used_bytes = :actual_bytes'));
+			->with($this->stringContains('used_bytes = :actualBytes'));
 
 		$this->repository->reconcile(1, 0, 750);
 	}

@@ -80,10 +80,15 @@ final class QuotaService implements QuotaServiceInterface
 			$userId  = (int) $pair['user_id'];
 			$forumId = (int) $pair['forum_id'];
 
-			$actual = (int) $this->connection->executeQuery(
-				'SELECT COALESCE(SUM(filesize), 0) FROM phpbb_stored_files WHERE uploader_id = :uid AND forum_id = :fid',
-				['uid' => $userId, 'fid' => $forumId],
-			)->fetchOne();
+			$qb = $this->connection->createQueryBuilder();
+			$actual = (int) $qb->select('COALESCE(SUM(filesize), 0)')
+				->from('phpbb_stored_files')
+				->where($qb->expr()->eq('uploader_id', ':uid'))
+				->andWhere($qb->expr()->eq('forum_id', ':fid'))
+				->setParameter('uid', $userId)
+				->setParameter('fid', $forumId)
+				->executeQuery()
+				->fetchOne();
 
 			$quota = $this->quotaRepo->findByUserAndForum($userId, $forumId);
 			$old   = $quota?->usedBytes ?? 0;

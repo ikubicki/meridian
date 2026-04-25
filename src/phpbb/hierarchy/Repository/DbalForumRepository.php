@@ -39,10 +39,14 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function findById(int $id): ?Forum
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE forum_id = :id LIMIT 1',
-				['id' => $id],
-			)->fetchAssociative();
+			$qb  = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('forum_id', ':id'))
+				->setParameter('id', $id)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -53,9 +57,12 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function findAll(): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' ORDER BY left_id ASC',
-			)->fetchAllAssociative();
+			$rows = $this->connection->createQueryBuilder()
+				->select('*')
+				->from(self::TABLE)
+				->orderBy('left_id', 'ASC')
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$result = [];
 			foreach ($rows as $row) {
@@ -72,10 +79,14 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function findChildren(int $parentId): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE parent_id = :parentId ORDER BY left_id ASC',
-				['parentId' => $parentId],
-			)->fetchAllAssociative();
+			$qb   = $this->connection->createQueryBuilder();
+			$rows = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('parent_id', ':parentId'))
+				->setParameter('parentId', $parentId)
+				->orderBy('left_id', 'ASC')
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$result = [];
 			foreach ($rows as $row) {
@@ -92,45 +103,65 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function insertRaw(CreateForumRequest $request): int
 	{
 		try {
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-					(forum_name, forum_type, forum_desc, forum_link, forum_status, parent_id,
-					 display_on_index, display_subforum_list, enable_indexing, enable_icons,
-					 forum_style, forum_image, forum_rules, forum_rules_link, forum_password,
-					 forum_topics_per_page, forum_flags, forum_parents, left_id, right_id,
-					 forum_posts_approved, forum_posts_unapproved, forum_posts_softdeleted,
-					 forum_topics_approved, forum_topics_unapproved, forum_topics_softdeleted,
-					 forum_last_post_id, forum_last_poster_id, forum_last_post_subject,
-					 forum_last_post_time, forum_last_poster_name, forum_last_poster_colour,
-					 prune_next, prune_days, prune_viewed, prune_freq, enable_prune)
-				VALUES
-					(:forumName, :forumType, :forumDesc, :forumLink, :forumStatus, :parentId,
-					 :displayOnIndex, :displaySubforumList, :enableIndexing, :enableIcons,
-					 :forumStyle, :forumImage, :forumRules, :forumRulesLink, :forumPassword,
-					 :topicsPerPage, :forumFlags, \'[]\', 0, 0,
-					 0, 0, 0, 0, 0, 0,
-					 0, 0, \'\', 0, \'\', \'\',
-					 0, 0, 0, 0, 0)',
-				[
-					'forumName'           => $request->name,
-					'forumType'           => $request->type->value,
-					'forumDesc'           => $request->description,
-					'forumLink'           => $request->link,
-					'forumStatus'         => ForumStatus::Unlocked->value,
-					'parentId'            => $request->parentId,
-					'displayOnIndex'      => (int) $request->displayOnIndex,
-					'displaySubforumList' => (int) $request->displaySubforumList,
-					'enableIndexing'      => (int) $request->enableIndexing,
-					'enableIcons'         => (int) $request->enableIcons,
-					'forumStyle'          => $request->style,
-					'forumImage'          => $request->image,
-					'forumRules'          => $request->rules,
-					'forumRulesLink'      => $request->rulesLink,
-					'forumPassword'       => $request->password,
-					'topicsPerPage'       => $request->topicsPerPage,
-					'forumFlags'          => $request->flags,
-				],
-			);
+			$this->connection->createQueryBuilder()
+				->insert(self::TABLE)
+				->values([
+					'forum_name'            => ':forumName',
+					'forum_type'            => ':forumType',
+					'forum_desc'            => ':forumDesc',
+					'forum_link'            => ':forumLink',
+					'forum_status'          => ':forumStatus',
+					'parent_id'             => ':parentId',
+					'display_on_index'      => ':displayOnIndex',
+					'display_subforum_list' => ':displaySubforumList',
+					'enable_indexing'       => ':enableIndexing',
+					'enable_icons'          => ':enableIcons',
+					'forum_style'           => ':forumStyle',
+					'forum_image'           => ':forumImage',
+					'forum_rules'           => ':forumRules',
+					'forum_rules_link'      => ':forumRulesLink',
+					'forum_password'        => ':forumPassword',
+					'forum_topics_per_page' => ':topicsPerPage',
+					'forum_flags'           => ':forumFlags',
+					'forum_parents'         => "'[]'",
+					'left_id'               => '0',
+					'right_id'              => '0',
+					'forum_posts_approved'   => '0',
+					'forum_posts_unapproved' => '0',
+					'forum_posts_softdeleted' => '0',
+					'forum_topics_approved'   => '0',
+					'forum_topics_unapproved' => '0',
+					'forum_topics_softdeleted' => '0',
+					'forum_last_post_id'      => '0',
+					'forum_last_poster_id'    => '0',
+					'forum_last_post_subject' => "''",
+					'forum_last_post_time'    => '0',
+					'forum_last_poster_name'  => "''",
+					'forum_last_poster_colour' => "''",
+					'prune_next'   => '0',
+					'prune_days'   => '0',
+					'prune_viewed' => '0',
+					'prune_freq'   => '0',
+					'enable_prune' => '0',
+				])
+				->setParameter('forumName', $request->name)
+				->setParameter('forumType', $request->type->value)
+				->setParameter('forumDesc', $request->description)
+				->setParameter('forumLink', $request->link)
+				->setParameter('forumStatus', ForumStatus::Unlocked->value)
+				->setParameter('parentId', $request->parentId)
+				->setParameter('displayOnIndex', (int) $request->displayOnIndex)
+				->setParameter('displaySubforumList', (int) $request->displaySubforumList)
+				->setParameter('enableIndexing', (int) $request->enableIndexing)
+				->setParameter('enableIcons', (int) $request->enableIcons)
+				->setParameter('forumStyle', $request->style)
+				->setParameter('forumImage', $request->image)
+				->setParameter('forumRules', $request->rules)
+				->setParameter('forumRulesLink', $request->rulesLink)
+				->setParameter('forumPassword', $request->password)
+				->setParameter('topicsPerPage', $request->topicsPerPage)
+				->setParameter('forumFlags', $request->flags)
+				->executeStatement();
 
 			return (int) $this->connection->lastInsertId();
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -231,10 +262,20 @@ class DbalForumRepository implements ForumRepositoryInterface
 				return $this->findById($request->forumId) ?? throw new \InvalidArgumentException("Forum {$request->forumId} not found");
 			}
 
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET ' . implode(', ', $sets) . ' WHERE forum_id = :forumId',
-				$params,
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'));
+
+			foreach ($sets as $set) {
+				[$col, $placeholder] = explode(' = ', $set, 2);
+				$qb->set($col, $placeholder);
+			}
+
+			foreach ($params as $key => $value) {
+				$qb->setParameter($key, $value);
+			}
+
+			$qb->executeStatement();
 
 			return $this->findById($request->forumId) ?? throw new \InvalidArgumentException("Forum {$request->forumId} not found after update");
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -245,10 +286,11 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function delete(int $forumId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE . ' WHERE forum_id = :forumId',
-				['forumId' => $forumId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete forum', previous: $e);
 		}
@@ -257,10 +299,17 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function updateTreePosition(int $forumId, int $leftId, int $rightId, int $parentId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET left_id = :leftId, right_id = :rightId, parent_id = :parentId WHERE forum_id = :forumId',
-				['leftId' => $leftId, 'rightId' => $rightId, 'parentId' => $parentId, 'forumId' => $forumId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('left_id', ':leftId')
+				->set('right_id', ':rightId')
+				->set('parent_id', ':parentId')
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('leftId', $leftId)
+				->setParameter('rightId', $rightId)
+				->setParameter('parentId', $parentId)
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to update tree position', previous: $e);
 		}
@@ -269,10 +318,13 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function shiftLeftIds(int $threshold, int $delta): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET left_id = left_id + :delta WHERE left_id >= :threshold',
-				['delta' => $delta, 'threshold' => $threshold],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('left_id', 'left_id + :delta')
+				->where($qb->expr()->gte('left_id', ':threshold'))
+				->setParameter('delta', $delta)
+				->setParameter('threshold', $threshold)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to shift left IDs', previous: $e);
 		}
@@ -281,10 +333,13 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function shiftRightIds(int $threshold, int $delta): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET right_id = right_id + :delta WHERE right_id >= :threshold',
-				['delta' => $delta, 'threshold' => $threshold],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('right_id', 'right_id + :delta')
+				->where($qb->expr()->gte('right_id', ':threshold'))
+				->setParameter('delta', $delta)
+				->setParameter('threshold', $threshold)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to shift right IDs', previous: $e);
 		}
@@ -293,10 +348,13 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function updateParentId(int $forumId, int $parentId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET parent_id = :parentId WHERE forum_id = :forumId',
-				['parentId' => $parentId, 'forumId' => $forumId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('parent_id', ':parentId')
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('parentId', $parentId)
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to update parent ID', previous: $e);
 		}
@@ -305,10 +363,12 @@ class DbalForumRepository implements ForumRepositoryInterface
 	public function clearParentsCache(int $forumId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . " SET forum_parents = '[]' WHERE forum_id = :forumId",
-				['forumId' => $forumId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('forum_parents', "'[]'")
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->setParameter('forumId', $forumId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to clear parents cache', previous: $e);
 		}

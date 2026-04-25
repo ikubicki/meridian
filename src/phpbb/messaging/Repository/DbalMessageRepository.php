@@ -16,7 +16,6 @@ declare(strict_types=1);
 
 namespace phpbb\messaging\Repository;
 
-use Doctrine\DBAL\ParameterType;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\db\Exception\RepositoryException;
 use phpbb\messaging\Contract\MessageRepositoryInterface;
@@ -43,14 +42,24 @@ class DbalMessageRepository implements MessageRepositoryInterface
 	public function findById(int $messageId): ?Message
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT message_id, conversation_id, author_id, message_text, message_subject,
-                        created_at, edited_at, edit_count, metadata
-                 FROM ' . self::TABLE . '
-                 WHERE message_id = :id
-                 LIMIT 1',
-				['id' => $messageId],
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select(
+				'message_id',
+				'conversation_id',
+				'author_id',
+				'message_text',
+				'message_subject',
+				'created_at',
+				'edited_at',
+				'edit_count',
+				'metadata'
+			)
+				->from(self::TABLE)
+				->where($qb->expr()->eq('message_id', ':id'))
+				->setParameter('id', $messageId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -61,25 +70,34 @@ class DbalMessageRepository implements MessageRepositoryInterface
 	public function listByConversation(int $conversationId, PaginationContext $ctx): PaginatedResult
 	{
 		try {
-			// Count total messages (excluding soft-deleted)
-			$total = (int) $this->connection->executeQuery(
-				'SELECT COUNT(*) FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId',
-				['conversationId' => $conversationId],
-			)->fetchOne();
+			$base = $this->connection->createQueryBuilder()
+				->from(self::TABLE)
+				->where('conversation_id = :conversationId')
+				->setParameter('conversationId', $conversationId);
+
+			$total = (int) (clone $base)->select('COUNT(*)')
+				->executeQuery()
+				->fetchOne();
 
 			$offset = ($ctx->page - 1) * $ctx->perPage;
 
-			$rows = $this->connection->executeQuery(
-				'SELECT message_id, conversation_id, author_id, message_text, message_subject,
-                        created_at, edited_at, edit_count, metadata
-                 FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId
-                 ORDER BY created_at ASC
-                 LIMIT :limit OFFSET :offset',
-				['conversationId' => $conversationId, 'limit' => $ctx->perPage, 'offset' => $offset],
-				['limit' => ParameterType::INTEGER, 'offset' => ParameterType::INTEGER],
-			)->fetchAllAssociative();
+			$rows = (clone $base)
+				->select(
+					'message_id',
+					'conversation_id',
+					'author_id',
+					'message_text',
+					'message_subject',
+					'created_at',
+					'edited_at',
+					'edit_count',
+					'metadata'
+				)
+				->orderBy('created_at', 'ASC')
+				->setMaxResults($ctx->perPage)
+				->setFirstResult($offset)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$items = array_map(
 				fn (array $row) => MessageDTO::fromEntity($this->hydrate($row)),
@@ -102,32 +120,36 @@ class DbalMessageRepository implements MessageRepositoryInterface
 		try {
 			$searchTerm = '%' . addcslashes($query, '%_') . '%';
 
-			// Count matching messages
-			$total = (int) $this->connection->executeQuery(
-				'SELECT COUNT(*) FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId
-                 AND (message_text LIKE :query OR message_subject LIKE :query)',
-				['conversationId' => $conversationId, 'query' => $searchTerm],
-			)->fetchOne();
+			$base = $this->connection->createQueryBuilder()
+				->from(self::TABLE)
+				->where('conversation_id = :conversationId')
+				->andWhere('(message_text LIKE :query OR message_subject LIKE :query)')
+				->setParameter('conversationId', $conversationId)
+				->setParameter('query', $searchTerm);
+
+			$total = (int) (clone $base)->select('COUNT(*)')
+				->executeQuery()
+				->fetchOne();
 
 			$offset = ($ctx->page - 1) * $ctx->perPage;
 
-			$rows = $this->connection->executeQuery(
-				'SELECT message_id, conversation_id, author_id, message_text, message_subject,
-                        created_at, edited_at, edit_count, metadata
-                 FROM ' . self::TABLE . '
-                 WHERE conversation_id = :conversationId
-                 AND (message_text LIKE :query OR message_subject LIKE :query)
-                 ORDER BY created_at ASC
-                 LIMIT :limit OFFSET :offset',
-				[
-					'conversationId' => $conversationId,
-					'query'          => $searchTerm,
-					'limit'          => $ctx->perPage,
-					'offset'         => $offset,
-				],
-				['limit' => ParameterType::INTEGER, 'offset' => ParameterType::INTEGER],
-			)->fetchAllAssociative();
+			$rows = (clone $base)
+				->select(
+					'message_id',
+					'conversation_id',
+					'author_id',
+					'message_text',
+					'message_subject',
+					'created_at',
+					'edited_at',
+					'edit_count',
+					'metadata'
+				)
+				->orderBy('created_at', 'ASC')
+				->setMaxResults($ctx->perPage)
+				->setFirstResult($offset)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$items = array_map(
 				fn (array $row) => MessageDTO::fromEntity($this->hydrate($row)),
@@ -150,20 +172,24 @@ class DbalMessageRepository implements MessageRepositoryInterface
 		try {
 			$now = time();
 
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-                    (conversation_id, author_id, message_text, message_subject, created_at, edit_count, metadata)
-                 VALUES
-                    (:conversationId, :authorId, :messageText, :messageSubject, :now, 0, :metadata)',
-				[
-					'conversationId' => $conversationId,
-					'authorId'       => $authorId,
-					'messageText'    => $request->messageText,
-					'messageSubject' => $request->messageSubject,
-					'now'            => $now,
-					'metadata'       => $request->metadata,
-				],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::TABLE)
+				->values([
+					'conversation_id'  => ':conversationId',
+					'author_id'        => ':authorId',
+					'message_text'     => ':messageText',
+					'message_subject'  => ':messageSubject',
+					'created_at'       => ':now',
+					'edit_count'       => '0',
+					'metadata'         => ':metadata',
+				])
+				->setParameter('conversationId', $conversationId)
+				->setParameter('authorId', $authorId)
+				->setParameter('messageText', $request->messageText)
+				->setParameter('messageSubject', $request->messageSubject)
+				->setParameter('now', $now)
+				->setParameter('metadata', $request->metadata)
+				->executeStatement();
 
 			return (int) $this->connection->lastInsertId();
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -180,23 +206,20 @@ class DbalMessageRepository implements MessageRepositoryInterface
 				return;
 			}
 
-			$set = [];
-			$params = ['messageId' => $messageId];
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->where($qb->expr()->eq('message_id', ':messageId'))
+				->setParameter('messageId', $messageId);
 
 			foreach ($fields as $field => $value) {
 				if (!in_array($field, self::UPDATABLE_FIELDS, true)) {
 					throw new \InvalidArgumentException('Unknown field: ' . $field);
 				}
-				$set[] = $field . ' = :' . $field;
-				$params[$field] = $value;
+				$qb->set($field, ':' . $field)
+					->setParameter($field, $value);
 			}
 
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . '
-                 SET ' . implode(', ', $set) . '
-                 WHERE message_id = :messageId',
-				$params,
-			);
+			$qb->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to update message', previous: $e);
 		}
@@ -206,10 +229,13 @@ class DbalMessageRepository implements MessageRepositoryInterface
 	{
 		try {
 			// Get conversation ID for the message
-			$conversationId = (int) $this->connection->executeQuery(
-				'SELECT conversation_id FROM ' . self::TABLE . ' WHERE message_id = :id',
-				['id' => $messageId],
-			)->fetchOne();
+			$qb = $this->connection->createQueryBuilder();
+			$conversationId = (int) $qb->select('conversation_id')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('message_id', ':id'))
+				->setParameter('id', $messageId)
+				->executeQuery()
+				->fetchOne();
 
 			if ($conversationId === 0) {
 				throw new RepositoryException('Message not found');
@@ -218,40 +244,47 @@ class DbalMessageRepository implements MessageRepositoryInterface
 			$now = time();
 
 			// Check if soft-delete record already exists
-			$exists = $this->connection->executeQuery(
-				'SELECT 1 FROM ' . self::DELETES_TABLE . '
-                 WHERE conversation_id = :conversationId AND message_id = :messageId AND user_id = :userId
-                 LIMIT 1',
-				['conversationId' => $conversationId, 'messageId' => $messageId, 'userId' => $userId],
-			)->fetchOne();
+			$qb2 = $this->connection->createQueryBuilder();
+			$exists = $qb2->select('1')
+				->from(self::DELETES_TABLE)
+				->where($qb2->expr()->eq('conversation_id', ':conversationId'))
+				->andWhere($qb2->expr()->eq('message_id', ':messageId'))
+				->andWhere($qb2->expr()->eq('user_id', ':userId'))
+				->setParameter('conversationId', $conversationId)
+				->setParameter('messageId', $messageId)
+				->setParameter('userId', $userId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchOne();
 
 			if ($exists !== false) {
 				// Update existing record
-				$this->connection->executeStatement(
-					'UPDATE ' . self::DELETES_TABLE . '
-                     SET deleted_at = :now
-                     WHERE conversation_id = :conversationId AND message_id = :messageId AND user_id = :userId',
-					[
-						'conversationId' => $conversationId,
-						'messageId'      => $messageId,
-						'userId'         => $userId,
-						'now'            => $now,
-					],
-				);
+				$qb3 = $this->connection->createQueryBuilder();
+				$qb3->update(self::DELETES_TABLE)
+					->set('deleted_at', ':now')
+					->where($qb3->expr()->eq('conversation_id', ':conversationId'))
+					->andWhere($qb3->expr()->eq('message_id', ':messageId'))
+					->andWhere($qb3->expr()->eq('user_id', ':userId'))
+					->setParameter('now', $now)
+					->setParameter('conversationId', $conversationId)
+					->setParameter('messageId', $messageId)
+					->setParameter('userId', $userId)
+					->executeStatement();
 			} else {
 				// Insert new record
-				$this->connection->executeStatement(
-					'INSERT INTO ' . self::DELETES_TABLE . '
-                        (conversation_id, message_id, user_id, deleted_at)
-                     VALUES
-                        (:conversationId, :messageId, :userId, :now)',
-					[
-						'conversationId' => $conversationId,
-						'messageId'      => $messageId,
-						'userId'         => $userId,
-						'now'            => $now,
-					],
-				);
+				$qb4 = $this->connection->createQueryBuilder();
+				$qb4->insert(self::DELETES_TABLE)
+					->values([
+						'conversation_id' => ':conversationId',
+						'message_id'      => ':messageId',
+						'user_id'         => ':userId',
+						'deleted_at'      => ':now',
+					])
+					->setParameter('conversationId', $conversationId)
+					->setParameter('messageId', $messageId)
+					->setParameter('userId', $userId)
+					->setParameter('now', $now)
+					->executeStatement();
 			}
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete message per user', previous: $e);
@@ -261,12 +294,16 @@ class DbalMessageRepository implements MessageRepositoryInterface
 	public function isDeletedForUser(int $messageId, int $userId): bool
 	{
 		try {
-			$result = $this->connection->executeQuery(
-				'SELECT 1 FROM ' . self::DELETES_TABLE . '
-                 WHERE message_id = :messageId AND user_id = :userId
-                 LIMIT 1',
-				['messageId' => $messageId, 'userId' => $userId],
-			)->fetchOne();
+			$qb = $this->connection->createQueryBuilder();
+			$result = $qb->select('1')
+				->from(self::DELETES_TABLE)
+				->where($qb->expr()->eq('message_id', ':messageId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('messageId', $messageId)
+				->setParameter('userId', $userId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchOne();
 
 			return $result !== false;
 		} catch (\Doctrine\DBAL\Exception $e) {

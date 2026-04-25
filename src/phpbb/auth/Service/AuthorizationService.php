@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace phpbb\auth\Service;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
 use phpbb\user\Entity\User;
@@ -57,44 +58,45 @@ final class AuthorizationService implements AuthorizationServiceInterface
 	/** @param int[] $forumScope */
 	private function resolveGroupPermission(int $userId, string $permission, array $forumScope): ?int
 	{
-		$placeholders = implode(',', array_fill(0, count($forumScope), '?'));
-
 		// Direct option grant on a group the user belongs to
-		$sql = "
-			SELECT ag.auth_setting
-			FROM phpbb_user_group ug
-			JOIN phpbb_acl_groups ag ON ag.group_id = ug.group_id
-			JOIN phpbb_acl_options ao ON ao.auth_option_id = ag.auth_option_id
-			WHERE ug.user_id = ?
-			  AND ug.user_pending = 0
-			  AND ao.auth_option = ?
-			  AND ag.forum_id IN ($placeholders)
-			ORDER BY ag.auth_setting DESC
-		";
-
-		$params = array_merge([$userId, $permission], $forumScope);
-		$row    = $this->connection->fetchOne($sql, $params);
+		$qb = $this->connection->createQueryBuilder();
+		$row = $qb->select('ag.auth_setting')
+			->from('phpbb_user_group', 'ug')
+			->join('ug', 'phpbb_acl_groups', 'ag', 'ag.group_id = ug.group_id')
+			->join('ag', 'phpbb_acl_options', 'ao', 'ao.auth_option_id = ag.auth_option_id')
+			->where($qb->expr()->eq('ug.user_id', ':userId'))
+			->andWhere($qb->expr()->eq('ug.user_pending', '0'))
+			->andWhere($qb->expr()->eq('ao.auth_option', ':permission'))
+			->andWhere('ag.forum_id IN (:forumScope)')
+			->orderBy('ag.auth_setting', 'DESC')
+			->setParameter('userId', $userId)
+			->setParameter('permission', $permission)
+			->setParameter('forumScope', $forumScope, ArrayParameterType::INTEGER)
+			->executeQuery()
+			->fetchOne();
 
 		if ($row !== false) {
 			return (int) $row;
 		}
 
 		// Role-based grant on a group the user belongs to
-		$sql = "
-			SELECT rd.auth_setting
-			FROM phpbb_user_group ug
-			JOIN phpbb_acl_groups ag ON ag.group_id = ug.group_id
-			JOIN phpbb_acl_roles_data rd ON rd.role_id = ag.auth_role_id
-			JOIN phpbb_acl_options ao ON ao.auth_option_id = rd.auth_option_id
-			WHERE ug.user_id = ?
-			  AND ug.user_pending = 0
-			  AND ag.auth_role_id > 0
-			  AND ao.auth_option = ?
-			  AND ag.forum_id IN ($placeholders)
-			ORDER BY rd.auth_setting DESC
-		";
-
-		$row = $this->connection->fetchOne($sql, $params);
+		$qb2 = $this->connection->createQueryBuilder();
+		$row = $qb2->select('rd.auth_setting')
+			->from('phpbb_user_group', 'ug')
+			->join('ug', 'phpbb_acl_groups', 'ag', 'ag.group_id = ug.group_id')
+			->join('ag', 'phpbb_acl_roles_data', 'rd', 'rd.role_id = ag.auth_role_id')
+			->join('rd', 'phpbb_acl_options', 'ao', 'ao.auth_option_id = rd.auth_option_id')
+			->where($qb2->expr()->eq('ug.user_id', ':userId'))
+			->andWhere($qb2->expr()->eq('ug.user_pending', '0'))
+			->andWhere($qb2->expr()->gt('ag.auth_role_id', '0'))
+			->andWhere($qb2->expr()->eq('ao.auth_option', ':permission'))
+			->andWhere('ag.forum_id IN (:forumScope)')
+			->orderBy('rd.auth_setting', 'DESC')
+			->setParameter('userId', $userId)
+			->setParameter('permission', $permission)
+			->setParameter('forumScope', $forumScope, ArrayParameterType::INTEGER)
+			->executeQuery()
+			->fetchOne();
 
 		return $row !== false ? (int) $row : null;
 	}
@@ -102,40 +104,41 @@ final class AuthorizationService implements AuthorizationServiceInterface
 	/** @param int[] $forumScope */
 	private function resolveUserPermission(int $userId, string $permission, array $forumScope): ?int
 	{
-		$placeholders = implode(',', array_fill(0, count($forumScope), '?'));
-
 		// Direct option override on the user
-		$sql = "
-			SELECT au.auth_setting
-			FROM phpbb_acl_users au
-			JOIN phpbb_acl_options ao ON ao.auth_option_id = au.auth_option_id
-			WHERE au.user_id = ?
-			  AND ao.auth_option = ?
-			  AND au.forum_id IN ($placeholders)
-			ORDER BY au.auth_setting DESC
-		";
-
-		$params = [$userId, $permission, ...$forumScope];
-		$row    = $this->connection->fetchOne($sql, $params);
+		$qb = $this->connection->createQueryBuilder();
+		$row = $qb->select('au.auth_setting')
+			->from('phpbb_acl_users', 'au')
+			->join('au', 'phpbb_acl_options', 'ao', 'ao.auth_option_id = au.auth_option_id')
+			->where($qb->expr()->eq('au.user_id', ':userId'))
+			->andWhere($qb->expr()->eq('ao.auth_option', ':permission'))
+			->andWhere('au.forum_id IN (:forumScope)')
+			->orderBy('au.auth_setting', 'DESC')
+			->setParameter('userId', $userId)
+			->setParameter('permission', $permission)
+			->setParameter('forumScope', $forumScope, ArrayParameterType::INTEGER)
+			->executeQuery()
+			->fetchOne();
 
 		if ($row !== false) {
 			return (int) $row;
 		}
 
 		// Role-based override on the user
-		$sql = "
-			SELECT rd.auth_setting
-			FROM phpbb_acl_users au
-			JOIN phpbb_acl_roles_data rd ON rd.role_id = au.auth_role_id
-			JOIN phpbb_acl_options ao ON ao.auth_option_id = rd.auth_option_id
-			WHERE au.user_id = ?
-			  AND au.auth_role_id > 0
-			  AND ao.auth_option = ?
-			  AND au.forum_id IN ($placeholders)
-			ORDER BY rd.auth_setting DESC
-		";
-
-		$row = $this->connection->fetchOne($sql, $params);
+		$qb2 = $this->connection->createQueryBuilder();
+		$row = $qb2->select('rd.auth_setting')
+			->from('phpbb_acl_users', 'au')
+			->join('au', 'phpbb_acl_roles_data', 'rd', 'rd.role_id = au.auth_role_id')
+			->join('rd', 'phpbb_acl_options', 'ao', 'ao.auth_option_id = rd.auth_option_id')
+			->where($qb2->expr()->eq('au.user_id', ':userId'))
+			->andWhere($qb2->expr()->gt('au.auth_role_id', '0'))
+			->andWhere($qb2->expr()->eq('ao.auth_option', ':permission'))
+			->andWhere('au.forum_id IN (:forumScope)')
+			->orderBy('rd.auth_setting', 'DESC')
+			->setParameter('userId', $userId)
+			->setParameter('permission', $permission)
+			->setParameter('forumScope', $forumScope, ArrayParameterType::INTEGER)
+			->executeQuery()
+			->fetchOne();
 
 		return $row !== false ? (int) $row : null;
 	}

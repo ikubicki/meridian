@@ -74,9 +74,8 @@ class FilesController
 
 		// Server-side MIME detection — ignore client Content-Type
 		$tmpPath  = $uploadedFile->getRealPath();
-		$finfo    = finfo_open(FILEINFO_MIME_TYPE);
-		$mimeType = finfo_file($finfo, $tmpPath);
-		finfo_close($finfo);
+		$finfo    = new \finfo(FILEINFO_MIME_TYPE);
+		$mimeType = $finfo->file($tmpPath);
 
 		if ($mimeType === false || $mimeType === '') {
 			return new JsonResponse(['error' => 'Could not detect file MIME type', 'code' => 'mime_detection_failed'], 400);

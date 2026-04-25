@@ -36,21 +36,38 @@ final class TrackingService implements TrackingServiceInterface
 		try {
 			$markTime = time();
 
-			$existing = $this->connection->executeQuery(
-				'SELECT user_id FROM ' . self::FORUMS_TRACK_TABLE . ' WHERE forum_id = :forumId AND user_id = :userId',
-				['forumId' => $forumId, 'userId' => $userId]
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$existing = $qb->select('user_id')
+				->from(self::FORUMS_TRACK_TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('forumId', $forumId)
+				->setParameter('userId', $userId)
+				->executeQuery()
+				->fetchAssociative();
 
 			if ($existing !== false) {
-				$this->connection->executeStatement(
-					'UPDATE ' . self::FORUMS_TRACK_TABLE . ' SET mark_time = :markTime WHERE forum_id = :forumId AND user_id = :userId',
-					['markTime' => $markTime, 'forumId' => $forumId, 'userId' => $userId]
-				);
+				$qb2 = $this->connection->createQueryBuilder();
+				$qb2->update(self::FORUMS_TRACK_TABLE)
+					->set('mark_time', ':markTime')
+					->where($qb2->expr()->eq('forum_id', ':forumId'))
+					->andWhere($qb2->expr()->eq('user_id', ':userId'))
+					->setParameter('markTime', $markTime)
+					->setParameter('forumId', $forumId)
+					->setParameter('userId', $userId)
+					->executeStatement();
 			} else {
-				$this->connection->executeStatement(
-					'INSERT INTO ' . self::FORUMS_TRACK_TABLE . ' (user_id, forum_id, mark_time) VALUES (:userId, :forumId, :markTime)',
-					['userId' => $userId, 'forumId' => $forumId, 'markTime' => $markTime]
-				);
+				$qb3 = $this->connection->createQueryBuilder();
+				$qb3->insert(self::FORUMS_TRACK_TABLE)
+					->values([
+						'user_id'   => ':userId',
+						'forum_id'  => ':forumId',
+						'mark_time' => ':markTime',
+					])
+					->setParameter('userId', $userId)
+					->setParameter('forumId', $forumId)
+					->setParameter('markTime', $markTime)
+					->executeStatement();
 			}
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new \phpbb\db\Exception\RepositoryException('Failed to mark forum read', previous: $e);
@@ -60,10 +77,15 @@ final class TrackingService implements TrackingServiceInterface
 	public function hasUnread(int $forumId, int $userId): bool
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT mark_time FROM ' . self::FORUMS_TRACK_TABLE . ' WHERE forum_id = :forumId AND user_id = :userId',
-				['forumId' => $forumId, 'userId' => $userId]
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$row = $qb->select('mark_time')
+				->from(self::FORUMS_TRACK_TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('forumId', $forumId)
+				->setParameter('userId', $userId)
+				->executeQuery()
+				->fetchAssociative();
 
 			if ($row === false) {
 				$forum = $this->repository->findById($forumId);
@@ -75,12 +97,18 @@ final class TrackingService implements TrackingServiceInterface
 			}
 
 			$markTime = (int) $row['mark_time'];
-			$result = $this->connection->executeQuery(
-				'SELECT COUNT(*) FROM ' . self::MARK_TIME_TABLE . ' WHERE forum_id = :forumId AND topic_last_post_time > :markTime',
-				['forumId' => $forumId, 'markTime' => $markTime]
-			)->fetchOne();
 
-			return (int) $result > 0;
+			$qb2 = $this->connection->createQueryBuilder();
+			$count = (int) $qb2->select('COUNT(*)')
+				->from(self::MARK_TIME_TABLE)
+				->where($qb2->expr()->eq('forum_id', ':forumId'))
+				->andWhere($qb2->expr()->gt('topic_last_post_time', ':markTime'))
+				->setParameter('forumId', $forumId)
+				->setParameter('markTime', $markTime)
+				->executeQuery()
+				->fetchOne();
+
+			return $count > 0;
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new \phpbb\db\Exception\RepositoryException('Failed to check unread', previous: $e);
 		}

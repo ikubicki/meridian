@@ -35,10 +35,16 @@ final class SubscriptionService implements SubscriptionServiceInterface
 				return;
 			}
 
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::WATCH_TABLE . ' (forum_id, user_id, notify_status) VALUES (:forumId, :userId, :notifyStatus)',
-				['forumId' => $forumId, 'userId' => $userId, 'notifyStatus' => 0]
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->insert(self::WATCH_TABLE)
+				->values([
+					'forum_id'      => ':forumId',
+					'user_id'       => ':userId',
+					'notify_status' => '0',
+				])
+				->setParameter('forumId', $forumId)
+				->setParameter('userId', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new \phpbb\db\Exception\RepositoryException('Failed to subscribe', previous: $e);
 		}
@@ -47,10 +53,13 @@ final class SubscriptionService implements SubscriptionServiceInterface
 	public function unsubscribe(int $forumId, int $userId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::WATCH_TABLE . ' WHERE forum_id = :forumId AND user_id = :userId',
-				['forumId' => $forumId, 'userId' => $userId]
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::WATCH_TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('forumId', $forumId)
+				->setParameter('userId', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new \phpbb\db\Exception\RepositoryException('Failed to unsubscribe', previous: $e);
 		}
@@ -59,10 +68,15 @@ final class SubscriptionService implements SubscriptionServiceInterface
 	public function isSubscribed(int $forumId, int $userId): bool
 	{
 		try {
-			$result = $this->connection->executeQuery(
-				'SELECT user_id FROM ' . self::WATCH_TABLE . ' WHERE forum_id = :forumId AND user_id = :userId',
-				['forumId' => $forumId, 'userId' => $userId]
-			)->fetchAssociative();
+			$qb = $this->connection->createQueryBuilder();
+			$result = $qb->select('user_id')
+				->from(self::WATCH_TABLE)
+				->where($qb->expr()->eq('forum_id', ':forumId'))
+				->andWhere($qb->expr()->eq('user_id', ':userId'))
+				->setParameter('forumId', $forumId)
+				->setParameter('userId', $userId)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $result !== false;
 		} catch (\Doctrine\DBAL\Exception $e) {

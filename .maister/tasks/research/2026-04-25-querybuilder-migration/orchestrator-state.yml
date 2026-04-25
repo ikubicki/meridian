@@ -1,0 +1,39 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+
+  options:
+    brainstorming_enabled: null
+    design_enabled: null
+
+  created: "2026-04-25"
+  updated: "2026-04-25"
+  task_path: .maister/tasks/research/2026-04-25-querybuilder-migration
+
+research_context:
+  research_type: "technical"
+  research_question: "How should we replace all hand-written SQL queries with Doctrine DBAL QueryBuilder across the phpbb\\ namespace?"
+  scope:
+    included:
+      - All Dbal*Repository classes in src/phpbb/
+      - Service classes that call $connection->executeQuery/executeStatement directly
+      - Integration test cases (SQLite in-memory) that use raw SQL for schema setup
+    excluded:
+      - phpbb3/ legacy code
+      - Vendor code
+      - Migration SQL files (.sql)
+    constraints:
+      - Must remain portable across MySQL and SQLite (used in tests)
+      - All existing tests must continue to pass
+      - No ORM / no DoctrineBundle — DBAL only
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: "default"
+  phase_summaries:
+    phase-1:
+      summary: null
+      steps_completed: []
