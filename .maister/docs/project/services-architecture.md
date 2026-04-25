@@ -61,6 +61,10 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 | **8** | Notifications Service | ✅ Done |
 | **9** | Search Service | ⏳ Planned |
 | **10** | React SPA Frontend | ⏳ Planned |
+| **11** | Content Formatting Plugins | ⏳ Planned |
+| **12** | Moderation Service | ⏳ Planned |
+| **13** | Configuration Service | ⏳ Planned |
+| **14** | Admin Panel | ⏳ Planned |
 
 ---
 

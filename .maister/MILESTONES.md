@@ -253,6 +253,61 @@ Related plans: `.maister/plans/`
 
 ---
 
+## M11 — Content Formatting Plugins
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 11.1 | Research content pipeline (BBCode, Markdown, Smilies) | ⏳ | — |
+| 11.2 | Implementation plan | ⏳ | — |
+| 11.3 | s9e text-formatter integration + `encoding_engine` column | ⏳ | — |
+| 11.4 | BBCode plugin | ⏳ | — |
+| 11.5 | Markdown plugin | ⏳ | — |
+| 11.6 | Smilies plugin | ⏳ | — |
+| 11.7 | PHPUnit tests | ⏳ | — |
+
+---
+
+## M12 — Moderation Service (`phpbb\moderation`)
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 12.1 | Research moderation | ⏳ | — |
+| 12.2 | Implementation plan | ⏳ | — |
+| 12.3 | Report entity + ReportRepository | ⏳ | — |
+| 12.4 | Moderation queue service | ⏳ | — |
+| 12.5 | Moderator actions (lock/delete/move topics) | ⏳ | — |
+| 12.6 | REST API (`/api/v1/moderation/`) | ⏳ | — |
+| 12.7 | PHPUnit tests | ⏳ | — |
+| 12.8 | Playwright E2E tests | ⏳ | — |
+
+---
+
+## M13 — Configuration Service (`phpbb\config`)
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 13.1 | Research config access patterns | ⏳ | — |
+| 13.2 | Implementation plan | ⏳ | — |
+| 13.3 | ConfigRepository (DBAL, `phpbb_config` table) | ⏳ | — |
+| 13.4 | ConfigService (get/set/delete) | ⏳ | — |
+| 13.5 | REST API (`/api/v1/config/` — admin-only) | ⏳ | — |
+| 13.6 | PHPUnit tests | ⏳ | — |
+
+---
+
+## M14 — Admin Panel (`phpbb\admin`)
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 14.1 | Research ACP requirements | ⏳ | — |
+| 14.2 | Implementation plan | ⏳ | — |
+| 14.3 | Admin REST API controllers | ⏳ | — |
+| 14.4 | React SPA admin UI | ⏳ | — |
+| 14.5 | PHPUnit tests | ⏳ | — |
+| 14.6 | Playwright E2E tests | ⏳ | — |
+
+---
+
 ## Cross-Cutting
 
 | # | Task | Status | Notes |
@@ -285,6 +340,10 @@ Research available: `tasks/research/`
 
 1. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
 2. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
+3. **M11: Content Formatting Plugins** — BBCode, Markdown, Smilies (s9e)
+4. **M12: Moderation Service** — reports, queue, moderator actions
+5. **M13: Configuration Service** — unified config replacing `$config` global
+6. **M14: Admin Panel** — ACP REST API + React admin UI
 
 ---
 

@@ -60,11 +60,17 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 ### M10: React SPA Frontend ⏳ Planned
 - [ ] **React SPA** — full SPA consuming `/api/v1/`; Vite + TypeScript; retire Twig/prosilver
 
-### Supporting Services (future)
-- [ ] **Content Formatting Plugins** — BBCode, Markdown, Smilies
-- [ ] **Moderation Service** — Reports, queue, mod actions
-- [ ] **Configuration Service** — Unified config access
-- [ ] **Admin Panel** — ACP service/API
+### M11: Content Formatting Plugins ⏳ Planned
+- [ ] **BBCode / Markdown / Smilies** — pluggable content pipeline via s9e text-formatter; format-aware `encoding_engine` column
+
+### M12: Moderation Service ⏳ Planned
+- [ ] **Moderation Service** — `phpbb\moderation\` — reports, moderation queue, moderator actions (lock/delete/move topics)
+
+### M13: Configuration Service ⏳ Planned
+- [ ] **Configuration Service** — `phpbb\config\` — unified config access replacing legacy `phpbb_config` table + `$config` global
+
+### M14: Admin Panel ⏳ Planned
+- [ ] **Admin Panel** — `phpbb\admin\` — ACP REST API + React SPA admin UI; replaces legacy `adm/`
 
 ### Cross-Cutting (resolved 2026-04-20)
 - [x] **User Service research** — Complete (`2026-04-19-users-service/`)
