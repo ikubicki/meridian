@@ -1,11 +1,11 @@
 # Global Coding Standards
 
-Conventions for the phpBB Vibed project targeting **PHP 8.3** and PSR-1/PSR-12 compliance.
+Conventions for the phpBB Vibed project targeting **PHP 8.2+** (minimum requirement) and PSR-1/PSR-12 compliance. The current runtime is **PHP 8.4** (8.4.20).
 Legacy rules (phpBB 3.3 `includes/` layer) are preserved in a clearly labelled section below.
 
 ## Naming Conventions
 
-### New Code (PHP 8.3 / PSR-1)
+### New Code (PHP 8.2+ / PSR-1)
 - **Variables**: `snake_case` — e.g., `$currentUser`, `$forumId`, `$postCount` *(camelCase accepted for local vars in new code too)*
 - **Classes & Interfaces**: `PascalCase` — e.g., `ExceptionSubscriber`, `AuthProvider`, `ForumController`
 - **Interface names**: `PascalCase` with `Interface` suffix — e.g., `DriverInterface`, `TreeInterface`
@@ -86,21 +86,23 @@ Every phpBB PHP file must begin with this exact license/copyright block immediat
 ```php
 <?php
 /**
-*
-* This file is part of the phpBB Forum Software package.
-*
-* @copyright (c) phpBB Limited <https://www.phpbb.com>
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-* For full copyright and license information, please see
-* the docs/CREDITS.txt file.
-*
-*/
+ *
+ * This file is part of the phpBB4 "Meridian" package.
+ *
+ * @copyright (c) Irek Kubicki <phpbb@codebuilders.pl>
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ * For full copyright and license information, please see
+ * the docs/CREDITS.txt file.
+ *
+ */
 ```
+
+> **Legacy files** under `src/phpbb3/` retain the original phpBB 3.x header with `phpBB Forum Software package` and `phpBB Limited` copyright. Do not change legacy headers.
 
 ## PHPDoc Requirements
 
-### On Class Properties (PHP 8.3)
+### On Class Properties (PHP 8.2+)
 Typed properties declared natively do **not** require a `@var` docblock. Use PHPDoc only when native typing is insufficient:
 
 ```php
@@ -178,7 +180,7 @@ The configuration file **`.php-cs-fixer.php`** must be committed to the reposito
 
 ### Ruleset
 
-The `.php-cs-fixer.php` configuration must target PHP 8.3 and extend `@PSR12` with PHP 8 specific fixers:
+The `.php-cs-fixer.php` configuration must target PHP 8.4 and extend `@PSR12` with PHP 8 specific fixers:
 
 ```php
 <?php
@@ -190,7 +192,7 @@ $finder = PhpCsFixer\Finder::create()
 return (new PhpCsFixer\Config())
     ->setRules([
         '@PSR12'                           => true,
-        '@PHP83Migration'                  => true,
+        '@PHP84Migration'                  => true,
         'declare_strict_types'             => true,
         'strict_param'                     => true,
         'array_syntax'                     => ['syntax' => 'short'],
