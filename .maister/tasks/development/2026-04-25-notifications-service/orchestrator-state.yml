@@ -1,0 +1,74 @@
+orchestrator:
+  started_phase: phase-1
+  completed_phases: []
+  failed_phases: []
+  auto_fix_attempts:
+    phase-1: 0
+    phase-2: 0
+    phase-5: 0
+    phase-6: 0
+    phase-7: 0
+    phase-8: 0
+    phase-11: 0
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: null
+    user_docs_enabled: null
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  created: "2026-04-25T00:00:00Z"
+  updated: "2026-04-25T00:00:00Z"
+  task_path: .maister/tasks/development/2026-04-25-notifications-service
+
+task:
+  title: "M8: Notifications Service (phpbb\\notifications)"
+  description: >
+    Implement phpbb\notifications service — standalone PHP 8.5/Symfony 8.x
+    implementation with Repository → Service → Controller layered architecture.
+    HTTP polling (30s), tag-aware cache, 4 REST endpoints, domain events.
+    React frontend <NotificationBell> component with useNotifications hook.
+  status: in_progress
+  tags: [notifications, rest-api, polling, cache, react, m8]
+  priority: high
+
+task_context:
+  risk_level: null
+  clarifications_resolved: null
+  scope_expanded: null
+  architecture_decision: null
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: false
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  research_reference:
+    path: .maister/tasks/research/2026-04-19-notifications-service
+    research_question: >
+      Jak zaprojektować usługę phpbb\notifications odpowiedzialną za powiadomienia
+      do użytkowników, wysyłkę emaili oraz powiadomienia w aplikacji frontendowej,
+      z lekkim REST API endpointem informującym o ilości i najnowszych powiadomieniach?
+    research_type: mixed
+    confidence_level: high
+  phase_summaries:
+    research:
+      summary: >
+        Full standalone phpbb\notifications service design. HTTP Polling 30s +
+        304 Not Modified. Tag-aware cache (30s TTL). 4 REST endpoints: GET /count,
+        GET /notifications, POST /{id}/read, POST /read. TypeRegistry + MethodManager
+        extensibility via Symfony events. React <NotificationBell> frontend.
+      key_findings:
+        - HTTP Polling 30s with Last-Modified/304 is sufficient for forum (ADR-001)
+        - Full rewrite — no legacy notification_manager dependency (ADR-004)
+        - Write-time responder aggregation for Facebook-style grouping (ADR-002)
+        - Tag-aware cache with event-driven invalidation (ADR-003)
+        - Extensible type/method registry via Symfony events (ADR-007)
+      recommended_approach: standalone-service-full-rewrite
+    codebase_analysis: {key_files: [], primary_language: php, summary: null}
+    clarifications: []
+    gap_analysis: {integration_points: [], summary: null}
+    scope_clarifications: {scope_expanded: null, summary: null}
+    specification: {summary: null}

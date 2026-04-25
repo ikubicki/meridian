@@ -339,3 +339,53 @@ services:
     phpbb\storage\Orphan\OrphanCleanupJob:
         arguments:
             $orphanService: '@phpbb\storage\Contract\OrphanServiceInterface'
+
+    # ---------------------------------------------------------------------------
+    # Notifications module (M8)
+    # ---------------------------------------------------------------------------
+
+    phpbb\notifications\Repository\DbalNotificationRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\notifications\Contract\NotificationRepositoryInterface:
+        alias: phpbb\notifications\Repository\DbalNotificationRepository
+
+    phpbb\notifications\TypeRegistry:
+        arguments:
+            $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+
+    phpbb\notifications\MethodManager:
+        arguments:
+            $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+
+    phpbb\notifications\Type\PostNotificationType:
+        tags:
+            - { name: kernel.event_listener, event: phpbb\notifications\Event\RegisterNotificationTypesEvent, method: register }
+
+    phpbb\notifications\Type\TopicNotificationType:
+        tags:
+            - { name: kernel.event_listener, event: phpbb\notifications\Event\RegisterNotificationTypesEvent, method: register }
+
+    phpbb\notifications\Method\BoardNotificationMethod:
+        tags:
+            - { name: kernel.event_listener, event: phpbb\notifications\Event\RegisterDeliveryMethodsEvent, method: register }
+
+    phpbb\notifications\Method\EmailNotificationMethod:
+        tags:
+            - { name: kernel.event_listener, event: phpbb\notifications\Event\RegisterDeliveryMethodsEvent, method: register }
+
+    phpbb\notifications\Service\NotificationService:
+        arguments:
+            $repository: '@phpbb\notifications\Contract\NotificationRepositoryInterface'
+            $cacheFactory: '@phpbb\cache\CachePoolFactoryInterface'
+
+    phpbb\notifications\Contract\NotificationServiceInterface:
+        alias: phpbb\notifications\Service\NotificationService
+        public: true
+
+    phpbb\notifications\Listener\CacheInvalidationSubscriber:
+        arguments:
+            $cacheFactory: '@phpbb\cache\CachePoolFactoryInterface'
+        tags:
+            - { name: kernel.event_subscriber }

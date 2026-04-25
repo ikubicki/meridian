@@ -11,6 +11,7 @@
  */
 
 import { test, expect, APIRequestContext, request as playwrightRequest } from '@playwright/test';
+import { execSync } from 'child_process';
 
 // All tests run serially — each step builds on the previous one's state.
 test.describe.configure({ mode: 'serial' });
@@ -732,6 +733,113 @@ test.describe('Messaging API', () => {
 			perPage:  expect.any(Number),
 			lastPage: expect.any(Number),
 		});
+	});
+});
+
+// ---------------------------------------------------------------------------
+// M8. Notifications API
+// ---------------------------------------------------------------------------
+test.describe('Notifications API', () => {
+	// alice user_id = 200 (verified from phpbb_users table)
+	const ALICE_USER_ID = 200;
+	const SEED_ITEM_ID  = 99901;
+
+	test.beforeAll(() => {
+		execSync(
+			`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
+			`"INSERT IGNORE INTO phpbb_notifications ` +
+			`(notification_type_id, item_id, item_parent_id, user_id, notification_read, notification_time, notification_data) ` +
+			`VALUES (1, ${SEED_ITEM_ID}, ${SEED_ITEM_ID}, ${ALICE_USER_ID}, 0, UNIX_TIMESTAMP()-60, '{}')"`,
+		);
+	});
+
+	test.afterAll(() => {
+		execSync(
+			`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
+			`"DELETE FROM phpbb_notifications WHERE item_id = ${SEED_ITEM_ID} AND user_id = ${ALICE_USER_ID}"`,
+		);
+	});
+
+	// Auth guard tests
+	test('GET /notifications/count without auth — 401', async () => {
+		const res = await apiCtx.get(`${API}/notifications/count`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('GET /notifications without auth — 401', async () => {
+		const res = await apiCtx.get(`${API}/notifications`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('POST /notifications/read without auth — 401', async () => {
+		const res = await apiCtx.post(`${API}/notifications/read`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('POST /notifications/999/read without auth — 401', async () => {
+		const res = await apiCtx.post(`${API}/notifications/999/read`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	// Happy path tests
+	test('GET /notifications/count — 200 with unread count and X-Poll-Interval header', async () => {
+		const res = await apiCtx.get(`${API}/notifications/count`, { headers: auth() });
+
+		expect(res.status()).toBe(200);
+
+		const body = await res.json();
+		expect(typeof body.data.unread).toBe('number');
+		expect(body.data.unread).toBeGreaterThanOrEqual(0);
+		expect(res.headers()['x-poll-interval']).toBe('30');
+	});
+
+	test('GET /notifications/count — 304 when If-Modified-Since matches Last-Modified', async () => {
+		// First request: obtain Last-Modified (seeded row guarantees non-null)
+		const first = await apiCtx.get(`${API}/notifications/count`, { headers: auth() });
+
+		expect(first.status()).toBe(200);
+
+		const lastModified = first.headers()['last-modified'];
+		expect(lastModified).toBeTruthy();
+
+		// Second request with If-Modified-Since set to the same value → 304
+		const second = await apiCtx.get(`${API}/notifications/count`, {
+			headers: { ...auth(), 'If-Modified-Since': lastModified },
+		});
+
+		expect(second.status()).toBe(304);
+	});
+
+	test('GET /notifications — 200 with data array and meta', async () => {
+		const res = await apiCtx.get(`${API}/notifications`, { headers: auth() });
+
+		expect(res.status()).toBe(200);
+
+		const body = await res.json();
+		expect(Array.isArray(body.data)).toBe(true);
+		expect(body.meta).toMatchObject({
+			total:    expect.any(Number),
+			page:     expect.any(Number),
+			perPage:  expect.any(Number),
+			lastPage: expect.any(Number),
+		});
+		expect(body.meta.lastPage).toBeGreaterThanOrEqual(1);
+	});
+
+	test('POST /notifications/read — 204 even when no unread', async () => {
+		const res = await apiCtx.post(`${API}/notifications/read`, { headers: auth() });
+
+		expect(res.status()).toBe(204);
+	});
+
+	test('POST /notifications/99999/read — 404 for non-existent notification', async () => {
+		const res = await apiCtx.post(`${API}/notifications/99999/read`, { headers: auth() });
+
+		expect(res.status()).toBe(404);
 	});
 });
 
