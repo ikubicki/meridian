@@ -36,6 +36,7 @@ Services do **not** depend on each other directly. They communicate via Symfony 
 | `config/` | ✅ M0 | `phpbb\config\` | Symfony DI YAML configs, route definitions |
 | `db/` | ✅ M0 | `phpbb\db\` | Doctrine DBAL 4 connection factory |
 | `hierarchy/` | ✅ M5a | `phpbb\hierarchy\` | Forum/category tree (nested set), ForumRepository/Service/Controller |
+| `storage/` | ⚠️ M5b — not implemented | `phpbb\storage\` | File/attachment storage (Flysystem, UUID v7, `stored_files`) — research done, no code yet |
 | `messaging/` | ✅ M7 | `phpbb\messaging\` | Private conversations — ConversationRepository/MessageRepository/ParticipantRepository |
 | `threads/` | ✅ M6 | `phpbb\threads\` | Topics + posts, Tiered Counter Pattern |
 | `user/` | ✅ M2 | `phpbb\user\` | User entity, profile, ban service |

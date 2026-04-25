@@ -6,7 +6,7 @@
 - **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
 - **Test coverage**: PHPUnit 10 (unit + integration) + Playwright E2E
 - **Developer**: Solo (AI-assisted)
-- **Status**: **M0–M7 implemented and passing** — M8–M10 planned
+- **Status**: **M0–M7 implemented and passing** — M5b (Storage) skipped, M8–M10 planned
 
 ---
 
@@ -34,6 +34,9 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 
 ### M5a: Hierarchy Service ✅ Done
 - [x] **Hierarchy Service** — `phpbb\hierarchy\` — forums, categories, nested set tree, domain events
+
+### M5b: Storage Service ⚠️ Research Done — Not Implemented
+- [ ] **Storage Service** — `phpbb\storage\` — Flysystem, UUID v7, single `stored_files` table; research complete but implementation skipped (no attachment support in M7 Messaging)
 
 ### M6: Threads Service ✅ Done
 - [x] **Threads Service** — `phpbb\threads\` — topics + posts, Tiered Counter Pattern, `DomainEventCollection`

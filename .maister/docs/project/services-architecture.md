@@ -55,12 +55,12 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 | **3** | Auth Service (Unified) | ✅ Done |
 | **4** | REST API Framework | ✅ Done |
 | **5a** | Hierarchy Service | ✅ Done |
+| **5b** | Storage Service | ⚠️ Research done — not implemented |
 | **6** | Threads Service | ✅ Done |
 | **7** | Messaging Service | ✅ Done |
 | **8** | Notifications Service | ⏳ Planned |
 | **9** | Search Service | ⏳ Planned |
 | **10** | React SPA Frontend | ⏳ Planned |
-| **8** | Notifications Service | Depends on all event sources + Cache |
 
 ---
 
