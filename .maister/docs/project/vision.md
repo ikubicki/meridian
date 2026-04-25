@@ -7,9 +7,9 @@
 
 ## Current State
 - **Version**: phpBB 3.3.15 (legacy base) + new `phpbb\` modules M0–M7 implemented
-- **Runtime**: PHP 8.4; minimum PHP 8.2
+- **Runtime**: PHP 8.5; minimum PHP 8.2
 - **Status**: Active implementation — M0–M7 complete, M8–M10 planned
-- **Tech Stack**: PHP 8.4, Symfony 8.x, Doctrine DBAL 4, JWT (firebase/php-jwt), Argon2id, React SPA, Playwright
+- **Tech Stack**: PHP 8.5, Symfony 8.x, Doctrine DBAL 4, JWT (firebase/php-jwt), Argon2id, React SPA, Playwright
 - **Architecture**: Hybrid — legacy `phpbb3\` layer retained as reference; new PSR-4 services in `src/phpbb\` run alongside within the same Symfony kernel
 - **Team**: Solo project (AI-assisted)
 
@@ -31,7 +31,7 @@ Meridian exists to demonstrate that a large, battle-tested PHP monolith can be s
 
 ## Key Concept Changes (Emerged During Implementation)
 
-- **Doctrine DBAL 4** chosen over raw PDO — provides type-safe query builder and connection management without ORM overhead
+- **Doctrine DBAL 4** chosen over raw PDO — provides type-safe QueryBuilder and connection management without ORM overhead; all repositories use `createQueryBuilder()` exclusively (no raw SQL strings)
 - **`final readonly class`** for all Entities and DTOs — immutability enforced at language level; constructed via `fromRow()` (DB→Entity) and `fromEntity()` (Entity→DTO) static factories
 - **DomainEventCollection** is immutable — constructed with the full events array (`new DomainEventCollection([...])`); no `add()` / `merge()` / `count()` methods
 - **Tiered Counter Pattern** — hot counter (cache) → cold counter (DB column) → recalculation cron; avoids N+1 UPDATE storms on high-traffic counters

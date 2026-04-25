@@ -2,9 +2,9 @@
 
 ## Current State
 - **Project**: phpBB4 "Meridian" — ground-up modernisation of phpBB 3.3.15
-- **Runtime**: PHP 8.4 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
+- **Runtime**: PHP 8.5 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
 - **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
-- **Test coverage**: PHPUnit 10 (unit + integration) + Playwright E2E
+- **Test coverage**: PHPUnit 10 (unit + integration, 374 tests) + Playwright E2E (89 tests)
 - **Developer**: Solo (AI-assisted)
 - **Status**: **M0–M7 implemented and passing** — M5b (Storage) skipped, M8–M10 planned
 
@@ -18,6 +18,7 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 - [x] **Composer PSR-4 autoload** — Composer for `phpbb\` namespace; legacy class_loader deleted
 - [x] **Root path elimination** — `PHPBB_FILESYSTEM_ROOT` constant, `__DIR__`-based paths
 - [x] **Symfony 8.x Kernel** — `src/phpbb/Kernel.php`, Docker, `composer test` / `composer test:e2e` scripts
+- [x] **Doctrine DBAL 4 QueryBuilder migration** — all M0–M7 repositories and services use `createQueryBuilder()` exclusively; no raw SQL strings in `src/phpbb/`
 - [ ] **GitHub Actions CI pipeline** — Lint + test + `composer audit` `Effort: S`
 
 ### M1: Cache Service ✅ Done
@@ -40,6 +41,7 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 
 ### M6: Threads Service ✅ Done
 - [x] **Threads Service** — `phpbb\threads\` — topics + posts, Tiered Counter Pattern, `DomainEventCollection`
+- [x] **Threads E2E tests** — 26 Playwright tests covering full CRUD lifecycle for topics + posts, `GET /topics/{id}/posts` new endpoint, anonymous access, pagination, error guards
 
 ### M7: Messaging Service ✅ Done
 - [x] **Messaging Service** — `phpbb\messaging\` — thread-per-participant-set, conversations + messages + participants

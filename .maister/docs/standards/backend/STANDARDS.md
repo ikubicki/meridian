@@ -337,35 +337,125 @@ Service methods that return lists consume `PaginationContext` (or a subtype) —
 
 ## SQL Safety
 
-### Always use the DBAL
-All SQL must go through the Database Abstraction Layer (`$db`). Never use raw `mysql_*`, `mysqli_*`, or `PDO` directly.
+### Always use the Doctrine DBAL QueryBuilder
 
-### Escaping
-- `$db->sql_escape($value)` — for string values in SQL (even when you believe the variable is safe)
-- `(int) $id` — cast integer IDs before inserting in SQL strings
-- Never interpolate user input directly into SQL strings
+All SQL in `src/phpbb/` must be written using `$this->connection->createQueryBuilder()`. Never use raw `mysql_*`, `mysqli_*`, `PDO` directly, or pass raw SQL strings to `executeQuery()`/`executeStatement()`.
 
 ```php
-// Correct:
-$sql = "SELECT * FROM " . USERS_TABLE . " WHERE username = '" . $db->sql_escape($username) . "'";
+// ✅ Correct — QueryBuilder with named parameters:
+$qb = $this->connection->createQueryBuilder();
+$row = $qb->select('*')
+    ->from('phpbb_topics')
+    ->where($qb->expr()->eq('topic_id', ':id'))
+    ->andWhere($qb->expr()->eq('topic_visibility', '1'))
+    ->setParameter('id', $topicId)
+    ->setMaxResults(1)
+    ->executeQuery()
+    ->fetchAssociative();
 
-// Correct for integers:
-$sql = 'SELECT * FROM ' . POSTS_TABLE . ' WHERE post_id = ' . (int) $post_id;
-
-// Wrong — never do this:
-$sql = "SELECT * FROM " . USERS_TABLE . " WHERE username = '$username'";
+// ❌ Wrong — raw SQL string:
+$row = $this->connection->executeQuery(
+    'SELECT * FROM phpbb_topics WHERE topic_id = :id',
+    ['id' => $topicId],
+)->fetchAssociative();
 ```
 
-### DBAL Helper Methods
-- `$db->sql_build_array('INSERT', $data_array)` — for INSERT/UPDATE
-- `$db->sql_build_query('SELECT', $sql_ary)` — for complex SELECT queries
-- `$db->sql_in_set('column', $id_array)` — for IN clauses
-- `$db->sql_query_limit($sql, $total, $offset)` — for LIMIT/pagination
+### Named Parameters (never positional `?`)
 
-### Cross-Database Compatibility
-- All SQL must work across MySQL, PostgreSQL, MSSQL, SQLite3, Oracle
-- Use `<>` for not-equals (SQL:2003 standard) — NOT `!=`
-- Do not use database-specific functions (`CONCAT` vs `||`, etc.)
+Always use named parameters (`:name`) — never positional `?` placeholders:
+
+```php
+// ✅ Correct:
+->setParameter('userId', $userId)
+
+// ❌ Wrong:
+->setParameter(0, $userId)
+```
+
+### Pagination — clone pattern
+
+For paginated queries, build a base QB and clone it for the count:
+
+```php
+$base = $this->connection->createQueryBuilder()
+    ->from('phpbb_topics', 't')
+    ->where($base->expr()->eq('t.forum_id', ':forumId'))
+    ->setParameter('forumId', $forumId);
+
+$total = (int) (clone $base)->select('COUNT(*)')->executeQuery()->fetchOne();
+$rows  = (clone $base)
+    ->select('*')
+    ->orderBy('t.topic_time', 'DESC')
+    ->setMaxResults($ctx->perPage)
+    ->setFirstResult(($ctx->page - 1) * $ctx->perPage)
+    ->executeQuery()
+    ->fetchAllAssociative();
+```
+
+### IN clauses — ArrayParameterType
+
+For `IN (:list)` with a PHP array, use `ArrayParameterType`:
+
+```php
+use Doctrine\DBAL\ArrayParameterType;
+
+$qb->andWhere('forum_id IN (:ids)')
+   ->setParameter('ids', $idArray, ArrayParameterType::INTEGER);
+```
+
+### Portability rules
+
+- **LIMIT/OFFSET**: `setMaxResults()` / `setFirstResult()` — never raw `LIMIT :n OFFSET :m`
+- **IS NULL / IS NOT NULL**: `$qb->expr()->isNull('col')` / `isNotNull('col')` — never `col = NULL`
+- **Greatest/Least**: Use `CASE WHEN` — `GREATEST()` is MySQL-only
+- **ON DUPLICATE KEY UPDATE**: Permitted as raw SQL only when QueryBuilder cannot express it (e.g., upsert); must include a comment explaining why
+
+### Dynamic UPDATE sets — UPDATABLE_FIELDS whitelist
+
+When building dynamic `SET` clauses from user-provided data, always validate field names against a constant whitelist:
+
+```php
+private const UPDATABLE_FIELDS = ['forum_name', 'forum_desc', 'forum_type'];
+
+$qb = $this->connection->createQueryBuilder()->update(self::TABLE);
+foreach ($data as $field => $value) {
+    if (!in_array($field, self::UPDATABLE_FIELDS, true)) {
+        throw new \InvalidArgumentException("Field not updatable: {$field}");
+    }
+    $qb->set($field, ':' . $field)->setParameter($field, $value);
+}
+$qb->where($qb->expr()->eq('forum_id', ':id'))->setParameter('id', $id)->executeStatement();
+```
+
+### INSERT — UniqueConstraintViolationException
+
+For insert-or-ignore semantics (replacing `INSERT IGNORE`), use try/catch:
+
+```php
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+
+try {
+    $this->connection->createQueryBuilder()
+        ->insert('phpbb_table')
+        ->values(['col' => ':val'])
+        ->setParameter('val', $value)
+        ->executeStatement();
+} catch (UniqueConstraintViolationException) {
+    // Already exists — ignore
+}
+```
+
+### Code: Zero Legacy SQL References
+
+| Forbidden | Replacement |
+|-----------|-------------|
+| `global $db, $user, $auth, $config, $cache, $request` | Constructor DI via Symfony container |
+| `$db->sql_query()`, `$db->sql_escape()`, DBAL methods | `$this->connection->createQueryBuilder()` |
+| `executeQuery('SELECT ...', ['param' => $val])` | `$qb->select(...)->from(...)->where(...)->setParameter(...)` |
+| `executeStatement('UPDATE ...', $params)` | `$qb->update(...)->set(...)->where(...)->executeStatement()` |
+| `$db->sql_build_array('INSERT', $data_array)` | `$qb->insert(...)->values([...])->setParameter(...)` |
+| `$db->sql_in_set('col', $array)` | `$qb->andWhere('col IN (:list)')->setParameter('list', $array, ArrayParameterType::INTEGER)` |
+| `$db->sql_query_limit($sql, $total, $offset)` | `$qb->setMaxResults($limit)->setFirstResult($offset)` |
 
 ## Security Practices
 
@@ -456,7 +546,7 @@ New code under `src/phpbb/` MUST NOT import, reference, instantiate, or call any
 | `add_form_key()` / `check_form_key()` | JWT token validation (stateless) |
 | `$phpbb_root_path`, `$phpEx` | `__DIR__`-based paths, `PHPBB_FILESYSTEM_ROOT` constant |
 | `includes/*.php` require/include | PSR-4 autoloading only |
-| `phpbb\db\driver\driver_interface` | `\PDO` injected via DI |
+| `phpbb\db\driver\driver_interface` | `Doctrine\DBAL\Connection` injected via DI |
 
 ### What This Means in Practice
 

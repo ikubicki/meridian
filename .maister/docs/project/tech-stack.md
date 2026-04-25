@@ -9,9 +9,9 @@ This document describes the technology choices and rationale for **phpBB4 "Merid
 
 ## Languages
 
-### PHP (8.2+ minimum — 8.4 runtime)
+### PHP (8.2+ minimum — 8.5 runtime)
 - **Minimum version**: PHP 8.2 (enforced in Composer and CI)
-- **Runtime**: PHP 8.4 (Docker image)
+- **Runtime**: PHP 8.5 (Docker image)
 - **Key features used in new code**:
   - `declare(strict_types=1)` everywhere
   - `final readonly class` for Entities and DTOs
@@ -40,9 +40,10 @@ This document describes the technology choices and rationale for **phpBB4 "Merid
 
 #### Doctrine DBAL 4
 - **Usage**: All database access in `src/phpbb/` modules
-- **No ORM** — raw SQL with type-safe query builder + prepared statements
-- **Connection**: `Doctrine\DBAL\Connection` injected via DI
+- **No ORM** — QueryBuilder API with named parameters (all M0–M7 repos migrated; no raw `executeQuery`/`executeStatement` with interpolated SQL)
+- **Connection**: `Doctrine\DBAL\Connection` injected via DI; `$this->connection->createQueryBuilder()` is the standard entry point
 - **Migrations**: DBAL `Schema` for `setUpSchema()` in integration tests
+- **Portability**: `setMaxResults()`/`setFirstResult()` for pagination, `$qb->expr()->isNull()` for IS NULL, `ArrayParameterType::INTEGER` for IN clauses — no MySQL-specific functions
 - **Rationale**: Type-aware, modern API without Doctrine ORM overhead; replaces both raw PDO and the legacy phpBB multi-driver DBAL
 
 ### Frontend
