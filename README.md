@@ -48,7 +48,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M3 | Auth Unified Service (`phpbb\auth`) — JWT + ACL | ✅ Done |
 | M4 | REST API Framework — routing, auth middleware | ✅ Done |
 | M5a | Hierarchy Service (`phpbb\hierarchy`) — forums/categories | ✅ Done |
-| M5b | Storage Service (`phpbb\storage`) — file/attachment storage | ⚠️ Research done, not implemented |
+| M5b | Storage Service (`phpbb\storage`) — file/attachment storage | ✅ Done |
 | M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
 | M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
 | M8 | Notifications Service (`phpbb\notifications`) | ⏳ Planned |
@@ -66,7 +66,7 @@ Full milestone detail: [.maister/MILESTONES.md](.maister/MILESTONES.md)
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | PHP 8.2+, PHP-FPM (Alpine) |
+| Runtime | PHP 8.5 (minimum 8.2), PHP-FPM (Alpine) |
 | Framework | Symfony 8.x (HttpKernel, DI, EventDispatcher) |
 | Database | MariaDB 10.x via Doctrine DBAL 4 |
 | Auth | JWT (firebase/php-jwt), Argon2id |
@@ -90,8 +90,9 @@ src/
     common/           # Shared value objects, domain events, pagination
     config/           # Symfony DI config (services.yaml, routes.yaml)
     db/               # DBAL connection factory + migrations
-    hierarchy/        # Forum/category tree
+    hierarchy/        # Forum/category tree (M5a)
     messaging/        # Private conversations (M7)
+    storage/          # File/attachment storage — Flysystem (M5b)
     threads/          # Topics + posts
     user/             # User entities, ban service
   phpbb3/             # Legacy code (untouched, temporary)
@@ -133,7 +134,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **339 PHPUnit tests · 54 E2E tests · 0 CS issues**
+Current coverage: **384 PHPUnit tests · 128 E2E tests · 0 CS issues**
 
 ---
 
