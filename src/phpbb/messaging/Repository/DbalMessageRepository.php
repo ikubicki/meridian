@@ -171,6 +171,8 @@ class DbalMessageRepository implements MessageRepositoryInterface
 		}
 	}
 
+	private const UPDATABLE_FIELDS = ['message_text', 'message_subject', 'edited_at', 'edit_count', 'metadata'];
+
 	public function update(int $messageId, array $fields): void
 	{
 		try {
@@ -182,6 +184,9 @@ class DbalMessageRepository implements MessageRepositoryInterface
 			$params = ['messageId' => $messageId];
 
 			foreach ($fields as $field => $value) {
+				if (!in_array($field, self::UPDATABLE_FIELDS, true)) {
+					throw new \InvalidArgumentException('Unknown field: ' . $field);
+				}
 				$set[] = $field . ' = :' . $field;
 				$params[$field] = $value;
 			}

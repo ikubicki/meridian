@@ -108,6 +108,8 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 		}
 	}
 
+	private const UPDATABLE_FIELDS = ['state', 'is_muted', 'is_blocked', 'role', 'last_read_at', 'last_read_message_id', 'left_at'];
+
 	public function update(int $conversationId, int $userId, array $fields): void
 	{
 		try {
@@ -119,6 +121,9 @@ class DbalParticipantRepository implements ParticipantRepositoryInterface
 			$params = ['conversationId' => $conversationId, 'userId' => $userId];
 
 			foreach ($fields as $field => $value) {
+				if (!in_array($field, self::UPDATABLE_FIELDS, true)) {
+					throw new \InvalidArgumentException('Unknown field: ' . $field);
+				}
 				$set[] = $field . ' = :' . $field;
 				$params[$field] = $value;
 			}
