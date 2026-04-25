@@ -51,7 +51,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M5b | Storage Service (`phpbb\storage`) — file/attachment storage | ✅ Done |
 | M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
 | M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
-| M8 | Notifications Service (`phpbb\notifications`) | ⏳ Planned |
+| M8 | Notifications Service (`phpbb\notifications`) — HTTP polling, mark-read | ✅ Done |
 | M9 | Search Service (`phpbb\search`) | ⏳ Planned |
 | M10 | React SPA Frontend | ⏳ Planned |
 
@@ -72,7 +72,7 @@ Full milestone detail: [.maister/MILESTONES.md](.maister/MILESTONES.md)
 | Auth | JWT (firebase/php-jwt), Argon2id |
 | Web server | Nginx |
 | Unit tests | PHPUnit 10 (`#[Test]` attributes) |
-| E2E tests | Playwright (TypeScript) |
+| E2E tests | Playwright (TypeScript) + `mysql2` (DB seeding via port 13306) |
 | Code style | PHP CS Fixer |
 | Containers | Docker + Docker Compose |
 | Frontend (SPA) | React + Vite (in progress) |
@@ -117,6 +117,10 @@ http://localhost:8181/api/v1/
 curl http://localhost:8181/api/v1/health
 ```
 
+> **E2E prerequisite**: the full Docker stack must be running before `composer test:e2e`.
+> MariaDB is exposed on `localhost:13306` so Playwright workers can seed test data directly
+> without `docker exec`.
+
 ---
 
 ## Tests
@@ -134,7 +138,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **384 PHPUnit tests · 128 E2E tests · 0 CS issues**
+Current coverage: **436 PHPUnit tests · 168 E2E tests · 0 CS issues**
 
 ---
 
