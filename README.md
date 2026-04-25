@@ -4,6 +4,12 @@ A ground-up modernisation of the phpBB forum engine — replacing its legacy PHP
 clean **Symfony 8.x backend**, **JSON REST API**, and **React SPA** frontend, while preserving
 full data compatibility with existing phpBB 3.x installations.
 
+> **Note:** This project is also my personal playground for learning and experimenting with
+> AI-assisted development workflows applied to a real-world legacy codebase. The combination of
+> a well-known domain (forum software), a large existing PHP codebase, and a clear modernisation
+> target makes phpBB an ideal subject for exploring how AI agents can plan, implement, test, and
+> verify incremental rewrites of production systems.
+
 ---
 
 ## Goal
