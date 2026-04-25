@@ -3,7 +3,7 @@
 Comprehensive plan for the new service-based architecture replacing the legacy phpBB monolith.
 Based on research tasks completed April 2026.
 
-**Status**: M0–M7 implemented and fully tested. M8–M10 planned.
+**Status**: M0–M8 implemented and fully tested. M9–M10 planned.
 
 ---
 
@@ -55,10 +55,10 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 | **3** | Auth Service (Unified) | ✅ Done |
 | **4** | REST API Framework | ✅ Done |
 | **5a** | Hierarchy Service | ✅ Done |
-| **5b** | Storage Service | ⚠️ Research done — not implemented |
+| **5b** | Storage Service | ✅ Done |
 | **6** | Threads Service | ✅ Done |
 | **7** | Messaging Service | ✅ Done |
-| **8** | Notifications Service | ⏳ Planned |
+| **8** | Notifications Service | ✅ Done |
 | **9** | Search Service | ⏳ Planned |
 | **10** | React SPA Frontend | ⏳ Planned |
 

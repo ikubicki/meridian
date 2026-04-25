@@ -59,9 +59,10 @@ This document describes the technology choices and rationale for **phpBB4 "Merid
 |------|---------|---------|
 | `phpunit/phpunit` | ^10.0 | Unit tests (`#[Test]` PHP 8 attributes, AAA pattern) |
 | Playwright | latest | E2E tests (TypeScript, full user flows via React SPA + API) |
+| `mysql2` | ^3.11.0 | E2E DB seeding — direct MariaDB access from Playwright workers (port 13306) |
 | `friendsofphp/php-cs-fixer` | latest | Code style enforcement (`@PSR12` + `@PHP84Migration`) |
 
-**Testing strategy**: Two layers — isolated unit tests (PHPUnit 10) + full-stack E2E (Playwright). Repository tests use `IntegrationTestCase` (SQLite in-memory). No `phpunit/dbunit` / XmlDataSet.
+**Testing strategy**: Two layers — isolated unit tests (PHPUnit 10) + full-stack E2E (Playwright). Repository tests use `IntegrationTestCase` (SQLite in-memory). E2E DB seeding uses `tests/e2e/helpers/db.ts` (typed async wrappers over `mysql2`) — no `docker exec` / shell commands. MariaDB exposed on `localhost:13306` for Playwright workers.
 
 ---
 
@@ -70,6 +71,7 @@ This document describes the technology choices and rationale for **phpBB4 "Merid
 ### MariaDB 10.x (production)
 - **Engine**: MariaDB 10.x via Docker (`phpbb_db` container)
 - **Access**: Doctrine DBAL 4 (`Connection` injection)
+- **E2E access**: Port `13306` exposed on localhost — `mysql2` in Playwright workers seeds/cleans test data directly (no `docker exec`)
 - **Schema**: Reuses existing `phpbb_*` tables where possible; new tables for redesigned features
 - **Query safety**: Parameterized queries only — no raw user input interpolation
 
@@ -107,7 +109,7 @@ This document describes the technology choices and rationale for **phpBB4 "Merid
 |-----------|-------|---------|
 | `phpbb_app` | PHP 8.4-FPM Alpine | PHP application server |
 | `phpbb_nginx` | Nginx Alpine | Reverse proxy (port 8181) |
-| `phpbb_db` | MariaDB 10.x | Database |
+| `phpbb_db` | MariaDB 10.x | Database (port 13306 exposed for E2E tests) |
 
 ### CI/CD
 - **Target**: GitHub Actions (lint + tests + `composer audit`)

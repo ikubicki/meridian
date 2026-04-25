@@ -4,9 +4,9 @@
 - **Project**: phpBB4 "Meridian" — ground-up modernisation of phpBB 3.3.15
 - **Runtime**: PHP 8.5 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
 - **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
-- **Test coverage**: PHPUnit 10 (unit + integration, 384 tests) + Playwright E2E (128 tests)
+- **Test coverage**: PHPUnit 10 (unit + integration, 436 tests) + Playwright E2E (168 tests)
 - **Developer**: Solo (AI-assisted)
-- **Status**: **M0–M7 implemented and passing** — M8–M10 planned
+- **Status**: **M0–M8 implemented and passing** — M9–M10 planned
 
 ---
 
@@ -49,8 +49,10 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 ### M7: Messaging Service ✅ Done
 - [x] **Messaging Service** — `phpbb\messaging\` — thread-per-participant-set, conversations + messages + participants
 
-### M8: Notifications Service ⏳ Planned
-- [ ] **Notifications Service** — `phpbb\notifications\` — HTTP polling (30s), tag-aware cache, React frontend
+### M8: Notifications Service ✅ Done
+- [x] **Notifications Service** — `phpbb\notifications\` — HTTP polling (30s), tag-aware cache, `NotificationTypeRepository` + `NotificationRepository`; `NotificationService` with `getNotifications()` / `markRead()` / `markAllRead()` / `countUnread()`; `VarExportMarshaller` cache serialization (plain arrays, reconstructed on read)
+- [x] **Notifications REST API** — `GET /notifications/count` (with `X-Poll-Interval: 30`, `Last-Modified`, conditional 304), `GET /notifications` (paginated `NotificationDTO[]`), `POST /notifications/{id}/read` (204/404), `POST /notifications/read` (mark-all, 204 idempotent)
+- [x] **Notifications E2E tests** — 31 Playwright tests (UC-N1..UC-N8): auth guards, count polling headers, HTTP 304 conditional, NotificationDTO shape, pagination, single markRead, mark-all-read idempotency, sequential markRead flow (count 2→1→0)
 
 ### M9: Search Service ⏳ Planned
 - [ ] **Search Service** — `phpbb\search\` — MySQL FT + Sphinx + pluggable ISP backends
