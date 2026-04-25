@@ -22,7 +22,7 @@ Related plans: `.maister/plans/`
 | 0.1 | Composer PSR-4 autoload | ✅ | — |
 | 0.2 | Root path elimination (`PHPBB_FILESYSTEM_ROOT`) | ✅ | — |
 | 0.3 | Symfony 8.x Kernel + MicroKernelTrait | ✅ | `ac4aeda` |
-| 0.4 | Dockerfile PHP 8.4 → 8.4-fpm-alpine | ✅ | `ac4aeda` |
+| 0.4 | Dockerfile PHP 8.5-fpm-alpine | ✅ | `ac4aeda` |
 | 0.5 | docker-compose JWT secret + env | ✅ | `ac4aeda` |
 | 0.6 | PHPUnit 10 + phpunit.xml | ✅ | `ac4aeda` |
 | 0.7 | Playwright E2E scaffolding | ✅ | `ac4aeda` |
@@ -122,7 +122,7 @@ Related plans: `.maister/plans/`
 | 5a.5 | HierarchyService (CRUD + move + delete) | ✅ | `df82bb3` |
 | 5a.6 | REST API controller (`/api/v1/forums/`) + elevated token | ✅ | `df82bb3` |
 | 5a.7 | PHPUnit tests (238 total) | ✅ | `df82bb3` |
-| 5a.8 | Playwright E2E tests (`/api/v1/forums/`) | ✅ | `df82bb3` |
+| 5a.8 | Playwright E2E tests (`/api/v1/forums/`) | ✅ | `0b36db5` (30 tests, UC-H1–H9) |
 
 ---
 
@@ -131,13 +131,13 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 5b.1 | Research storage | ✅ | `tasks/research/2026-04-19-storage-service/` |
-| 5b.2 | Implementation plan | ⏳ | — |
-| 5b.3 | Flysystem adapter + UUID v7 | ⏳ | — |
-| 5b.4 | StoredFile entity + stored_files table | ⏳ | — |
-| 5b.5 | StorageService | ⏳ | — |
-| 5b.6 | REST API controller (`/api/v1/files/`) | ⏳ | — |
-| 5b.7 | PHPUnit tests | ⏳ | — |
-| 5b.8 | Playwright E2E tests (`/api/v1/files/`) | ⏳ | — |
+| 5b.2 | Implementation plan | ✅ | — |
+| 5b.3 | Flysystem adapter + UUID v7 | ✅ | `d976392` |
+| 5b.4 | StoredFile entity + stored_files table | ✅ | `d976392` |
+| 5b.5 | StorageService (store, retrieve, delete, claim, readStream) | ✅ | `d976392` |
+| 5b.6 | REST API controller (`/api/v1/files/`) — POST, GET, download, DELETE | ✅ | `d976392` |
+| 5b.7 | PHPUnit tests (384 total) | ✅ | `d976392` |
+| 5b.8 | Playwright E2E tests (`/api/v1/files/`) — 22 tests, UC-1–UC-14 | ✅ | `d976392` |
 
 ---
 
@@ -204,8 +204,8 @@ Related plans: `.maister/plans/`
 | 7.5 | MessagingService + sub-services (archive, pin, delete) | ✅ | `src/phpbb/messaging/MessagingService.php` |
 | 7.6 | DB migration: 4 messaging tables | ✅ | `src/phpbb/db/migrations/Version20260424MessageSchema.php` |
 | 7.7 | REST API controllers (17 endpoints) | ✅ | `src/phpbb/api/Controller/Conversations/Messages/ParticipantsController.php` |
-| 7.8 | PHPUnit tests (339/339) | ✅ | `tests/phpbb/messaging/`, `tests/phpbb/api/Controller/` |
-| 7.9 | Playwright E2E tests (54/54) | ✅ | `tests/e2e/api.spec.ts` |
+| 7.8 | PHPUnit tests (384/384) | ✅ | `tests/phpbb/messaging/`, `tests/phpbb/api/Controller/` |
+| 7.9 | Playwright E2E tests (128/128) | ✅ | `tests/e2e/api.spec.ts` |
 
 ---
 
@@ -263,30 +263,26 @@ Related plans: `.maister/plans/`
 
 ## Current Focus
 
-**✅ M6 — Threads Service (`phpbb\threads`)** — COMPLETE
+**✅ M0–M7 — All implemented and passing**
 
-Completed: M6 ✅ (`a6ac5a9`) · M5a Hierarchy Service ✅ (`df82bb3`) · M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`)
+Completed (most recent first):
+- M5a E2E tests ✅ (`0b36db5`) — 30 Playwright tests for Hierarchy Service
+- M5b Storage Service ✅ (`d976392`) — upload, metadata, stream download, delete
+- M7 Messaging ✅ — 17 endpoints, 384 PHPUnit tests, 128 E2E tests
+- M6 Threads ✅ (`a6ac5a9`) — topics + posts, E2E tests
+- M5a Hierarchy ✅ (`df82bb3`) — forums, nested set tree
+- M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`) · M0 Infrastructure ✅
 
-**🔄 Next: M6.a — OpenAPI Gap Analysis + Milestone Planning (Completed)**
+**⏳ Next: M8 — Notifications Service (`phpbb\notifications`)**
 
-Completed 2026-04-22:
-- Full OpenAPI vs controller endpoint comparison: 99 spec items → 19 implemented → 82 missing
-- Categorized 82 missing endpoints into 7 milestone buckets
-- Created `outputs/openapi-missing-endpoints.txt` artifact
-- Updated `implementation-plan.md` with milestone roadmap
+Research complete: `tasks/research/2026-04-19-notifications-service/`
 
-**⏳ Priority Backlog (Next Development Cycles):**
+**⏳ Priority Backlog:**
 
-1. **Milestone A: Conversations & Messaging (17 endpoints)** — User-facing core
-2. **Milestone B: User Management & Moderation (9 endpoints)** — Enable auth/authz workflows
-3. **Milestone C: Groups & Permissions (8 endpoints)** — Permission policy foundation
-4. **Milestone D: Topic/Post Moderation (7 endpoints)** — Advanced ops
-5. **Milestone E: Drafts, Files, Notifications (13 endpoints)** — Content + UX
-6. **Milestone F: Auth, Profile, Config, Search (11 endpoints)** — Infrastructure
-7. **Milestone G: Delivery & Verification** — Full test + security sweep
-
-See: `.maister/tasks/development/2026-04-22-threads-service/implementation/implementation-plan.md` (Section "OpenAPI Gap Milestones (Categorized Backlog)")
+1. **M8: Notifications Service** — HTTP polling (30s), tag-aware cache
+2. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
+3. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
 
 ---
 
-*Last updated: 2026-04-24 (threads-service complete; milestone planning added)*
+*Last updated: 2026-04-25 (M5b Storage Service complete; M5a + hierarchy E2E tests; 384 PHPUnit / 128 E2E)*
