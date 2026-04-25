@@ -1,12 +1,12 @@
 # Modernization Roadmap
 
-## Current State Assessment
-- **Version**: phpBB 3.3.15
-- **Technology Age**: Symfony 3.4 (EOL), Twig 1.x/2.x, PHP 7.2+ baseline → **Target: Symfony 8.x, React SPA, PHP 8.2+**
-- **Technical Debt**: High — procedural legacy layer, no strict typing, no CI/CD, no static analysis
-- **Architecture**: Hybrid monolith in active modernization (legacy `includes/` + modern `phpbb/`)
-- **Test coverage**: Test suite not co-located (upstream-only), limited local feedback loop
-- **Developer**: Solo
+## Current State
+- **Project**: phpBB4 "Meridian" — ground-up modernisation of phpBB 3.3.15
+- **Runtime**: PHP 8.4 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
+- **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
+- **Test coverage**: PHPUnit 10 (unit + integration) + Playwright E2E
+- **Developer**: Solo (AI-assisted)
+- **Status**: **M0–M7 implemented and passing** — M8–M10 planned
 
 ---
 
@@ -14,26 +14,43 @@
 
 Full details: [services-architecture.md](services-architecture.md) | Assessment: [cross-cutting-assessment.md](../../tasks/research/cross-cutting-assessment.md)
 
-### Phase 0: Infrastructure Foundation
-- [x] **Composer PSR-4 autoload** — Delete custom class_loader, use Composer for `phpbb\` `Research: Complete`
-- [x] **Root path elimination** — Replace `$phpbb_root_path` with `PHPBB_FILESYSTEM_ROOT` constant `Research: Complete`
+### M0: Infrastructure Foundation ✅ Done
+- [x] **Composer PSR-4 autoload** — Composer for `phpbb\` namespace; legacy class_loader deleted
+- [x] **Root path elimination** — `PHPBB_FILESYSTEM_ROOT` constant, `__DIR__`-based paths
+- [x] **Symfony 8.x Kernel** — `src/phpbb/Kernel.php`, Docker, `composer test` / `composer test:e2e` scripts
 - [ ] **GitHub Actions CI pipeline** — Lint + test + `composer audit` `Effort: S`
 
-### Phase 1: Core Infrastructure Services
-- [x] **Cache Service** — PSR-16 TagAwareCacheInterface, filesystem-first, pool isolation `Research: Complete`
-- [x] **User Service** — User entity, profile, groups, bans `Research: Complete`
-- [x] **Auth Unified Service** — AuthN + AuthZ, JWT tokens, 5-layer permission resolver `Research: Complete`
-- [x] **REST API Framework** — Symfony HttpKernel, YAML routes, JWT bearer auth `Research: Complete`
+### M1: Cache Service ✅ Done
+- [x] **Cache Service** — PSR-16 `TagAwareCacheInterface`, filesystem-first, pool isolation per service
 
-### Phase 2: Domain Services
-- [x] **Hierarchy Service** — Forums, categories, subforums, nested set `Research: Complete`
-- [x] **Storage Service** — Flysystem, UUID v7, single `stored_files` table `Research: Complete`
-- [x] **Threads Service** — Topics, posts, content pipeline, hybrid counters `Research: Complete`
-- [x] **Messaging Service** — Thread-per-participant-set, pinned+archive `Research: Complete`
-- [x] **Notifications Service** — Full rewrite, HTTP polling 30s, React frontend `Research: Complete`
+### M2: User Service ✅ Done
+- [x] **User Service** — `phpbb\user\` — User entity, profile, groups, ban service; `final readonly class` pattern established
 
-### Phase 3: Supporting Services (research needed)
-- [x] **Search Service** — Full-text search backends, ISP architecture `Research: Complete`
+### M3: Auth Unified Service ✅ Done
+- [x] **Auth Unified Service** — `phpbb\auth\` — JWT bearer tokens (firebase/php-jwt), Argon2id, 5-layer ACL resolver
+
+### M4: REST API Framework ✅ Done
+- [x] **REST API Framework** — Symfony HttpKernel, YAML routes, `AuthSubscriber`, versioned `/api/v1/`
+
+### M5a: Hierarchy Service ✅ Done
+- [x] **Hierarchy Service** — `phpbb\hierarchy\` — forums, categories, nested set tree, domain events
+
+### M6: Threads Service ✅ Done
+- [x] **Threads Service** — `phpbb\threads\` — topics + posts, Tiered Counter Pattern, `DomainEventCollection`
+
+### M7: Messaging Service ✅ Done
+- [x] **Messaging Service** — `phpbb\messaging\` — thread-per-participant-set, conversations + messages + participants
+
+### M8: Notifications Service ⏳ Planned
+- [ ] **Notifications Service** — `phpbb\notifications\` — HTTP polling (30s), tag-aware cache, React frontend
+
+### M9: Search Service ⏳ Planned
+- [ ] **Search Service** — `phpbb\search\` — MySQL FT + Sphinx + pluggable ISP backends
+
+### M10: React SPA Frontend ⏳ Planned
+- [ ] **React SPA** — full SPA consuming `/api/v1/`; Vite + TypeScript; retire Twig/prosilver
+
+### Supporting Services (future)
 - [ ] **Content Formatting Plugins** — BBCode, Markdown, Smilies
 - [ ] **Moderation Service** — Reports, queue, mod actions
 - [ ] **Configuration Service** — Unified config access

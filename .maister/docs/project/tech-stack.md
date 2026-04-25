@@ -1,22 +1,25 @@
 # Technology Stack
 
 ## Overview
-This document describes the technology choices and rationale for **phpBB Vibed** (phpBB 3.3.15 modernization project).
+This document describes the technology choices and rationale for **phpBB4 "Meridian"** — a ground-up modernisation of phpBB 3.3.x targeting Symfony 8.x, PHP 8.4, and a React SPA frontend.
+
+> Legacy packages from the original phpBB 3.3.15 codebase remain in `src/phpbb3/` (vendor-pinned) but are not used by new `src/phpbb/` modules.
 
 ---
 
 ## Languages
 
-### PHP (7.2+ / 8.x)
-- **Usage**: ~100% of backend codebase
-- **Minimum version**: PHP 7.2.0 (enforced at startup in `includes/startup.php`)
-- **Supported range**: `^7.2 || ^8.0` (from `composer.json`)
-- **Rationale**: phpBB is a PHP-native application. PHP 8.x is the modernization target for strict typing, named arguments, enums, and readonly properties.
-- **Key Features Used**:
-  - PSR-4 autoloading under `phpbb\` namespace
-  - Constructor-based Dependency Injection
-  - PHPDoc annotations throughout `phpbb/` layer
-  - Legacy procedural style in `includes/` (under active reduction)
+### PHP (8.2+ minimum — 8.4 runtime)
+- **Minimum version**: PHP 8.2 (enforced in Composer and CI)
+- **Runtime**: PHP 8.4 (Docker image)
+- **Key features used in new code**:
+  - `declare(strict_types=1)` everywhere
+  - `final readonly class` for Entities and DTOs
+  - Named arguments throughout (`new self(id: $row['id'], ...)`)
+  - Backed enums (`int` / `string`) for domain status types
+  - Constructor promotion with `readonly` modifier
+  - `match` expressions, nullsafe operator, first-class callables
+  - Intersection types for mock properties (`Interface&MockObject`)
 
 ---
 
@@ -24,195 +27,107 @@ This document describes the technology choices and rationale for **phpBB Vibed**
 
 ### Backend
 
-#### Symfony Components (3.4 LTS — EOL, upgrade targeted)
-| Component | Version | Purpose |
-|---|---|---|
-| `symfony/dependency-injection` | ~3.4 | DI Container (YAML service definitions) |
-| `symfony/event-dispatcher` | ~3.4 | Extension event system (500+ hooks) |
-| `symfony/http-foundation` | ~3.4 | Request/Response abstraction |
-| `symfony/http-kernel` | ~3.4 | HTTP Kernel (`app.php` routing) |
-| `symfony/routing` | ~3.4 | URL routing |
-| `symfony/console` | ~3.4 | CLI tool (`bin/phpbbcli.php`) |
-| `symfony/config` | ~3.4 | YAML configuration loading |
-| `symfony/finder` | ~3.4 | File system traversal |
-| `symfony/filesystem` | ~3.4 | File operations |
-| `symfony/yaml` | ~3.4 | YAML parsing for service configs |
-| `symfony/process` | ^3.4 | System process execution |
-| `symfony/proxy-manager-bridge` | ~3.4 | Lazy service proxies |
+#### Symfony 8.x (current)
+| Component | Purpose |
+|-----------|---------|
+| `symfony/http-kernel` | HTTP request/response lifecycle |
+| `symfony/dependency-injection` | DI Container (YAML service definitions) |
+| `symfony/event-dispatcher` | Domain event dispatch + extensibility |
+| `symfony/routing` | YAML-configured route definitions |
+| `symfony/console` | CLI tool (`bin/phpbbcli.php`) |
+| `symfony/config` | YAML configuration loading |
+| `symfony/yaml` | YAML parsing |
 
-> **⚠️ Upgrade Target**: Symfony 3.4 is EOL. Target migration to **Symfony 8.x** (latest major, PHP 8.2+ required).
-
-#### Twig (1.x / 2.x — upgrade targeted)
-- **Version**: `^1.0 || ^2.0`
-- **Bridge**: `symfony/twig-bridge ~3.4`
-- **Usage**: Template rendering for all forum views (`styles/prosilver/template/`)
-- **Cache**: Compiled templates stored in `cache/twig/`
-- **Rationale**: phpBB's default templating engine since major refactor. Twig 3.x is the upgrade target.
+#### Doctrine DBAL 4
+- **Usage**: All database access in `src/phpbb/` modules
+- **No ORM** — raw SQL with type-safe query builder + prepared statements
+- **Connection**: `Doctrine\DBAL\Connection` injected via DI
+- **Migrations**: DBAL `Schema` for `setUpSchema()` in integration tests
+- **Rationale**: Type-aware, modern API without Doctrine ORM overhead; replaces both raw PDO and the legacy phpBB multi-driver DBAL
 
 ### Frontend
-- **React SPA** — full Single Page Application consuming REST API
-- **Vite** — build tooling (target)
-- **TypeScript** — type-safe frontend (target)
-- Complete break from legacy server-rendered views
+- **React SPA** — full Single Page Application consuming REST API (`/api/v1/`)
+- **Vite** — build tooling
+- **TypeScript** — type-safe frontend
 - No SSR — pure client-side React
-- Legacy Twig/prosilver templates fully retired
-- Prototype: `mocks/forum-index/` (React/Vite)
+- Legacy server-rendered Twig/prosilver templates fully retired (M10 target)
+- Working prototype: `mocks/forum-index/` (React + Vite)
 
 ### Testing
-| Library | Version | Purpose |
-|---|---|---|
-| `phpunit/phpunit` | ^10.0 | Unit testing (PHP 8 attributes, AAA pattern) |
-| Playwright | latest | E2E testing (full user flows through React SPA + REST API) |
-| `squizlabs/php_codesniffer` | ~3.4 | Code style linting |
+| Tool | Version | Purpose |
+|------|---------|---------|
+| `phpunit/phpunit` | ^10.0 | Unit tests (`#[Test]` PHP 8 attributes, AAA pattern) |
+| Playwright | latest | E2E tests (TypeScript, full user flows via React SPA + API) |
+| `friendsofphp/php-cs-fixer` | latest | Code style enforcement (`@PSR12` + `@PHP84Migration`) |
 
-> **Testing strategy**: Two layers only — isolated unit tests (PHPUnit) + full-stack E2E (Playwright). No integration-test grey area.
+**Testing strategy**: Two layers — isolated unit tests (PHPUnit 10) + full-stack E2E (Playwright). Repository tests use `IntegrationTestCase` (SQLite in-memory). No `phpunit/dbunit` / XmlDataSet.
 
 ---
 
 ## Database
 
-### Custom Multi-Driver DBAL (factory pattern)
-- **Location**: `phpbb/db/driver/`
-- **Supported engines**: MySQL/MariaDB, PostgreSQL, MSSQL, SQLite3, Oracle
-- **No external ORM** — direct SQL via phpBB's own DBAL
-- **Query safety**: Parameterized queries via `$db->sql_build_query()` and `$db->sql_escape()`
-- **Migrations**: Custom migrator in `phpbb/db/migration/` — class-based schema migrations (`phpbb/db/migration/data/v30x/` through `v33x/`)
-- **Rationale**: phpBB's DBAL predates modern ORMs; provides cross-database portability without Doctrine overhead
+### MariaDB 10.x (production)
+- **Engine**: MariaDB 10.x via Docker (`phpbb_db` container)
+- **Access**: Doctrine DBAL 4 (`Connection` injection)
+- **Schema**: Reuses existing `phpbb_*` tables where possible; new tables for redesigned features
+- **Query safety**: Parameterized queries only — no raw user input interpolation
 
----
-
-## Caching
-
-### Multi-Driver Cache Layer (`phpbb/cache/driver/`)
-| Driver | Description |
-|---|---|
-| `file` | Default — file-based cache in `cache/` |
-| `apcu` | APCu in-memory cache (recommended for production) |
-| `memcached` | Memcached distributed cache |
-| `redis` | Redis cache |
-| `wincache` | Windows Cache Extension (for IIS deployments) |
-| `null` | No-cache driver (testing/dev) |
+### SQLite (integration tests)
+- **Usage**: In-memory SQLite via `IntegrationTestCase` for repository unit/integration tests
+- **Driver**: `pdo_sqlite` through Doctrine DBAL
+- **No fixtures files** — schema created inline in `setUpSchema()`, test data inserted via `executeStatement()`
 
 ---
 
 ## Authentication & Security
 
-- **Password hashing**: Multi-algorithm driver (`phpbb/passwords/driver/`) — Argon2id, Argon2i, bcrypt, salted MD5, phpass
-- **Auth providers**: DB, Apache, LDAP, OAuth (`phpbb/auth/provider/`)
-- **OAuth**: `carlos-mg89/oauth: ^0.8.15`
-- **Anti-spam**: Google reCAPTCHA v2 (`google/recaptcha: ~1.1`)
-- **CSRF protection**: `check_form_key()` on all state-changing POST requests
-- **ACL system**: Fine-grained permission system in `phpbb/acl/`
+- **JWT bearer tokens**: `firebase/php-jwt` — access + refresh tokens
+- **Password hashing**: Argon2id (via PHP 8 native `password_hash()`/`password_verify()`)
+- **ACL**: 5-layer permission resolver in `phpbb\auth` (Auth Unified Service)
+- **CSRF**: Not applicable to REST API (stateless JWT bearer auth)
+- **OAuth relic**: `carlos-mg89/oauth` remains in vendor for legacy `phpbb3\` layer only
 
 ---
 
-## Search
+## Caching
 
-| Driver | Type |
-|---|---|
-| MySQL Full-Text | Native MySQL/MariaDB FTS |
-| PostgreSQL Full-Text | Native PostgreSQL FTS |
-| Sphinx Search | External Sphinx Search daemon |
-
----
-
-## Text Processing
-
-- **BBCode / text formatter**: `s9e/text-formatter: ^2.0`
-- **Image size detection**: `marc1706/fast-image-size: ^1.1`
-
----
-
-## Build Tools & Package Management
-
-| Tool | Version | Purpose |
-|---|---|---|
-| Composer | (latest) | PHP dependency management |
-| Phing | ~2.4 | Build system (Ant/XML-based) |
-| PHP_CodeSniffer | ~3.4 | PHP code style linting |
+### PSR-16 TagAwareCacheInterface
+- **Interface**: `phpbb\cache\service\TagAwareCacheInterface` (PSR-16 extended)
+- **Backend**: Filesystem-first for dev/test; APCu or Redis for production
+- **Pool isolation**: Each service uses its own cache pool (`cache.{service}`)
+- **Tiered Counter Pattern**: Hot counter (cache) → Cold counter (DB column) → Recalculation cron
 
 ---
 
 ## Infrastructure
 
-### Containerization
-- Not configured in this repository (no Dockerfile / docker-compose.yml detected)
-- **Laravel Homestead** (`~7.0`) available as Vagrant-based dev environment
+### Containerization (Docker + Docker Compose)
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| `phpbb_app` | PHP 8.4-FPM Alpine | PHP application server |
+| `phpbb_nginx` | Nginx Alpine | Reverse proxy (port 8181) |
+| `phpbb_db` | MariaDB 10.x | Database |
 
 ### CI/CD
-- **Not configured** in this repository (no `.github/workflows/`, no `.travis.yml`)
-- Upstream phpBB project uses their own CI infrastructure
-- **Planned**: GitHub Actions pipeline (lint + tests + `composer audit`)
-
-### Hosting Compatibility
-- Apache (`.htaccess`-based)
-- Nginx (`docs/nginx.sample.conf`)
-- IIS (`web.config` present in root)
-- lighttpd (`docs/lighttpd.sample.conf`)
+- **Target**: GitHub Actions (lint + tests + `composer audit`)
+- **Composer shortcuts**: `composer test`, `composer test:e2e`, `composer cs:fix`
 
 ---
 
-## HTTP Client
+## Text Processing (legacy `phpbb3\` layer)
 
-- **Guzzle**: `guzzlehttp/guzzle: ~6.3` — used for external HTTP calls (version updates, OAuth flows)
+- **BBCode / text formatter**: `s9e/text-formatter: ^2.0` (retained for legacy compatibility)
+- **New content pipeline**: `encoding_engine` column; `s9e` XML default for new `phpbb\threads\` content
 
 ---
 
-## Key Dependencies Summary
+## Key Dependencies Summary (new `src/phpbb/` modules)
 
 | Package | Version | Category |
-|---|---|---|
-| `symfony/*` | ~3.4 | Framework (EOL — upgrade planned) |
-| `twig/twig` | ^1.0 \|\| ^2.0 | Templating (upgrade planned) |
-| `s9e/text-formatter` | ^2.0 | BBCode parsing |
-| `guzzlehttp/guzzle` | ~6.3 | HTTP client |
-| `google/recaptcha` | ~1.1 | Anti-spam |
-| `carlos-mg89/oauth` | ^0.8.15 | OAuth authentication |
-| `marc1706/fast-image-size` | ^1.1 | Image processing |
-
----
-
-## Migration Path
-
-| Component | Current | Target | Priority |
-|---|---|---|---|
-| Symfony | 3.4 (EOL) | 6.x / 7.x LTS | High |
-| Twig | 1.x / 2.x | 3.x | High |
-| PHP minimum | 7.2 | 8.1 | Medium |
-| PHP_CodeSniffer | 3.4 | PHPStan (static analysis) | Medium |
-| JavaScript | Vanilla | Evaluate: Alpine.js / minimal toolchain | Low |
-
----
-
-## Target Architecture (New Services)
-
-The following stack applies to all new `phpbb\{service}\*` code (see [services-architecture.md](services-architecture.md)):
-
-| Layer | Technology | Notes |
-|---|---|---|
-| **PHP** | 8.2+ (target 8.3) | `readonly` classes, enums, match, named args, fibers |
-| **DI** | Symfony 8.x DI Container | YAML service definitions, autowire disabled |
-| **Events** | Symfony EventDispatcher 8.x | All mutations → `DomainEventCollection`; controllers dispatch |
-| **HTTP** | Symfony HttpKernel 8.x | REST API, YAML routes, JWT bearer auth |
-| **Database** | PDO (prepared statements) | No DBAL, no ORM. Direct PDO with named params |
-| **Cache** | `TagAwareCacheInterface` | Pool per service (`cache.{service}`), filesystem-first |
-| **Auth** | JWT (firebase/php-jwt) | Argon2id password hashing, 5-layer ACL |
-| **Content** | s9e TextFormatter | XML default storage, `encoding_engine` column |
-| **Testing** | PHPUnit 10.x + Playwright | Unit tests + E2E browser tests |
-| **Static Analysis** | PHPStan level 8 | Replaces PHP_CodeSniffer |
-| **Frontend** | React SPA | Full SPA consuming REST API, Vite + TypeScript |
-| **Extension model** | Event-based (macrokernel) | `RegisterXxxEvent` pattern, no tagged DI |
-
-### Key Differences from Legacy
-
-- **No `$phpbb_root_path`** — `__DIR__`-based paths, `PHPBB_FILESYSTEM_ROOT` constant
-- **No custom class_loader** — Composer PSR-4 autoloading
-- **No `service_collection`** — Event-based plugin registration
-- **No `$db->sql_query()`** — PDO prepared statements only
-- **No `global`** — All deps via constructor injection
-- **No `append_sid()`** — Symfony router generates URLs
-
----
-
-*Last Updated*: April 2026
-*Auto-detected from*: `composer.json`, `includes/startup.php`, `includes/constants.php`, `config/default/container/`, `phpbb/cache/driver/`, `phpbb/auth/provider/`
+|---------|---------|---------|
+| `symfony/*` | ^8.x | Framework |
+| `doctrine/dbal` | ^4.0 | Database access layer |
+| `firebase/php-jwt` | latest | JWT token issuance + verification |
+| `phpunit/phpunit` | ^10.0 | Unit testing |
+| `friendsofphp/php-cs-fixer` | latest | Code style enforcement |
+| `s9e/text-formatter` | ^2.0 | Content formatting (shared with legacy) |

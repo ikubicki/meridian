@@ -1,17 +1,17 @@
 # Services Architecture Plan
 
 Comprehensive plan for the new service-based architecture replacing the legacy phpBB monolith.
-Based on 10 completed research tasks (April 2026).
+Based on research tasks completed April 2026.
 
-**Status**: Research complete, pre-implementation alignment in progress.
+**Status**: M0–M7 implemented and fully tested. M8–M10 planned.
 
 ---
 
 ## Architecture Vision
 
 Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\` namespace. Each service follows the **Repository → Service → Controller** layered pattern with:
-- PHP 8.2+ (readonly classes, enums, match expressions)
-- PDO prepared statements (no legacy DBAL)
+- PHP 8.2+ (readonly classes, enums, match expressions); runtime PHP 8.4
+- Doctrine DBAL 4 (type-safe query builder + prepared statements — no ORM, no legacy phpBB DBAL)
 - Symfony 8.x DI Container (YAML-configured)
 - Symfony 8.x EventDispatcher for domain events
 - REST API via Symfony HttpKernel + JWT bearer auth
@@ -47,17 +47,19 @@ Rewrite phpBB as a set of **standalone, PSR-4 services** under `phpbb\{service}\
 
 ## Implementation Order
 
-| Phase | Service(s) | Rationale |
-|-------|-----------|-----------|
-| **0** | Composer Autoload + Root Path Elimination | Infrastructure prerequisites |
-| **1** | Cache Service | Foundational utility, no upstream deps |
-| **2** | User Service | Auth depends on User entity — **research complete** (April 2026) |
-| **3** | Auth Service | Depends on User + Cache |
-| **4** | REST API Framework | Depends on Auth for token subscriber |
-| **5a** | Hierarchy Service | No service deps, Threads depends on it |
-| **5b** | Storage Service | No service deps, Messaging needs it |
-| **6** | Threads Service | Depends on Hierarchy |
-| **7** | Messaging Service | Depends on Storage |
+| Phase | Service(s) | Status |
+|-------|-----------|--------|
+| **0** | Composer Autoload + Root Path Elimination + Symfony Kernel | ✅ Done |
+| **1** | Cache Service | ✅ Done |
+| **2** | User Service | ✅ Done |
+| **3** | Auth Service (Unified) | ✅ Done |
+| **4** | REST API Framework | ✅ Done |
+| **5a** | Hierarchy Service | ✅ Done |
+| **6** | Threads Service | ✅ Done |
+| **7** | Messaging Service | ✅ Done |
+| **8** | Notifications Service | ⏳ Planned |
+| **9** | Search Service | ⏳ Planned |
+| **10** | React SPA Frontend | ⏳ Planned |
 | **8** | Notifications Service | Depends on all event sources + Cache |
 
 ---
@@ -72,8 +74,8 @@ All services follow these conventions:
 - **Events**: All mutations return `DomainEventCollection`; controllers dispatch. See [DOMAIN_EVENTS.md](../standards/backend/DOMAIN_EVENTS.md)
 - **Auth**: Services are auth-unaware; ACL enforced by API layer subscriber
 - **Cache**: All services MUST use `TagAwareCacheInterface` via pool isolation (`cache.{service}`). No exceptions
-- **DB**: Direct PDO with prepared statements, explicit JOINs. Maximum phpBB3 schema compatibility, zero legacy code references
-- **Entities**: `final readonly class` for value objects, PHP 8.2 enums for types
+- **DB**: Doctrine DBAL 4 (`Connection` injection, type-safe query builder). Maximum phpBB3 schema compatibility, zero legacy code references
+- **Entities**: `final readonly class` — Entities hydrated via `fromRow(array $row): self`; DTOs via `fromEntity(Entity $e): self`. No mutable objects.
 - **IDs**: Integer autoincrement PKs + UUID v7 columns alongside. UUID as external ID
 - **Schema**: Reuse existing `phpbb_*` tables. Additive-only changes. New tables only for redesigned features
 - **Exceptions**: Shared `phpbb\common\Exception\*` base classes with HTTP error mapping

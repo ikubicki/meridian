@@ -6,11 +6,11 @@
 
 | File | Description |
 |------|-------------|
-| [project/vision.md](project/vision.md) | Project goals, current state, and modernization direction for phpBB Vibed |
-| [project/roadmap.md](project/roadmap.md) | Service rewrite roadmap: 10 researched services, implementation phases, cross-cutting items |
-| [project/services-architecture.md](project/services-architecture.md) | **NEW** — Services architecture plan: inventory, dependency graph, implementation order, shared patterns |
-| [project/tech-stack.md](project/tech-stack.md) | Languages, frameworks, and tooling choices with rationale |
-| [project/architecture.md](project/architecture.md) | Hybrid monolith architecture: legacy procedural layer vs. modern `phpbb/` OOP core |
+| [project/vision.md](project/vision.md) | phpBB4 "Meridian" project purpose, M0–M7 delivery table, key concept changes from research (Doctrine DBAL 4, `final readonly class`, DomainEventCollection immutability, IntegrationTestCase, Tiered Counter Pattern, Macrokernel extension model) |
+| [project/roadmap.md](project/roadmap.md) | Milestone-based implementation plan: M0–M7 ✅ Done, M8–M10 planned; Cross-cutting decisions resolved |
+| [project/services-architecture.md](project/services-architecture.md) | Services architecture: M0–M7 implemented; Doctrine DBAL 4; implementation order table with status; shared patterns (final readonly entities/DTOs, fromRow/fromEntity factories, DomainEventCollection, Tiered Counter, Macrokernel); dependency graph |
+| [project/tech-stack.md](project/tech-stack.md) | PHP 8.2+/8.4 runtime, Symfony 8.x, Doctrine DBAL 4, JWT/Argon2id auth, PHPUnit 10 + Playwright, MariaDB + SQLite (integration tests), Docker setup |
+| [project/architecture.md](project/architecture.md) | Hybrid architecture: new PSR-4 services (`src/phpbb/` M0–M7 modules) + retained legacy (`src/phpbb3/`); vertical service slice pattern; REST API data flow; security (JWT, DBAL 4 parameterized queries, no global state) |
 
 ---
 
