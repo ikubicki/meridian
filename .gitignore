@@ -6,6 +6,8 @@ store/*
 !store/index.htm
 files/*
 !files/index.htm
+images/avatars/upload/*
+!images/avatars/upload/.gitkeep
 node_modules
 .php-cs-fixer.cache
 .phpunit.result.cache
