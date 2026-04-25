@@ -214,12 +214,16 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 8.1 | Research notifications | ✅ | `tasks/research/2026-04-19-notifications-service/` |
-| 8.2 | Implementation plan | ⏳ | — |
-| 8.3 | NotificationsService + HTTP polling (30s) | ⏳ | — |
-| 8.4 | Tag-aware cache integration | ⏳ | — |
-| 8.5 | React frontend (polling component) | ⏳ | — |
-| 8.6 | PHPUnit tests | ⏳ | — |
-| 8.7 | Playwright E2E tests (`/api/v1/notifications/`, polling) | ⏳ | — |
+| 8.2 | Implementation plan | ✅ | `tasks/development/2026-04-25-notifications-service/` |
+| 8.3 | Notification entity + NotificationType entity | ✅ | `4240553` |
+| 8.4 | NotificationRepository + NotificationTypeRepository (DBAL) | ✅ | `4240553` |
+| 8.5 | NotificationService (getNotifications, countUnread, markRead, markAllRead) | ✅ | `4240553` |
+| 8.6 | Tag-aware cache integration (VarExportMarshaller plain-array fix) | ✅ | `4240553` |
+| 8.7 | REST API: GET /count (X-Poll-Interval, Last-Modified, 304), GET /notifications, POST /{id}/read, POST /read | ✅ | `4240553` |
+| 8.8 | PHPUnit tests (436 total) | ✅ | `4240553` |
+| 8.9 | Playwright E2E tests — 31 tests, UC-N1..UC-N8 | ✅ | `4240553` |
+| 8.10 | E2E DB seeding: mysql2 helper (helpers/db.ts), port 13306 | ✅ | `57cbbbb` |
+| 8.11 | React frontend (polling component) | ⏳ | M10 |
 
 ---
 
@@ -263,26 +267,25 @@ Related plans: `.maister/plans/`
 
 ## Current Focus
 
-**✅ M0–M7 — All implemented and passing**
+**✅ M0–M8 — All implemented and passing**
 
 Completed (most recent first):
-- M5a E2E tests ✅ (`0b36db5`) — 30 Playwright tests for Hierarchy Service
-- M5b Storage Service ✅ (`d976392`) — upload, metadata, stream download, delete
+- M8 Notifications ✅ (`4240553`, `57cbbbb`) — 4 REST endpoints, 436 PHPUnit tests, 31 E2E tests (UC-N1..UC-N8), mysql2 DB seeding helper
 - M7 Messaging ✅ — 17 endpoints, 384 PHPUnit tests, 128 E2E tests
+- M5b Storage ✅ (`d976392`) — upload, metadata, stream download, delete
+- M5a Hierarchy ✅ (`0b36db5`) — 30 Playwright tests, forums/categories nested set
 - M6 Threads ✅ (`a6ac5a9`) — topics + posts, E2E tests
-- M5a Hierarchy ✅ (`df82bb3`) — forums, nested set tree
 - M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`) · M0 Infrastructure ✅
 
-**⏳ Next: M8 — Notifications Service (`phpbb\notifications`)**
+**⏳ Next: M9 — Search Service (`phpbb\search`)**
 
-Research complete: `tasks/research/2026-04-19-notifications-service/`
+Research available: `tasks/research/`
 
 **⏳ Priority Backlog:**
 
-1. **M8: Notifications Service** — HTTP polling (30s), tag-aware cache
-2. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
-3. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
+1. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
+2. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
 
 ---
 
-*Last updated: 2026-04-25 (M5b Storage Service complete; M5a + hierarchy E2E tests; 384 PHPUnit / 128 E2E)*
+*Last updated: 2026-04-25 (M8 Notifications Service complete; 436 PHPUnit / 168 E2E)*
