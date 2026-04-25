@@ -192,3 +192,70 @@ services:
     phpbb\threads\Contract\ThreadsServiceInterface:
         alias: phpbb\threads\ThreadsService
         public: true
+
+    # ---------------------------------------------------------------------------
+    # Messaging module (M7)
+    # ---------------------------------------------------------------------------
+
+    phpbb\messaging\Repository\DbalConversationRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\ConversationRepositoryInterface:
+        alias: phpbb\messaging\Repository\DbalConversationRepository
+
+    phpbb\messaging\Repository\DbalMessageRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\MessageRepositoryInterface:
+        alias: phpbb\messaging\Repository\DbalMessageRepository
+
+    phpbb\messaging\Repository\DbalParticipantRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\ParticipantRepositoryInterface:
+        alias: phpbb\messaging\Repository\DbalParticipantRepository
+
+    phpbb\messaging\ConversationService:
+        arguments:
+            $conversationRepo: '@phpbb\messaging\Contract\ConversationRepositoryInterface'
+            $participantRepo: '@phpbb\messaging\Contract\ParticipantRepositoryInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\ConversationServiceInterface:
+        alias: phpbb\messaging\ConversationService
+
+    phpbb\messaging\MessageService:
+        arguments:
+            $conversationRepo: '@phpbb\messaging\Contract\ConversationRepositoryInterface'
+            $messageRepo: '@phpbb\messaging\Contract\MessageRepositoryInterface'
+            $participantRepo: '@phpbb\messaging\Contract\ParticipantRepositoryInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\MessageServiceInterface:
+        alias: phpbb\messaging\MessageService
+
+    phpbb\messaging\ParticipantService:
+        arguments:
+            $conversationRepo: '@phpbb\messaging\Contract\ConversationRepositoryInterface'
+            $participantRepo: '@phpbb\messaging\Contract\ParticipantRepositoryInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\ParticipantServiceInterface:
+        alias: phpbb\messaging\ParticipantService
+
+    phpbb\messaging\MessagingService:
+        arguments:
+            $conversationRepo: '@phpbb\messaging\Contract\ConversationRepositoryInterface'
+            $messageRepo: '@phpbb\messaging\Contract\MessageRepositoryInterface'
+            $participantRepo: '@phpbb\messaging\Contract\ParticipantRepositoryInterface'
+            $conversationService: '@phpbb\messaging\Contract\ConversationServiceInterface'
+            $messageService: '@phpbb\messaging\Contract\MessageServiceInterface'
+            $participantService: '@phpbb\messaging\Contract\ParticipantServiceInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\messaging\Contract\MessagingServiceInterface:
+        alias: phpbb\messaging\MessagingService
+        public: true

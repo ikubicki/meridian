@@ -631,3 +631,107 @@ test('POST /topics/{id}/posts as alice — 201 (f_reply granted via REGISTERED g
 	});
 });
 
+// ---------------------------------------------------------------------------
+// M7. Messaging API
+// ---------------------------------------------------------------------------
+test.describe('Messaging API', () => {
+	let conversationId: number;
+
+	test('GET /conversations requires auth — 401', async () => {
+		const res = await apiCtx.get(`${API}/conversations`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('POST /conversations requires auth — 401', async () => {
+		const res = await apiCtx.post(`${API}/conversations`, {
+			data: { participantIds: [1] },
+		});
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('POST /conversations creates conversation — 201 with data.id', async () => {
+		const res = await apiCtx.post(`${API}/conversations`, {
+			data: { participantIds: [1], title: 'E2E Test Conversation' },
+			headers: auth(),
+		});
+
+		expect(res.status()).toBe(201);
+
+		const body = await res.json();
+		expect(body.data).toMatchObject({
+			id: expect.any(Number),
+		});
+
+		conversationId = body.data.id;
+	});
+
+	test('GET /conversations returns list — 200 with data array', async () => {
+		const res = await apiCtx.get(`${API}/conversations`, { headers: auth() });
+
+		expect(res.status()).toBe(200);
+
+		const body = await res.json();
+		expect(Array.isArray(body.data)).toBe(true);
+		expect(body.meta).toMatchObject({
+			total:    expect.any(Number),
+			page:     1,
+			perPage:  expect.any(Number),
+			lastPage: expect.any(Number),
+		});
+	});
+
+	test('GET /conversations/:id returns conversation — 200 with data.id', async () => {
+		const res = await apiCtx.get(`${API}/conversations/${conversationId}`, { headers: auth() });
+
+		expect(res.status()).toBe(200);
+
+		const body = await res.json();
+		expect(body.data.id).toBe(conversationId);
+	});
+
+	test('POST /conversations/:id/archive — 204', async () => {
+		const res = await apiCtx.post(`${API}/conversations/${conversationId}/archive`, {
+			headers: auth(),
+		});
+
+		expect(res.status()).toBe(204);
+	});
+
+	test('GET /conversations/:id/messages requires auth — 401', async () => {
+		const res = await apiCtx.get(`${API}/conversations/${conversationId}/messages`);
+
+		expect(res.status()).toBe(401);
+	});
+
+	test('POST /conversations/:id/messages sends message — 201 with data.id', async () => {
+		const res = await apiCtx.post(`${API}/conversations/${conversationId}/messages`, {
+			data: { text: 'Hello from E2E!' },
+			headers: auth(),
+		});
+
+		expect(res.status()).toBe(201);
+
+		const body = await res.json();
+		expect(body.data).toMatchObject({
+			id: expect.any(Number),
+		});
+	});
+
+	test('GET /conversations/:id/messages returns list — 200 with data array', async () => {
+		const res = await apiCtx.get(`${API}/conversations/${conversationId}/messages`, { headers: auth() });
+
+		expect(res.status()).toBe(200);
+
+		const body = await res.json();
+		expect(Array.isArray(body.data)).toBe(true);
+		expect(body.meta).toMatchObject({
+			total:    expect.any(Number),
+			page:     1,
+			perPage:  expect.any(Number),
+			lastPage: expect.any(Number),
+		});
+	});
+});
+

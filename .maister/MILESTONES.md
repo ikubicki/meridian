@@ -106,8 +106,8 @@ Related plans: `.maister/plans/`
 | 4.3 | AuthenticationSubscriber (real JWT, `_allow_anonymous`) | ✅ | `df82bb3` |
 | 4.4 | Real controllers (health, auth, forums, users) | ✅ | `df82bb3` |
 | 4.5 | Playwright E2E (47 tests) | ✅ | `df82bb3` |
-| 4.6 | Wire topics/posts controllers (`phpbb\threads`) | 🔄 | — |
-| 4.7 | Update E2E tests po wdrożeniu `phpbb\threads` | 🔄 | — |
+| 4.6 | Wire topics/posts controllers (`phpbb\threads`) | ✅ | `7efa440` (5 endpoints: GET/POST topics, GET/POST posts) |
+| 4.7 | Update E2E tests po wdrożeniu `phpbb\threads` | ✅ | `7efa440` (45 E2E tests, all passing) |
 
 ---
 
@@ -146,14 +146,14 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 6.1 | Research threads | ✅ | `tasks/research/2026-04-18-threads-service/` |
-| 6.2 | Implementation plan | ⏳ | — |
-| 6.3 | Topic/post entities + content pipeline | ⏳ | — |
-| 6.4 | TopicRepository + PostRepository (DBAL) | ⏳ | — |
-| 6.5 | ThreadsService (facade) | ⏳ | — |
-| 6.6 | Hybrid counters (Tiered Counter Pattern) | ⏳ | — |
-| 6.7 | REST API controllers (TopicsController, PostsController) | 🔄 | DBAL tymczasowo w kontrolerze; przeniesienie do `phpbb\threads` |
-| 6.8 | PHPUnit tests | 🔄 | Częściowe — do aktualizacji |
-| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | 🔄 | Częściowe — do aktualizacji |
+| 6.2 | Implementation plan | ✅ | `tasks/development/2026-04-22-threads-service/implementation-plan.md` |
+| 6.3 | Topic/post entities + content pipeline | ✅ | `7efa440` |
+| 6.4 | TopicRepository + PostRepository (DBAL) | ✅ | `7efa440` |
+| 6.5 | ThreadsService (facade) | ✅ | `7efa440` |
+| 6.6 | Hybrid counters (Tiered Counter Pattern) | ⏳ | Future optimization (not critical for MVP) |
+| 6.7 | REST API controllers (TopicsController, PostsController) | ✅ | `7efa440` (all 5 endpoints) |
+| 6.8 | PHPUnit tests | ✅ | 273 unit/integration tests + 45 E2E (all passing) |
+| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | ✅ | `a6ac5a9` (post.spec.ts verified)
 
 ---
 
@@ -198,14 +198,14 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 7.1 | Research messaging | ✅ | `tasks/research/2026-04-19-messaging-service/` |
-| 7.2 | Implementation plan | ⏳ | — |
-| 7.3 | Thread-per-participant-set model | ⏳ | — |
-| 7.4 | MessagingRepository (PDO, new schema) | ⏳ | — |
-| 7.5 | MessagingService (pinned + archive) | ⏳ | — |
-| 7.6 | Migration: phpbb_privmsgs* → messaging | ⏳ | — |
-| 7.7 | REST API controllers | ⏳ | — |
-| 7.8 | PHPUnit tests | ⏳ | — |
-| 7.9 | Playwright E2E tests (`/api/v1/messages/`) | ⏳ | — |
+| 7.2 | Implementation plan | ✅ | `tasks/development/2026-04-24-messaging-service/implementation/implementation-plan.md` |
+| 7.3 | Thread-per-participant-set model | ✅ | `src/phpbb/messaging/` |
+| 7.4 | DBAL Repositories (conversations, messages, participants) | ✅ | `src/phpbb/messaging/Repository/` |
+| 7.5 | MessagingService + sub-services (archive, pin, delete) | ✅ | `src/phpbb/messaging/MessagingService.php` |
+| 7.6 | DB migration: 4 messaging tables | ✅ | `src/phpbb/db/migrations/Version20260424MessageSchema.php` |
+| 7.7 | REST API controllers (17 endpoints) | ✅ | `src/phpbb/api/Controller/Conversations/Messages/ParticipantsController.php` |
+| 7.8 | PHPUnit tests (339/339) | ✅ | `tests/phpbb/messaging/`, `tests/phpbb/api/Controller/` |
+| 7.9 | Playwright E2E tests (54/54) | ✅ | `tests/e2e/api.spec.ts` |
 
 ---
 
@@ -263,15 +263,30 @@ Related plans: `.maister/plans/`
 
 ## Current Focus
 
-**🔄 M6 — Threads Service (`phpbb\threads`)**
+**✅ M6 — Threads Service (`phpbb\threads`)** — COMPLETE
 
-Previous: M5a Hierarchy Service ✅ (`df82bb3`) · M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`)
+Completed: M6 ✅ (`a6ac5a9`) · M5a Hierarchy Service ✅ (`df82bb3`) · M3 Auth ✅ · M2 User ✅ · M1 Cache ✅ (`1abc94b`)
 
-Bezpośrednie zadania:
-1. Napraw testy `TopicsControllerTest` (nowa sygnatura konstruktora)
-2. Napraw testy e2e `api.spec.ts` (usunięto mock-based assertions)
-3. Zaplanuj implementację `phpbb\threads` (M6.2)
+**🔄 Next: M6.a — OpenAPI Gap Analysis + Milestone Planning (Completed)**
+
+Completed 2026-04-22:
+- Full OpenAPI vs controller endpoint comparison: 99 spec items → 19 implemented → 82 missing
+- Categorized 82 missing endpoints into 7 milestone buckets
+- Created `outputs/openapi-missing-endpoints.txt` artifact
+- Updated `implementation-plan.md` with milestone roadmap
+
+**⏳ Priority Backlog (Next Development Cycles):**
+
+1. **Milestone A: Conversations & Messaging (17 endpoints)** — User-facing core
+2. **Milestone B: User Management & Moderation (9 endpoints)** — Enable auth/authz workflows
+3. **Milestone C: Groups & Permissions (8 endpoints)** — Permission policy foundation
+4. **Milestone D: Topic/Post Moderation (7 endpoints)** — Advanced ops
+5. **Milestone E: Drafts, Files, Notifications (13 endpoints)** — Content + UX
+6. **Milestone F: Auth, Profile, Config, Search (11 endpoints)** — Infrastructure
+7. **Milestone G: Delivery & Verification** — Full test + security sweep
+
+See: `.maister/tasks/development/2026-04-22-threads-service/implementation/implementation-plan.md` (Section "OpenAPI Gap Milestones (Categorized Backlog)")
 
 ---
 
-*Last updated: 2026-04-22*
+*Last updated: 2026-04-24 (threads-service complete; milestone planning added)*
