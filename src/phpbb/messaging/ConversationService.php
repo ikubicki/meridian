@@ -48,14 +48,16 @@ final class ConversationService implements ConversationServiceInterface
 		$this->connection->beginTransaction();
 
 		try {
-			$hash = $this->hashParticipants($request->participantIds);
+			$hash = $this->hashParticipants(array_merge([$userId], $request->participantIds));
 
 			// Check if conversation already exists for this participant set
 			$existing = $this->conversationRepo->findByParticipantHash($hash);
 			if ($existing !== null) {
 				$this->connection->commit();
 
-				return new DomainEventCollection([]); // Idempotent: return early if already exists
+				return new DomainEventCollection([
+					new ConversationCreatedEvent(entityId: $existing->id, actorId: $userId),
+				]); // Idempotent: return existing conversation
 			}
 
 			// Create new conversation
