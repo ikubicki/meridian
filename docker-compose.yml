@@ -38,6 +38,8 @@ services:
       MYSQL_DATABASE: phpbb
       MYSQL_USER: phpbb
       MYSQL_PASSWORD: phpbb
+    ports:
+      - "13306:3306"  # Expose for E2E test seeding (mysql2 from host)
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:

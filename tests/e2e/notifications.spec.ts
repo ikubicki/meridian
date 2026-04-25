@@ -25,7 +25,7 @@
  */
 
 import { test, expect, APIRequestContext, request as playwrightRequest } from '@playwright/test';
-import { execSync } from 'child_process';
+import * as db from './helpers/db';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -61,35 +61,16 @@ test.beforeAll(async () => {
 	});
 
 	// Seed 3 unread notifications for alice so every test has real data.
-	const values = SEED_ITEM_IDS
-		.map(itemId => `(1, ${itemId}, ${itemId}, ${ALICE_USER_ID}, 0, UNIX_TIMESTAMP()-60, '{}')`)
-		.join(', ');
-
-	execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-		`"INSERT IGNORE INTO phpbb_notifications ` +
-		`(notification_type_id, item_id, item_parent_id, user_id, notification_read, notification_time, notification_data) ` +
-		`VALUES ${values}"`,
+	const idMap = await db.seedNotifications(
+		SEED_ITEM_IDS.map(itemId => ({ typeId: 1, itemId, parentId: itemId, userId: ALICE_USER_ID })),
 	);
 
-	// Retrieve the auto-assigned notification_ids so we can use them in markRead tests.
-	const raw = execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -Ne ` +
-		`"SELECT notification_id FROM phpbb_notifications ` +
-		`WHERE item_id IN (${SEED_ITEM_IDS.join(',')}) AND user_id = ${ALICE_USER_ID} ` +
-		`ORDER BY item_id ASC"`,
-	).toString().trim();
-
-	seededNotificationIds = raw.split('\n').map(Number).filter(id => id > 0);
+	seededNotificationIds = SEED_ITEM_IDS.map(id => idMap.get(id) ?? 0).filter(id => id > 0);
 });
 
 test.afterAll(async () => {
-	execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-		`"DELETE FROM phpbb_notifications ` +
-		`WHERE item_id IN (${SEED_ITEM_IDS.join(',')}) AND user_id = ${ALICE_USER_ID}"`,
-	);
-
+	await db.clearNotifications(SEED_ITEM_IDS, ALICE_USER_ID);
+	await db.closePool();
 	await apiCtx.dispose();
 });
 
@@ -438,39 +419,21 @@ const UC8_TOPIC_ITEM_ID = 99800;
 const TYPE_TOPIC = 1;
 const TYPE_POST  = 5;
 
-test('UC-N8 seed — insert one topic-follow and one post-reply notification for alice', () => {
+test('UC-N8 seed — insert one topic-follow and one post-reply notification for alice', async () => {
 	// UC-N7 already ran GET /count which cached 0 for alice.
-	// Seeding via direct SQL bypasses the API cache invalidation path,
-	// so we must flush the on-disk notification cache first.
-	execSync(
-		`docker exec phpbb_app sh -c ` +
-		`"rm -f /var/www/phpbb/cache/phpbb4/production/phpbb4/*.cache"`,
-	);
+	// Seeding via direct DB bypasses the API cache invalidation path,
+	// so flush the on-disk notification cache first (cache/ is volume-mounted).
+	db.flushNotificationCache();
 
-	execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-		`"INSERT IGNORE INTO phpbb_notifications ` +
-		`(notification_type_id, item_id, item_parent_id, user_id, notification_read, notification_time, notification_data) ` +
-		`VALUES ` +
+	const idMap = await db.seedNotifications([
 		// notification.type.topic — alice is following topic 500, new post arrived
-		`(${TYPE_TOPIC}, ${UC8_TOPIC_ITEM_ID}, 500, ${ALICE_USER_ID}, 0, UNIX_TIMESTAMP()-120, '{}'), ` +
+		{ typeId: TYPE_TOPIC, itemId: UC8_TOPIC_ITEM_ID, parentId: 500, userId: ALICE_USER_ID, timeOffset: 120 },
 		// notification.type.post  — someone replied to alice's post in topic 500
-		`(${TYPE_POST},  ${UC8_POST_ITEM_ID},  500, ${ALICE_USER_ID}, 0, UNIX_TIMESTAMP()-60,  '{}')"`,
-	);
+		{ typeId: TYPE_POST,  itemId: UC8_POST_ITEM_ID,  parentId: 500, userId: ALICE_USER_ID, timeOffset: 60  },
+	]);
 
-	// Retrieve the auto-assigned ids
-	const raw = execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -Ne ` +
-		`"SELECT notification_id, notification_type_id FROM phpbb_notifications ` +
-		`WHERE item_id IN (${UC8_TOPIC_ITEM_ID}, ${UC8_POST_ITEM_ID}) AND user_id = ${ALICE_USER_ID} ` +
-		`ORDER BY notification_type_id ASC"`,
-	).toString().trim();
-
-	for (const line of raw.split('\n')) {
-		const [id, typeId] = line.trim().split('\t').map(Number);
-		if (typeId === TYPE_TOPIC) { uc8TopicNotifId = id; }
-		if (typeId === TYPE_POST)  { uc8PostNotifId  = id; }
-	}
+	uc8TopicNotifId = idMap.get(UC8_TOPIC_ITEM_ID) ?? 0;
+	uc8PostNotifId  = idMap.get(UC8_POST_ITEM_ID)  ?? 0;
 
 	expect(uc8TopicNotifId).toBeGreaterThan(0);
 	expect(uc8PostNotifId).toBeGreaterThan(0);
@@ -539,10 +502,6 @@ test('UC-N8 GET /notifications/count after second markRead — unread count is 0
 	expect(body.data.unread).toBe(0);
 });
 
-test('UC-N8 cleanup — remove seeded UC-N8 notifications', () => {
-	execSync(
-		`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-		`"DELETE FROM phpbb_notifications ` +
-		`WHERE item_id IN (${UC8_TOPIC_ITEM_ID}, ${UC8_POST_ITEM_ID}) AND user_id = ${ALICE_USER_ID}"`,
-	);
+test('UC-N8 cleanup — remove seeded UC-N8 notifications', async () => {
+	await db.clearNotifications([UC8_TOPIC_ITEM_ID, UC8_POST_ITEM_ID], ALICE_USER_ID);
 });

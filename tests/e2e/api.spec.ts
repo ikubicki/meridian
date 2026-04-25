@@ -11,7 +11,7 @@
  */
 
 import { test, expect, APIRequestContext, request as playwrightRequest } from '@playwright/test';
-import { execSync } from 'child_process';
+import * as db from './helpers/db';
 
 // All tests run serially — each step builds on the previous one's state.
 test.describe.configure({ mode: 'serial' });
@@ -744,20 +744,14 @@ test.describe('Notifications API', () => {
 	const ALICE_USER_ID = 200;
 	const SEED_ITEM_ID  = 99901;
 
-	test.beforeAll(() => {
-		execSync(
-			`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-			`"INSERT IGNORE INTO phpbb_notifications ` +
-			`(notification_type_id, item_id, item_parent_id, user_id, notification_read, notification_time, notification_data) ` +
-			`VALUES (1, ${SEED_ITEM_ID}, ${SEED_ITEM_ID}, ${ALICE_USER_ID}, 0, UNIX_TIMESTAMP()-60, '{}')"`,
-		);
+	test.beforeAll(async () => {
+		await db.seedNotifications([
+			{ typeId: 1, itemId: SEED_ITEM_ID, parentId: SEED_ITEM_ID, userId: ALICE_USER_ID },
+		]);
 	});
 
-	test.afterAll(() => {
-		execSync(
-			`docker exec phpbb_db mysql -uphpbb -pphpbb phpbb -e ` +
-			`"DELETE FROM phpbb_notifications WHERE item_id = ${SEED_ITEM_ID} AND user_id = ${ALICE_USER_ID}"`,
-		);
+	test.afterAll(async () => {
+		await db.clearNotifications([SEED_ITEM_ID], ALICE_USER_ID);
 	});
 
 	// Auth guard tests
