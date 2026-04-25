@@ -12,7 +12,11 @@ PHPUnit 10+ conventions and patterns for the phpBB Vibed test suite.
 
 ### Files & Classes
 - Test file: `<SubjectName>Test.php` (PascalCase, e.g., `SessionTest.php`, `AuthProviderTest.php`)
-- Test class: `phpbb\tests\<component>\<Subject>Test` (matches file name)
+- Test class namespace:
+  - Older modules: `phpbb\tests\<module>\` (lowercase `tests`) — retained for compatibility
+  - **Newer modules (preferred)**: `phpbb\Tests\<module>\` (PascalCase `Tests`)
+  - File always lives under `tests/phpbb/<module>/` — PSR-4 autoload maps both forms
+  - **For all new test files use `phpbb\Tests\<module>\`**
 
 ### Method Names
 - Use descriptive `camelCase` starting with `test`:
@@ -114,23 +118,56 @@ public function validateUsernameRejectsInvalid(string $username): void
 }
 ```
 
-## Database Tests
+## Integration Tests — SQLite In-Memory
 
-- Extend `phpbb_database_test_case` for tests requiring DB interaction
-- Provide fixtures via `getDataSet()` returning an `XmlDataSet`
-- Use `tests/dbal/fixtures/` for XML fixture files
-- Reset auto-increment and truncate tables in `setUp()` via `$this->db->sql_query('TRUNCATE ...')`
-- Never share DB state between tests — each test must be fully independent
+Repository / integration tests extend `IntegrationTestCase` (at `tests/phpbb/Integration/IntegrationTestCase.php`), which spins up an in-memory SQLite database via Doctrine DBAL. There are no XML/fixture files.
 
 ```php
-class SelectTest extends phpbb_database_test_case
+namespace phpbb\Tests\messaging\Integration;
+
+use phpbb\Tests\Integration\IntegrationTestCase;
+use phpbb\messaging\Repository\DbalConversationRepository;
+
+final class DbalConversationRepositoryTest extends IntegrationTestCase
 {
-    protected function getDataSet(): \PHPUnit\DbUnit\DataSet\IDataSet
+    private DbalConversationRepository $repository;
+
+    protected function setUpSchema(): void
     {
-        return $this->createXMLDataSet(__DIR__ . '/fixtures/select.xml');
+        $this->connection->executeStatement('
+            CREATE TABLE phpbb_conversations (
+                conversation_id INT PRIMARY KEY,
+                participant_hash VARCHAR(40) NOT NULL,
+                created_by INT NOT NULL,
+                created_at INT NOT NULL,
+                last_message_id INT,
+                message_count INT NOT NULL DEFAULT 0
+            )
+        ');
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->repository = new DbalConversationRepository($this->connection);
+    }
+
+    public function testFindsConversationById(): void
+    {
+        // Arrange — insert directly via $this->connection->executeStatement()
+        // Act — call repository method
+        // Assert — PHPUnit assertions
     }
 }
 ```
+
+Key points:
+- `IntegrationTestCase` is at `tests/phpbb/Integration/IntegrationTestCase.php`
+- `$this->connection` is a Doctrine DBAL `Connection` (SQLite in-memory)
+- `setUpSchema()` is called by `parent::setUp()` — must create all required tables
+- No fixture files, no XML datasets — insert test data inline via `$this->connection->executeStatement()`
+- Namespace: `phpbb\Tests\<module>\Integration\`
+- Each test is isolated — schema is recreated per test run
 
 ## Mocking
 
@@ -138,6 +175,35 @@ class SelectTest extends phpbb_database_test_case
 - Mock at the interface boundary, not the concrete class where possible
 - Verify interactions with `expects($this->once())` / `expects($this->exactly(n))` when call count matters
 - Avoid over-mocking: if setup is complex, consider an integration test with the real class
+
+### Intersection type for mock properties
+
+Declare mock properties using the `InterfaceName&MockObject` intersection type. This gives IDE autocompletion for both the interface's own methods and PHPUnit mock methods (`expects`, `willReturn`, etc.):
+
+```php
+use PHPUnit\Framework\MockObject\MockObject;
+use phpbb\messaging\Repository\ConversationRepositoryInterface;
+
+final class ConversationServiceTest extends TestCase
+{
+    private ConversationRepositoryInterface&MockObject $repo;
+
+    protected function setUp(): void
+    {
+        $this->repo = $this->createMock(ConversationRepositoryInterface::class);
+    }
+
+    public function testCreate(): void
+    {
+        $this->repo->expects($this->once())
+            ->method('save')
+            ->with($this->isInstanceOf(Conversation::class));
+        // ...
+    }
+}
+```
+
+Simple inline mocks (not reused across methods) may be declared without the intersection type:
 
 ```php
 $db = $this->createMock(DriverInterface::class);
@@ -181,19 +247,17 @@ public function loginThrowsForUnknownUser(): void
 ## Test Toolchain
 
 ### Version Requirements
-- **PHPUnit**: `^10.0`
-- **phpunit/dbunit**: replaced by `phpunit/db-unit` or direct DB setup in `setUp()`
-- **fabpot/goutte**: `~3.2` — functional/integration HTTP tests
-- **php-webdriver/webdriver**: `~1.8` — E2E browser tests via Selenium WebDriver
+- **PHPUnit**: `^10.0` (unit & integration, PHP)
+- **Playwright** (TypeScript): E2E browser tests in `tests/e2e/`, config at `tests/e2e/playwright.config.ts`
 - **Code style**: `squizlabs/php_codesniffer: ~3.4`
 
-Run all tests: `vendor/bin/phpunit -c phpunit.xml`
+Run PHP tests: `vendor/bin/phpunit -c phpunit.xml`  
+Run E2E tests: `composer test:e2e` (runs Playwright via the `tests/e2e/` directory)
 
 ### Test Layers
-| Layer | Tool | Use for |
-|---|---|---|
-| Unit | PHPUnit 10 | Single class/method, fully mocked dependencies |
-| DB Integration | PHPUnit + manual setUp | Tests requiring real database operations |
-| Functional (HTTP) | Goutte | Full HTTP request/response testing without a real browser |
-| E2E | Selenium WebDriver | Full browser automation for UI-critical flows |
+| Layer | Tool | Location | Use for |
+|---|---|---|---|
+| Unit | PHPUnit 10 (MockObject built-in) | `tests/phpbb/<module>/` | Single class/method, fully mocked dependencies |
+| Integration (DB) | PHPUnit 10 + `IntegrationTestCase` (SQLite in-memory) | `tests/phpbb/<module>/Integration/` | Repository / DBAL layer tests |
+| E2E | Playwright (TypeScript) | `tests/e2e/` | Full browser automation for API and UI-critical flows |
 

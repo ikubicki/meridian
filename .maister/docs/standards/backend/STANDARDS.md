@@ -1,6 +1,6 @@
 # Backend Coding Standards
 
-PHP 8.3 standards for the phpBB Vibed backend codebase.
+PHP 8.2+ (minimum), runtime PHP 8.4 standards for the phpBB Vibed backend codebase.
 
 ## Strict Types
 
@@ -30,6 +30,16 @@ public function tearDown(): void
 ```
 
 Use `?Type` (nullable) only when `null` is a meaningful return. Prefer `never` for methods that always throw.
+
+### Intersection Types for Mocked Dependencies (Tests)
+
+In test classes, use intersection types to combine the interface and `MockObject`:
+
+```php
+private ConversationRepositoryInterface&MockObject $conversationRepo;
+```
+
+This preserves IDE autocompletion for mock methods while enforcing the interface contract.
 
 ## Namespacing (PSR-4)
 
@@ -98,6 +108,62 @@ readonly class TokenClaims
 }
 ```
 
+### `final readonly class` for Entities and DTOs
+
+Entities and DTOs are immutable value objects — always declare them `final readonly class`:
+
+```php
+// ✅ Entity — constructed from DB row via static factory
+final readonly class Conversation
+{
+    public function __construct(
+        public int $conversationId,
+        public string $participantHash,
+        public int $createdBy,
+        public int $createdAt,
+        public ?int $lastMessageId,
+        public int $messageCount,
+    ) {}
+
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            conversationId: (int) $row['conversation_id'],
+            participantHash: $row['participant_hash'],
+            createdBy: (int) $row['created_by'],
+            createdAt: (int) $row['created_at'],
+            lastMessageId: isset($row['last_message_id']) ? (int) $row['last_message_id'] : null,
+            messageCount: (int) $row['message_count'],
+        );
+    }
+}
+
+// ✅ DTO — constructed from entity via static factory
+final readonly class ConversationDTO
+{
+    public function __construct(
+        public int $id,
+        public int $createdBy,
+        public int $createdAt,
+    ) {}
+
+    public static function fromEntity(Conversation $conversation): self
+    {
+        return new self(
+            id: $conversation->conversationId,
+            createdBy: $conversation->createdBy,
+            createdAt: $conversation->createdAt,
+        );
+    }
+}
+```
+
+Key rules:
+- Entities always have `fromRow(array $row): self` static factory
+- DTOs always have `fromEntity(EntityClass $entity): self` static factory
+- Both are `final readonly` — never mutable, never extended
+- Named arguments in `new self(...)` calls — mandatory for clarity
+
 ## Modern PHP Constructs
 
 ### `match` Expression
@@ -147,9 +213,26 @@ $formatted = array_map(fn($f) => $this->formatForum($f), $forums);
 ```
 
 ### Enums
-Use `enum` for fixed value sets:
+Use backed enums for all fixed-value domain sets (`UserType`, `BanType`, `GroupType`, `ForumStatus`, `ForumType`, etc.):
 
 ```php
+// Backed int enum for DB-stored status
+enum ForumStatus: int
+{
+    case Visible = 0;
+    case Hidden  = 1;
+    case Locked  = 2;
+}
+
+// Backed string enum for domain values
+enum BanType: string
+{
+    case User  = 'user';
+    case Ip    = 'ip';
+    case Email = 'email';
+}
+
+// Backed string enum for HTTP methods
 enum HttpMethod: string
 {
     case Get    = 'GET';
@@ -158,6 +241,12 @@ enum HttpMethod: string
     case Delete = 'DELETE';
 }
 ```
+
+Conventions:
+- Enums live in `src/phpbb/<module>/Enum/` or `src/phpbb/<module>/Entity/` (for status enums tightly coupled to an entity)
+- File name matches enum name: `UserType.php` → `enum UserType`
+- Always backed (`int` or `string`) — never pure enums for domain code
+- Import via `use` — never reference by FQN inline
 
 ## Class Member Visibility
 
