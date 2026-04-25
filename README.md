@@ -48,6 +48,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M3 | Auth Unified Service (`phpbb\auth`) — JWT + ACL | ✅ Done |
 | M4 | REST API Framework — routing, auth middleware | ✅ Done |
 | M5a | Hierarchy Service (`phpbb\hierarchy`) — forums/categories | ✅ Done |
+| M5b | Storage Service (`phpbb\storage`) — file/attachment storage | ⚠️ Research done, not implemented |
 | M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
 | M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
 | M8 | Notifications Service (`phpbb\notifications`) | ⏳ Planned |
