@@ -14,14 +14,21 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Entity;
 
-abstract readonly class DomainEvent
+final readonly class StorageQuota
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		public int $userId,
+		public int $forumId,
+		public int $usedBytes,
+		public int $maxBytes,
+		public int $updatedAt,
 	) {
+	}
+
+	public function isExceeded(int $additionalBytes): bool
+	{
+		return $this->usedBytes + $additionalBytes > $this->maxBytes;
 	}
 }

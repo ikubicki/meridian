@@ -14,14 +14,19 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Quota;
 
-abstract readonly class DomainEvent
+use phpbb\storage\Contract\QuotaServiceInterface;
+
+final class QuotaReconciliationJob
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		private readonly QuotaServiceInterface $quotaService,
 	) {
+	}
+
+	public function run(): void
+	{
+		$this->quotaService->reconcileAll();
 	}
 }

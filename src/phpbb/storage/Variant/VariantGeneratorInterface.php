@@ -14,14 +14,15 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Variant;
 
-abstract readonly class DomainEvent
+interface VariantGeneratorInterface
 {
-	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
-	) {
-	}
+	/**
+	 * Generate a variant from raw file content.
+	 *
+	 * @return string Raw bytes of the generated variant
+	 * @throws \RuntimeException on generation failure
+	 */
+	public function generate(string $content): string;
 }

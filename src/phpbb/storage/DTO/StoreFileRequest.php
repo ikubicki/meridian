@@ -14,14 +14,20 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\DTO;
 
-abstract readonly class DomainEvent
+use phpbb\storage\Enum\AssetType;
+
+final readonly class StoreFileRequest
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		public AssetType $assetType,
+		public int $uploaderId,
+		public int $forumId,
+		public string $tmpPath,
+		public string $originalName,
+		public string $mimeType,
+		public int $filesize,
 	) {
 	}
 }

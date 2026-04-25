@@ -14,14 +14,11 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Enum;
 
-abstract readonly class DomainEvent
+enum VariantType: string
 {
-	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
-	) {
-	}
+	case Thumbnail = 'thumbnail';
+	case Webp      = 'webp';
+	case Medium    = 'medium';
 }

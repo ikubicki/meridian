@@ -14,14 +14,20 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Event;
 
-abstract readonly class DomainEvent
+use phpbb\common\Event\DomainEvent;
+
+/**
+ * Raised when an image variant (e.g. thumbnail) is generated.
+ */
+final readonly class VariantGeneratedEvent extends DomainEvent
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		string $entityId,
+		int $actorId = 0,
+		public readonly string $parentId = '',
 	) {
+		parent::__construct($entityId, $actorId);
 	}
 }

@@ -14,14 +14,8 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Exception;
 
-abstract readonly class DomainEvent
+final class UploadValidationException extends \RuntimeException
 {
-	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
-	) {
-	}
 }

@@ -14,14 +14,15 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\DTO;
 
-abstract readonly class DomainEvent
+final readonly class ClaimContext
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		public string $fileId,
+		public int $actorId,
+		public string $entityType,
+		public string|int $entityId,
 	) {
 	}
 }

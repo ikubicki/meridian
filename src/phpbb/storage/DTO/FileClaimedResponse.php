@@ -14,14 +14,21 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\DTO;
 
-abstract readonly class DomainEvent
+final readonly class FileClaimedResponse
 {
 	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		public string $fileId,
+		public int $claimedAt,
 	) {
+	}
+
+	public function toArray(): array
+	{
+		return [
+			'file_id'    => $this->fileId,
+			'claimed_at' => $this->claimedAt,
+		];
 	}
 }

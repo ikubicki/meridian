@@ -259,3 +259,83 @@ services:
     phpbb\messaging\Contract\MessagingServiceInterface:
         alias: phpbb\messaging\MessagingService
         public: true
+
+    # ---------------------------------------------------------------------------
+    # Storage module (M5b)
+    # ---------------------------------------------------------------------------
+
+    phpbb\storage\Repository\DbalStoredFileRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\storage\Contract\StoredFileRepositoryInterface:
+        alias: phpbb\storage\Repository\DbalStoredFileRepository
+
+    phpbb\storage\Repository\DbalStorageQuotaRepository:
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+
+    phpbb\storage\Contract\StorageQuotaRepositoryInterface:
+        alias: phpbb\storage\Repository\DbalStorageQuotaRepository
+
+    phpbb\storage\Adapter\StorageAdapterFactory:
+        arguments:
+            $storagePath: '%kernel.project_dir%'
+
+    phpbb\storage\Service\UrlGenerator:
+        arguments:
+            $baseUrl: '%env(default::PHPBB_BASE_URL)%'
+
+    phpbb\storage\Contract\UrlGeneratorInterface:
+        alias: phpbb\storage\Service\UrlGenerator
+
+    phpbb\storage\Quota\QuotaService:
+        arguments:
+            $quotaRepo: '@phpbb\storage\Contract\StorageQuotaRepositoryInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+            $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+
+    phpbb\storage\Contract\QuotaServiceInterface:
+        alias: phpbb\storage\Quota\QuotaService
+
+    phpbb\storage\Service\OrphanService:
+        arguments:
+            $fileRepo: '@phpbb\storage\Contract\StoredFileRepositoryInterface'
+            $adapterFactory: '@phpbb\storage\Adapter\StorageAdapterFactory'
+            $quotaService: '@phpbb\storage\Contract\QuotaServiceInterface'
+            $connection: '@Doctrine\DBAL\Connection'
+            $logger: '@Psr\Log\LoggerInterface'
+
+    phpbb\storage\Contract\OrphanServiceInterface:
+        alias: phpbb\storage\Service\OrphanService
+
+    phpbb\storage\StorageService:
+        arguments:
+            $fileRepo: '@phpbb\storage\Contract\StoredFileRepositoryInterface'
+            $quotaService: '@phpbb\storage\Contract\QuotaServiceInterface'
+            $orphanService: '@phpbb\storage\Contract\OrphanServiceInterface'
+            $urlGenerator: '@phpbb\storage\Contract\UrlGeneratorInterface'
+            $adapterFactory: '@phpbb\storage\Adapter\StorageAdapterFactory'
+            $connection: '@Doctrine\DBAL\Connection'
+            $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+
+    phpbb\storage\Contract\StorageServiceInterface:
+        alias: phpbb\storage\StorageService
+        public: true
+
+    phpbb\storage\Variant\ThumbnailGenerator: ~
+
+    phpbb\storage\Variant\ThumbnailListener:
+        arguments:
+            $generator: '@phpbb\storage\Variant\ThumbnailGenerator'
+            $fileRepo: '@phpbb\storage\Contract\StoredFileRepositoryInterface'
+            $adapterFactory: '@phpbb\storage\Adapter\StorageAdapterFactory'
+            $dispatcher: '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+        tags:
+            - { name: kernel.event_listener, event: phpbb.storage.file_stored, method: onFileStored }
+
+    phpbb\storage\Quota\QuotaReconciliationJob: ~
+
+    phpbb\storage\Orphan\OrphanCleanupJob:
+        arguments:
+            $orphanService: '@phpbb\storage\Contract\OrphanServiceInterface'

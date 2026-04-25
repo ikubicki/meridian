@@ -19,6 +19,7 @@ services:
       PHPBB_DB_PREFIX: phpbb_
       PHPBB_CACHE_DRIVER: "phpbb\\cache\\driver\\file"
       PHPBB_JWT_SECRET: "dev-jwt-secret-change-in-production-xx"
+      PHPBB_BASE_URL: "http://localhost:8181"
     volumes:
       - .:/var/www/phpbb
       - ./files:/var/www/phpbb/files

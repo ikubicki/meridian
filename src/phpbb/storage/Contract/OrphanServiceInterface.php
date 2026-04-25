@@ -14,14 +14,11 @@
 
 declare(strict_types=1);
 
-namespace phpbb\common\Event;
+namespace phpbb\storage\Contract;
 
-abstract readonly class DomainEvent
+use phpbb\common\Event\DomainEventCollection;
+
+interface OrphanServiceInterface
 {
-	public function __construct(
-		public readonly string|int $entityId,
-		public readonly int $actorId,
-		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
-	) {
-	}
+	public function cleanupExpired(int $olderThanTimestamp): DomainEventCollection;
 }
