@@ -317,3 +317,109 @@ test('POST /files as export — 201', async () => {
 	const body = await res.json();
 	expect(body.file_id).toMatch(/^[0-9a-f]{32}$/i);
 });
+
+// ---------------------------------------------------------------------------
+// UC-12: GET /files/:id — retrieve file metadata
+// ---------------------------------------------------------------------------
+test('GET /files/:id — 200 with full FileInfo shape for uploaded avatar', async () => {
+	// avatarFileId was captured from UC-5
+	const res = await apiCtx.get(`${API}/files/${avatarFileId}`);
+
+	expect(res.status()).toBe(200);
+
+	const body = await res.json();
+	expect(body).toMatchObject({
+		file_id:       avatarFileId,
+		asset_type:    'avatar',
+		visibility:    'public',
+		original_name: expect.any(String),
+		url:           expect.any(String),
+		mime_type:     'image/jpeg',
+		filesize:      expect.any(Number),
+		is_orphan:     expect.any(Boolean),
+		created_at:    expect.any(Number),
+	});
+	expect(body.filesize).toBeGreaterThan(0);
+});
+
+test('GET /files/:id — 404 for non-existing file', async () => {
+	const fakeId = '00000000000000000000000000000000';
+	const res    = await apiCtx.get(`${API}/files/${fakeId}`);
+
+	expect(res.status()).toBe(404);
+});
+
+// ---------------------------------------------------------------------------
+// UC-13: GET /files/:id/download — serve file content
+// ---------------------------------------------------------------------------
+test('GET /files/:id/download — 200 for public avatar (no auth needed)', async () => {
+	// Public avatar: anonymous download allowed
+	const res = await apiCtx.get(`${API}/files/${avatarFileId}/download`);
+
+	expect(res.status()).toBe(200);
+	const contentType = res.headers()['content-type'] ?? '';
+	expect(contentType).toContain('image/jpeg');
+});
+
+test('GET /files/:id/download — 401 for private attachment without auth', async () => {
+	// attachmentFileId was captured from UC-6 (private visibility)
+	const res = await apiCtx.get(`${API}/files/${attachmentFileId}/download`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('GET /files/:id/download — 200 for private attachment with auth', async () => {
+	const res = await apiCtx.get(`${API}/files/${attachmentFileId}/download`, {
+		headers: auth(aliceToken),
+	});
+
+	expect(res.status()).toBe(200);
+	const contentType = res.headers()['content-type'] ?? '';
+	expect(contentType).toContain('text/plain');
+});
+
+test('GET /files/:id/download — 404 for non-existing file', async () => {
+	const fakeId = '00000000000000000000000000000000';
+	const res    = await apiCtx.get(`${API}/files/${fakeId}/download`);
+
+	expect(res.status()).toBe(404);
+});
+
+// ---------------------------------------------------------------------------
+// UC-14: DELETE /files/:id — delete file
+// ---------------------------------------------------------------------------
+test('DELETE /files/:id — 401 without auth', async () => {
+	const res = await apiCtx.delete(`${API}/files/${avatarFileId}`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('DELETE /files/:id — 204 when owner deletes their file', async () => {
+	// Upload a disposable file first
+	const uploadRes = await apiCtx.post(`${API}/files`, {
+		multipart: {
+			file:       { name: 'to-delete.jpg', mimeType: 'image/jpeg', buffer: minimalJpeg() },
+			asset_type: 'avatar',
+		},
+		headers: auth(aliceToken),
+	});
+	expect(uploadRes.status()).toBe(201);
+	const { file_id: fileToDelete } = await uploadRes.json();
+
+	// Delete it
+	const deleteRes = await apiCtx.delete(`${API}/files/${fileToDelete}`, {
+		headers: auth(aliceToken),
+	});
+
+	expect(deleteRes.status()).toBe(204);
+});
+
+test('DELETE /files/:id — 404 for already-deleted or non-existing file', async () => {
+	const fakeId = '00000000000000000000000000000000';
+	const res    = await apiCtx.delete(`${API}/files/${fakeId}`, {
+		headers: auth(aliceToken),
+	});
+
+	expect(res.status()).toBe(404);
+});
+

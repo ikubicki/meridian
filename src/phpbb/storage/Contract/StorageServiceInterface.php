@@ -34,4 +34,12 @@ interface StorageServiceInterface
 	public function getUrl(string $fileId): string;
 
 	public function exists(string $fileId): bool;
+
+	/**
+	 * Open a read stream for the file content. Caller is responsible for closing it.
+	 *
+	 * @return resource
+	 * @throws \phpbb\storage\Exception\FileNotFoundException
+	 */
+	public function readStream(string $fileId): mixed;
 }

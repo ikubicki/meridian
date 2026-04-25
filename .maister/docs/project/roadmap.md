@@ -4,9 +4,9 @@
 - **Project**: phpBB4 "Meridian" — ground-up modernisation of phpBB 3.3.15
 - **Runtime**: PHP 8.5 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
 - **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
-- **Test coverage**: PHPUnit 10 (unit + integration, 374 tests) + Playwright E2E (89 tests)
+- **Test coverage**: PHPUnit 10 (unit + integration, 384 tests) + Playwright E2E (98 tests)
 - **Developer**: Solo (AI-assisted)
-- **Status**: **M0–M7 implemented and passing** — M5b (Storage) skipped, M8–M10 planned
+- **Status**: **M0–M7 implemented and passing** — M8–M10 planned
 
 ---
 
@@ -36,8 +36,10 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 ### M5a: Hierarchy Service ✅ Done
 - [x] **Hierarchy Service** — `phpbb\hierarchy\` — forums, categories, nested set tree, domain events
 
-### M5b: Storage Service ⚠️ Research Done — Not Implemented
-- [ ] **Storage Service** — `phpbb\storage\` — Flysystem, UUID v7, single `stored_files` table; research complete but implementation skipped (no attachment support in M7 Messaging)
+### M5b: Storage Service ✅ Done
+- [x] **Storage Service** — `phpbb\storage\` — Flysystem (local adapter), UUID v7 `BINARY(16)`, single `phpbb_stored_files` table + `phpbb_storage_quotas`; upload, retrieve metadata, authenticated download, delete via REST API; orphan tracking + TTL cleanup job; quota reservation + reconciliation; async thumbnail generation via `FileStoredEvent` listener
+- [x] **Storage REST API** — `POST /files` (upload, 201), `GET /files/{id}` (metadata, anonymous), `GET /files/{id}/download` (stream, auth-gated for private files), `DELETE /files/{id}` (owner-only, 204)
+- [x] **Storage E2E tests** — 22 Playwright tests covering all use cases: upload validation, MIME detection, public/private URL discrimination, file metadata, authenticated download, delete lifecycle
 
 ### M6: Threads Service ✅ Done
 - [x] **Threads Service** — `phpbb\threads\` — topics + posts, Tiered Counter Pattern, `DomainEventCollection`

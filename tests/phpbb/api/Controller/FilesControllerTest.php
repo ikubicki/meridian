@@ -19,13 +19,17 @@ namespace phpbb\Tests\api\Controller;
 use phpbb\api\Controller\FilesController;
 use phpbb\common\Event\DomainEventCollection;
 use phpbb\storage\Contract\StorageServiceInterface;
+use phpbb\storage\Entity\StoredFile;
 use phpbb\storage\Enum\AssetType;
+use phpbb\storage\Enum\FileVisibility;
 use phpbb\storage\Event\FileStoredEvent;
+use phpbb\storage\Exception\FileNotFoundException;
 use phpbb\storage\Exception\QuotaExceededException;
 use phpbb\storage\Exception\UploadValidationException;
 use phpbb\user\Entity\User;
 use phpbb\user\Enum\UserType;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -33,8 +37,8 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class FilesControllerTest extends TestCase
 {
-	private StorageServiceInterface $storageService;
-	private EventDispatcherInterface $dispatcher;
+	private StorageServiceInterface&MockObject $storageService;
+	private EventDispatcherInterface&MockObject $dispatcher;
 	private FilesController $controller;
 	private string $tmpFile;
 
@@ -162,10 +166,191 @@ final class FilesControllerTest extends TestCase
 		$this->assertArrayHasKey('url', $data);
 	}
 
-	private function makeUser(): User
+	// ---------------------------------------------------------------------------
+	// GET /files/{id}
+	// ---------------------------------------------------------------------------
+
+	#[Test]
+	public function get_returns_404_when_file_not_found(): void
+	{
+		$this->storageService
+			->method('retrieve')
+			->willThrowException(new FileNotFoundException('not found'));
+
+		$response = $this->controller->get('unknown', Request::create('/api/v1/files/unknown'));
+
+		$this->assertSame(404, $response->getStatusCode());
+		$body = json_decode($response->getContent(), true);
+		$this->assertSame('File not found', $body['error']);
+	}
+
+	#[Test]
+	public function get_returns_200_with_file_info(): void
+	{
+		$file = $this->makeStoredFile();
+		$this->storageService->method('retrieve')->with('abc')->willReturn($file);
+		$this->storageService->method('getUrl')->with('abc')->willReturn('http://example.com/images/avatars/upload/abc');
+
+		$response = $this->controller->get('abc', Request::create('/api/v1/files/abc'));
+
+		$this->assertSame(200, $response->getStatusCode());
+		$body = json_decode($response->getContent(), true);
+		$this->assertSame('abc', $body['file_id']);
+		$this->assertSame('avatar', $body['asset_type']);
+		$this->assertSame('public', $body['visibility']);
+		$this->assertSame('avatar.png', $body['original_name']);
+		$this->assertSame('image/png', $body['mime_type']);
+		$this->assertSame(100, $body['filesize']);
+		$this->assertFalse($body['is_orphan']);
+		$this->assertArrayHasKey('created_at', $body);
+	}
+
+	// ---------------------------------------------------------------------------
+	// GET /files/{id}/download
+	// ---------------------------------------------------------------------------
+
+	#[Test]
+	public function download_returns_404_when_file_not_found(): void
+	{
+		$this->storageService
+			->method('retrieve')
+			->willThrowException(new FileNotFoundException('not found'));
+
+		$response = $this->controller->download('missing', Request::create('/api/v1/files/missing/download'));
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	#[Test]
+	public function download_returns_401_for_private_file_when_unauthenticated(): void
+	{
+		$file = $this->makeStoredFile(visibility: FileVisibility::Private);
+		$this->storageService->method('retrieve')->willReturn($file);
+
+		$response = $this->controller->download('abc', Request::create('/api/v1/files/abc/download'));
+
+		$this->assertSame(401, $response->getStatusCode());
+	}
+
+	#[Test]
+	public function download_returns_streamed_response_for_public_file(): void
+	{
+		$file   = $this->makeStoredFile(visibility: FileVisibility::Public);
+		$stream = fopen('php://temp', 'r+');
+		fwrite($stream, 'file-content');
+		rewind($stream);
+
+		$this->storageService->method('retrieve')->willReturn($file);
+		$this->storageService->method('readStream')->willReturn($stream);
+
+		$response = $this->controller->download('abc', Request::create('/api/v1/files/abc/download'));
+
+		$this->assertSame(200, $response->getStatusCode());
+		$this->assertSame('image/png', $response->headers->get('Content-Type'));
+	}
+
+	#[Test]
+	public function download_returns_streamed_response_for_private_file_when_authenticated(): void
+	{
+		$file   = $this->makeStoredFile(visibility: FileVisibility::Private);
+		$stream = fopen('php://temp', 'r+');
+		fwrite($stream, 'file-content');
+		rewind($stream);
+
+		$this->storageService->method('retrieve')->willReturn($file);
+		$this->storageService->method('readStream')->willReturn($stream);
+
+		$request = Request::create('/api/v1/files/abc/download');
+		$request->attributes->set('_api_user', $this->makeUser());
+
+		$response = $this->controller->download('abc', $request);
+
+		$this->assertSame(200, $response->getStatusCode());
+	}
+
+	// ---------------------------------------------------------------------------
+	// DELETE /files/{id}
+	// ---------------------------------------------------------------------------
+
+	#[Test]
+	public function delete_returns_401_when_unauthenticated(): void
+	{
+		$response = $this->controller->delete('abc', Request::create('/api/v1/files/abc', 'DELETE'));
+
+		$this->assertSame(401, $response->getStatusCode());
+	}
+
+	#[Test]
+	public function delete_returns_404_when_file_not_found(): void
+	{
+		$this->storageService
+			->method('retrieve')
+			->willThrowException(new FileNotFoundException('not found'));
+
+		$request = Request::create('/api/v1/files/abc', 'DELETE');
+		$request->attributes->set('_api_user', $this->makeUser());
+
+		$response = $this->controller->delete('abc', $request);
+
+		$this->assertSame(404, $response->getStatusCode());
+	}
+
+	#[Test]
+	public function delete_returns_403_when_user_is_not_owner(): void
+	{
+		$file = $this->makeStoredFile(uploaderId: 99);
+		$this->storageService->method('retrieve')->willReturn($file);
+
+		$request = Request::create('/api/v1/files/abc', 'DELETE');
+		$request->attributes->set('_api_user', $this->makeUser());
+
+		$response = $this->controller->delete('abc', $request);
+
+		$this->assertSame(403, $response->getStatusCode());
+	}
+
+	#[Test]
+	public function delete_returns_204_when_owner_deletes_file(): void
+	{
+		$file = $this->makeStoredFile(uploaderId: 1);
+		$this->storageService->method('retrieve')->willReturn($file);
+		$this->storageService->method('delete')->willReturn(new DomainEventCollection([]));
+
+		$request = Request::create('/api/v1/files/abc', 'DELETE');
+		$request->attributes->set('_api_user', $this->makeUser());
+
+		$response = $this->controller->delete('abc', $request);
+
+		$this->assertSame(204, $response->getStatusCode());
+	}
+
+	private function makeStoredFile(
+		FileVisibility $visibility = FileVisibility::Public,
+		int $uploaderId = 1,
+	): StoredFile {
+		return new StoredFile(
+			id:           'abc',
+			assetType:    AssetType::Avatar,
+			visibility:   $visibility,
+			originalName: 'avatar.png',
+			physicalName: 'abc',
+			mimeType:     'image/png',
+			filesize:     100,
+			checksum:     str_repeat('0', 64),
+			isOrphan:     false,
+			parentId:     null,
+			variantType:  null,
+			uploaderId:   $uploaderId,
+			forumId:      0,
+			createdAt:    1000000,
+			claimedAt:    null,
+		);
+	}
+
+	private function makeUser(int $id = 1): User
 	{
 		return new User(
-			id:               1,
+			id:               $id,
 			type:             UserType::Normal,
 			username:         'testuser',
 			usernameClean:    'testuser',

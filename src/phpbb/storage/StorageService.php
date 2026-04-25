@@ -96,7 +96,7 @@ final class StorageService implements StorageServiceInterface
 			$this->connection->commit();
 
 			$event = new FileStoredEvent($fileId, $request->uploaderId, $fileId, $request->assetType);
-			$this->dispatcher->dispatch($event, 'phpbb.storage.file_stored');
+			$this->dispatcher->dispatch($event);
 
 			return new DomainEventCollection([$event]);
 		} catch (\Throwable $e) {
@@ -182,6 +182,14 @@ final class StorageService implements StorageServiceInterface
 	public function exists(string $fileId): bool
 	{
 		return $this->fileRepo->findById($fileId) !== null;
+	}
+
+	public function readStream(string $fileId): mixed
+	{
+		$file       = $this->retrieve($fileId);
+		$filesystem = $this->adapterFactory->createForAssetType($file->assetType);
+
+		return $filesystem->readStream($file->physicalName);
 	}
 
 	private function generateUuidV7(): string

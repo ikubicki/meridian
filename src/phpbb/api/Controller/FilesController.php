@@ -17,15 +17,20 @@ declare(strict_types=1);
 namespace phpbb\api\Controller;
 
 use phpbb\storage\Contract\StorageServiceInterface;
+use phpbb\storage\DTO\FileInfo;
 use phpbb\storage\DTO\FileStoredResponse;
 use phpbb\storage\DTO\StoreFileRequest;
 use phpbb\storage\Enum\AssetType;
+use phpbb\storage\Enum\FileVisibility;
+use phpbb\storage\Exception\FileNotFoundException;
 use phpbb\storage\Exception\QuotaExceededException;
 use phpbb\storage\Exception\UploadValidationException;
 use phpbb\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 class FilesController
@@ -114,6 +119,92 @@ class FilesController
 			return new JsonResponse(['error' => $e->getMessage(), 'code' => 'validation_error'], 400);
 		} catch (\Throwable) {
 			return new JsonResponse(['error' => 'Storage write failed'], 500);
+		}
+	}
+
+	#[Route('/files/{id}', name: 'api_v1_files_get', methods: ['GET'], defaults: ['_allow_anonymous' => true])]
+	public function get(string $id, Request $request): JsonResponse
+	{
+		try {
+			$file = $this->storageService->retrieve($id);
+			$url  = $this->storageService->getUrl($id);
+
+			$fileInfo = new FileInfo(
+				fileId:       $file->id,
+				assetType:    $file->assetType,
+				visibility:   $file->visibility,
+				originalName: $file->originalName,
+				url:          $url,
+				mimeType:     $file->mimeType,
+				filesize:     $file->filesize,
+				isOrphan:     $file->isOrphan,
+				createdAt:    $file->createdAt,
+				claimedAt:    $file->claimedAt,
+			);
+
+			return new JsonResponse($fileInfo->toArray());
+		} catch (FileNotFoundException) {
+			return new JsonResponse(['error' => 'File not found'], 404);
+		}
+	}
+
+	#[Route('/files/{id}/download', name: 'api_v1_files_download', methods: ['GET'], defaults: ['_allow_anonymous' => true])]
+	public function download(string $id, Request $request): Response
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		try {
+			$file = $this->storageService->retrieve($id);
+
+			// Private files require authentication
+			if ($file->visibility === FileVisibility::Private && $user === null) {
+				return new JsonResponse(['error' => 'Authentication required'], 401);
+			}
+
+			$stream = $this->storageService->readStream($id);
+
+			$disposition = 'attachment; filename="' . addslashes($file->originalName) . '"';
+
+			return new StreamedResponse(
+				static function () use ($stream): void {
+					fpassthru($stream);
+				},
+				200,
+				[
+					'Content-Type'        => $file->mimeType,
+					'Content-Length'      => (string) $file->filesize,
+					'Content-Disposition' => $disposition,
+				],
+			);
+		} catch (FileNotFoundException) {
+			return new JsonResponse(['error' => 'File not found'], 404);
+		}
+	}
+
+	#[Route('/files/{id}', name: 'api_v1_files_delete', methods: ['DELETE'])]
+	public function delete(string $id, Request $request): Response
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		if ($user === null) {
+			return new JsonResponse(['error' => 'Authentication required'], 401);
+		}
+
+		try {
+			$file = $this->storageService->retrieve($id);
+
+			if ($file->uploaderId !== $user->id) {
+				return new JsonResponse(['error' => 'Access denied'], 403);
+			}
+
+			$events = $this->storageService->delete($id, $user->id);
+			$events->dispatch($this->dispatcher);
+
+			return new Response(null, 204);
+		} catch (FileNotFoundException) {
+			return new JsonResponse(['error' => 'File not found'], 404);
 		}
 	}
 }
