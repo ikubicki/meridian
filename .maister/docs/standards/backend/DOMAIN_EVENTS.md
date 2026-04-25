@@ -47,12 +47,14 @@ namespace phpbb\common\Event;
 abstract readonly class DomainEvent
 {
 	public function __construct(
-		public int $entityId,
-		public int $actorId,
-		public \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+		public readonly int $entityId,
+		public readonly int $actorId,
+		public readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
 	) {}
 }
 ```
+
+> **`occurredAt`**: Never pass this argument explicitly — it defaults to `new \DateTimeImmutable()` (current time). There is no `timestamp` parameter. Passing `timestamp: time()` is a compile error.
 
 ### Service-Specific Events
 
@@ -114,7 +116,9 @@ Every `DomainEvent` MUST include:
 |-------|------|-------------|
 | `entityId` | `int` | Primary key of affected entity |
 | `actorId` | `int` | User who triggered the action |
-| `occurredAt` | `DateTimeImmutable` | Timestamp of the event |
+| `occurredAt` | `DateTimeImmutable` | Timestamp of the event (auto-set — never pass explicitly) |
+
+> Do **not** pass `occurredAt` or `timestamp` manually. The default `new \DateTimeImmutable()` is always correct.
 
 Additional fields are service-specific (e.g., `forumId` on `TopicCreatedEvent`).
 
@@ -122,41 +126,61 @@ Additional fields are service-specific (e.g., `forumId` on `TopicCreatedEvent`).
 
 ## DomainEventCollection
 
+The actual class has **no** `add()`, `merge()`, `count()`, or `isEmpty()` methods. The constructor **requires** the events array — there is no default.
+
 ```php
 namespace phpbb\common\Event;
 
-final class DomainEventCollection implements \IteratorAggregate, \Countable
+final class DomainEventCollection implements \IteratorAggregate
 {
-	/** @param DomainEvent[] $events */
-	public function __construct(
-		private array $events = [],
-	) {}
-
-	public function add(DomainEvent $event): void
+	public function __construct(private readonly array $events)
 	{
-		$this->events[] = $event;
 	}
 
-	public function merge(self $other): self
-	{
-		return new self([...$this->events, ...$other->events]);
-	}
+	public function dispatch(\Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher): void { ... }
 
 	public function getIterator(): \ArrayIterator
 	{
 		return new \ArrayIterator($this->events);
 	}
 
-	public function count(): int
+	public function all(): array
 	{
-		return count($this->events);
+		return $this->events;
 	}
 
-	public function isEmpty(): bool
+	public function first(): ?DomainEvent
 	{
-		return $this->events === [];
+		return $this->events[0] ?? null;
 	}
 }
+```
+
+### Anti-Pattern: Mutable Accumulator
+
+```php
+// ❌ WRONG — DomainEventCollection has no add() method and requires array in constructor
+$events = new DomainEventCollection();        // ERROR: Expected 1 argument, found 0
+$events->add(new ConversationCreatedEvent(    // ERROR: Undefined method 'add'
+	entityId: $id,
+	actorId: $userId,
+	timestamp: time(),                        // ERROR: Unknown named argument $timestamp
+));
+return $events;
+
+// ✅ CORRECT — inline array, no mutation, occurredAt is auto-set
+return new DomainEventCollection([
+	new ConversationCreatedEvent(entityId: $id, actorId: $userId),
+]);
+```
+
+### Empty Collection (Idempotent Cases)
+
+When an operation has nothing to report (e.g. early return on idempotent path), return an empty collection — never `null`.
+
+```php
+// ✅ For methods that may return no events (idempotent cases)
+return new DomainEventCollection([]);
 ```
 
 ---

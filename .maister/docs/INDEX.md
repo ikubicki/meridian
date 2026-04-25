@@ -31,7 +31,7 @@ REST API conventions for `src/phpbb/api/`: versioned URL structure (`/api/v1/`),
 Tiered Counter Pattern standard for denormalized counters: hot counter (cache) → cold counter (DB column) → recalculation cron job. Cache key convention `counter.{service}.{entity_id}.{field}`. Flush strategies (request-count, time-based, hybrid). Used by Hierarchy, Threads, Messaging, Notifications.
 
 ### [Backend / Domain Events](standards/backend/DOMAIN_EVENTS.md)
-Domain event standard: all mutations return `DomainEventCollection`, controllers dispatch. Event naming `{Entity}{Action}Event`, base class `phpbb\common\Event\DomainEvent` with `entityId`, `actorId`, `occurredAt`. Dispatch responsibility in controller layer, not service layer.
+Domain event standard: all mutations return `DomainEventCollection`, controllers dispatch. Event naming `{Entity}{Action}Event`, base class `phpbb\common\Event\DomainEvent` with `entityId`, `actorId`, `occurredAt` (auto-defaulted — never pass explicitly, no `timestamp` param). `DomainEventCollection` requires the events array in constructor (no default); has **no** `add()`, `merge()`, `count()`, or `isEmpty()` — always construct with inline array. Anti-pattern "Mutable Accumulator" documented. Dispatch responsibility in controller layer, not service layer.
 
 ### [Testing](standards/testing/STANDARDS.md)
 PHPUnit 10+ conventions: `#[Test]`, `#[DataProvider]`, `#[Before]`, `#[After]` PHP 8 attributes (no annotations), `PascalCase` test class names, `camelCase` method names, `setUp(): void`, `expectException()` over annotation, parameterized data providers, test isolation, DB integration testing patterns.
