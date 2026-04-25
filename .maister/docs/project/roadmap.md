@@ -4,7 +4,7 @@
 - **Project**: phpBB4 "Meridian" — ground-up modernisation of phpBB 3.3.15
 - **Runtime**: PHP 8.5 (minimum PHP 8.2); Symfony 8.x; Doctrine DBAL 4
 - **Architecture**: Hybrid — legacy `phpbb3\` retained as reference; new PSR-4 services in `src/phpbb\` M0–M7 complete
-- **Test coverage**: PHPUnit 10 (unit + integration, 384 tests) + Playwright E2E (98 tests)
+- **Test coverage**: PHPUnit 10 (unit + integration, 384 tests) + Playwright E2E (128 tests)
 - **Developer**: Solo (AI-assisted)
 - **Status**: **M0–M7 implemented and passing** — M8–M10 planned
 
@@ -35,6 +35,7 @@ Full details: [services-architecture.md](services-architecture.md) | Assessment:
 
 ### M5a: Hierarchy Service ✅ Done
 - [x] **Hierarchy Service** — `phpbb\hierarchy\` — forums, categories, nested set tree, domain events
+- [x] **Hierarchy E2E tests** — 30 Playwright tests covering all use cases: anonymous GET access, ForumDTO shape validation, parent_id filter, auth guards, full CRUD lifecycle, DELETE-with-children rejection, 404 edge cases
 
 ### M5b: Storage Service ✅ Done
 - [x] **Storage Service** — `phpbb\storage\` — Flysystem (local adapter), UUID v7 `BINARY(16)`, single `phpbb_stored_files` table + `phpbb_storage_quotas`; upload, retrieve metadata, authenticated download, delete via REST API; orphan tracking + TTL cleanup job; quota reservation + reconciliation; async thumbnail generation via `FileStoredEvent` listener
