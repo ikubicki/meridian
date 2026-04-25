@@ -1,163 +1,151 @@
-# phpBB 3.3.x
+# phpBB4 "Meridian"
 
-Thank you for downloading phpBB. This README will guide you through the basics of installation and operation of phpBB. Please ensure you read this and the accompanying documentation fully **before** proceeding with the installation.
-
-## Table of Contents
-
-1. [Installing phpBB](#1-installing-phpbb)
-2. [Running phpBB](#2-running-phpbb)
-   - [Languages (i18n)](#2i-languages-internationalisation---i18n)
-   - [Styles](#2ii-styles)
-   - [Extensions](#2iii-extensions)
-3. [Getting help with phpBB](#3-getting-help-with-phpbb)
-   - [Documentation](#3i-phpbb-documentation)
-   - [Knowledge Base](#3ii-knowledge-base)
-   - [Community Forums](#3iii-community-forums)
-   - [Internet Relay Chat (IRC)](#3iv-internet-relay-chat)
-4. [Status of this version](#4-status-of-this-version)
-5. [Reporting bugs](#5-reporting-bugs)
-   - [Security related bugs](#5i-security-related-bugs)
-6. [Overview of current bug list](#6-overview-of-current-bug-list)
-7. [PHP compatibility issues](#7-php-compatibility-issues)
-8. [Copyright and disclaimer](#8-copyright-and-disclaimer)
+A ground-up modernisation of the phpBB forum engine — replacing its legacy PHP 5.x monolith with a
+clean **Symfony 8.x backend**, **JSON REST API**, and **React SPA** frontend, while preserving
+full data compatibility with existing phpBB 3.x installations.
 
 ---
 
-## 1. Installing phpBB
+## Goal
 
-Installation, update and conversion instructions can be found in the [INSTALL](docs/INSTALL.html) document. If you are intending on converting from a phpBB 2.0.x or 3.0.x installation we highly recommend that you backup any existing data before proceeding!
+phpBB 3.x is a mature, widely deployed forum platform with a well-understood domain model. Its
+architecture, however, pre-dates modern PHP practices: global state, procedural controllers,
+template-driven server rendering, and tightly coupled database access make it hard to extend,
+test, and scale.
 
-Users of phpBB 3.0, 3.1, 3.2, and 3.3 Beta versions cannot directly update.
+**Meridian** rewrites the engine module by module, targeting:
 
-**Unsupported installation types:**
-- Updates from phpBB Beta versions and lower to phpBB Release Candidates and higher
-- Conversions from phpBB 2.0.x to phpBB 3.0 Beta, 3.1 Beta, 3.2 Beta, and 3.3 Beta versions
-- phpBB 3.0 Beta, 3.1 Beta, 3.2 beta, or 3.3 beta installations
+- **PHP 8.2+** with strict types, readonly properties, and named arguments throughout
+- **Symfony 8.x** kernel with dependency injection, event dispatcher, and HTTP foundation
+- **Doctrine DBAL 4** for safe, type-aware database access (no raw string interpolation)
+- **JWT-based authentication** (access + refresh tokens, Argon2id password hashing)
+- **REST API** as the single integration surface — no server-rendered HTML
+- **React SPA** as the reference frontend, consuming the REST API
+- **PHPUnit 10 + Playwright** ensuring every service and endpoint is covered before merge
 
-**Supported installation types:**
-- Updates from phpBB 3.0 RC1, 3.1 RC1 and 3.2 RC1 to the latest version
-- Note: if using the *Advanced Update Package*, updates are supported from phpBB 3.0.2 onward. To update a pre-3.0.2 installation, first update to 3.0.2 and then update to the current version.
-- Conversions from phpBB 2.0.x to the latest version
-- New installations of phpBB 3.2.x — only the latest released version
-- New installations of phpBB 3.3.x — only the latest released version
-
----
-
-## 2. Running phpBB
-
-Once installed, phpBB is easily managed via the Administration and Moderator Control Panels.
-
-### 2.i. Languages (Internationalisation - i18n)
-
-A number of language packs with included style localisations are available. You can find them in the [Language Packs](https://www.phpbb.com/languages/) section of our downloads or from the [Customisation Database](https://www.phpbb.com/customise/db/language_packs-25).
-
-Installation: download the required language pack, uncompress it and upload the included `language` and `styles` folders to the root of your board installation. Then install via **Administration Control Panel → Customise → Language management → Language packs**.
-
-If you wish to volunteer to translate, you can [apply to become a translator](https://www.phpbb.com/languages/apply.php).
-
-### 2.ii. Styles
-
-phpBB allows styles to be switched with relative ease. Browse available styles in the [Styles](https://www.phpbb.com/customise/db/styles-2/) section of our [Customisation Database](https://www.phpbb.com/customise/db/).
-
-**Please note** that 3rd party styles for phpBB2 will **not** work in phpBB3.
-
-Installation: unarchive the package into your `src/phpbb/styles/` directory, then visit **Administration Control Panel → Customise → Style management → Install Styles**.
-
-After modifying styles, purge the board cache via **Administration Control Panel → index → Purge the cache**.
-
-### 2.iii. Extensions
-
-Browse extensions in the [Extensions](https://www.phpbb.com/customise/db/extensions-36) section of our [Customisation Database](https://www.phpbb.com/customise/db/).
-
-**Please remember** that bugs occurring after installing an extension should **NOT** be reported to the bug tracker. First disable the extension and verify the problem persists.
+The legacy `phpbb3\` codebase is kept intact during the transition. New modules under `phpbb\`
+run side-by-side within the same Symfony kernel and gradually take over until the old layer
+can be deleted entirely.
 
 ---
 
-## 3. Getting help with phpBB
+## How We Get There
 
-### 3.i. phpBB Documentation
+The project is broken into vertical milestones, each delivering a self-contained, production-ready
+service with its own repository layer, service facade, REST controller, and full test coverage.
 
-Comprehensive documentation is available at:
-<https://www.phpbb.com/support/docs/en/3.3/ug/>
+| Milestone | Service | Status |
+|-----------|---------|--------|
+| M0 | Core Infrastructure (Symfony kernel, Docker, CI) | ✅ Done |
+| M1 | Cache Service (`phpbb\cache`) | ✅ Done |
+| M2 | User Service (`phpbb\user`) | ✅ Done |
+| M3 | Auth Unified Service (`phpbb\auth`) — JWT + ACL | ✅ Done |
+| M4 | REST API Framework — routing, auth middleware | ✅ Done |
+| M5a | Hierarchy Service (`phpbb\hierarchy`) — forums/categories | ✅ Done |
+| M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
+| M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
+| M8 | Notifications Service (`phpbb\notifications`) | ⏳ Planned |
+| M9 | Search Service (`phpbb\search`) | ⏳ Planned |
+| M10 | React SPA Frontend | ⏳ Planned |
 
-### 3.ii. Knowledge Base
+Security reviews (OWASP Top 10) and load tests (k6) are scheduled between milestones as
+explicit checkpoints, not afterthoughts.
 
-<https://www.phpbb.com/kb/>
-
-### 3.iii. Community Forums
-
-<https://www.phpbb.com/community/>
-
-Please search before posting. phpBB is entirely staffed by volunteers — be respectful when awaiting responses.
-
-### 3.iv. Internet Relay Chat
-
-IRC network: [irc.libera.chat](irc://irc.libera.chat), channel: **#phpbb**
-
-Full list of IRC channels: <https://www.phpbb.com/support/irc/>
-
----
-
-## 4. Status of this version
-
-This is a stable release of phpBB. The 3.3.x line is feature frozen, with point releases principally including fixes for bugs and security issues.
-
-Development forums: <http://area51.phpbb.com/phpBB/>
+Full milestone detail: [.maister/MILESTONES.md](.maister/MILESTONES.md)
 
 ---
 
-## 5. Reporting Bugs
+## Tech Stack
 
-Please use the bug tracker — **do NOT post bug reports to the forums**:
-<http://tracker.phpbb.com/browse/PHPBB3>
-
-Before submitting a bug:
-1. Confirm the bug is reproduceable
-2. Search existing bug reports for duplicates
-3. Check the community forums
-
-When posting a new bug, include:
-- Server type/version (e.g. Apache 2.2.3, IIS 7)
-- PHP version and mode of operation
-- DB type/version (e.g. MySQL 5.0.77, PostgreSQL 9.0.6)
-
-If you have a patch, attach it to the ticket or submit a pull request [on GitHub](https://github.com/phpbb/phpbb).
-
-### 5.i. Security related bugs
-
-**Do NOT** post security vulnerabilities to the bug tracker or public forums. Report them to:
-<https://www.phpbb.com/security/>
+| Layer | Technology |
+|-------|-----------|
+| Runtime | PHP 8.2+, PHP-FPM (Alpine) |
+| Framework | Symfony 8.x (HttpKernel, DI, EventDispatcher) |
+| Database | MariaDB 10.x via Doctrine DBAL 4 |
+| Auth | JWT (firebase/php-jwt), Argon2id |
+| Web server | Nginx |
+| Unit tests | PHPUnit 10 (`#[Test]` attributes) |
+| E2E tests | Playwright (TypeScript) |
+| Code style | PHP CS Fixer |
+| Containers | Docker + Docker Compose |
+| Frontend (SPA) | React + Vite (in progress) |
 
 ---
 
-## 6. Overview of current bug list
+## Project Structure
 
-Known issues that may affect users on a wider scale:
-
-- Conversions may fail to complete on large boards under some hosts.
-- Updates may fail to complete on large update sets under some hosts.
-- Smilies placed directly after bbcode tags will not get parsed. Smilies always need to be separated by spaces.
-
----
-
-## 7. PHP compatibility issues
-
-phpBB 3.3.x requires **PHP 7.2.0** minimum. We recommend running the latest stable PHP release.
-
-Tested under Linux and Windows running Apache with:
-- MySQLi 4.1.3, 4.x, 5.x
-- MariaDB 5.x
-- PostgreSQL 8.x
-- Oracle 8
-- SQLite 3
-- PHP 7.2.0–7.4.x and 8.0.x–8.3.x
-
-### 7.i. Notice on PHP security issues
-
-Currently there are no known issues regarding PHP security.
+```
+src/
+  phpbb/              # New modules (PSR-4, namespace phpbb\)
+    api/              # REST controllers + request/response layer
+    auth/             # Authentication + authorisation (JWT, ACL)
+    cache/            # Tag-aware cache service
+    common/           # Shared value objects, domain events, pagination
+    config/           # Symfony DI config (services.yaml, routes.yaml)
+    db/               # DBAL connection factory + migrations
+    hierarchy/        # Forum/category tree
+    messaging/        # Private conversations (M7)
+    threads/          # Topics + posts
+    user/             # User entities, ban service
+  phpbb3/             # Legacy code (untouched, temporary)
+tests/
+  phpbb/              # PHPUnit unit + integration tests
+  e2e/                # Playwright end-to-end tests
+.maister/             # Project docs, standards, task plans, milestones
+```
 
 ---
 
-## 8. Copyright and disclaimer
+## Running Locally
 
-phpBB is free software, released under the terms of the [GNU General Public License, version 2 (GPL-2.0)](http://opensource.org/licenses/gpl-2.0.php). Copyright © [phpBB Limited](https://www.phpbb.com). For full copyright and license information, please see the [docs/CREDITS.txt](docs/CREDITS.txt) file.
+```bash
+# Start the full stack (PHP-FPM, Nginx, MariaDB)
+docker compose up -d
+
+# API base URL
+http://localhost:8181/api/v1/
+
+# Health check
+curl http://localhost:8181/api/v1/health
+```
+
+---
+
+## Tests
+
+```bash
+# PHPUnit (unit + integration)
+composer test
+
+# Playwright E2E
+composer test:e2e
+
+# PHP CS Fixer (auto-fix)
+composer cs:fix
+```
+
+All three must pass before any change is considered complete.
+
+Current coverage: **339 PHPUnit tests · 54 E2E tests · 0 CS issues**
+
+---
+
+## Coding Standards
+
+- `declare(strict_types=1)` in every PHP file
+- PSR-4 autoloading under `phpbb\` namespace
+- Dependency injection — no `global`, no `static` service locators
+- PDO prepared statements / DBAL query builder — never raw user input in SQL
+- Controllers are thin: validate input, call service, return JSON response
+- Every mutation method returns `DomainEventCollection`; controllers dispatch events
+- New code ships with PHPUnit tests; critical flows ship with Playwright E2E tests
+
+Full standards: [.maister/docs/standards/](.maister/docs/standards/)
+
+---
+
+## License
+
+GNU General Public License, version 2 (GPL-2.0).  
+Original phpBB code © phpBB Limited. New modules © Irek Kubicki / codebuilders.pl.  
+See [docs/CREDITS.txt](docs/CREDITS.txt) for full attribution.
