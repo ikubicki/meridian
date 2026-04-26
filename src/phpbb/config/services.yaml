@@ -207,6 +207,7 @@ services:
             $postRepository: '@phpbb\threads\Contract\PostRepositoryInterface'
             $connection: '@Doctrine\DBAL\Connection'
             $searchIndexer: '@phpbb\search\Contract\SearchIndexerInterface'
+            $contentPipeline: '@phpbb\content\Contract\PostContentPipelineInterface'
 
     phpbb\threads\Contract\ThreadsServiceInterface:
         alias: phpbb\threads\ThreadsService
@@ -418,6 +419,17 @@ services:
     phpbb\config\Contract\ConfigRepositoryInterface:
         alias: phpbb\config\ConfigRepository
 
+    phpbb\config\ConfigTextRepository: ~
+
+    phpbb\config\Contract\ConfigTextRepositoryInterface:
+        alias: phpbb\config\ConfigTextRepository
+
+    phpbb\config\Service\ConfigTextService: ~
+
+    phpbb\config\Contract\ConfigTextServiceInterface:
+        alias: phpbb\config\Service\ConfigTextService
+        public: true
+
     # ---------------------------------------------------------------------------
     # Search module (M10)
     # ---------------------------------------------------------------------------
@@ -444,3 +456,25 @@ services:
     phpbb\search\Service\NullSearchIndexer: ~
     phpbb\search\Contract\SearchIndexerInterface:
         alias: phpbb\search\Service\SearchIndexerService
+
+    # ---------------------------------------------------------------------------
+    # Content module (M11a — plugin pipeline)
+    # ---------------------------------------------------------------------------
+
+    phpbb\content\Pipeline\PostContentPipeline: ~
+
+    phpbb\content\Contract\PostContentPipelineInterface:
+        alias: phpbb\content\Pipeline\PostContentPipeline
+        public: true
+
+    phpbb\content\Pipeline\MediaPipeline: ~
+
+    phpbb\content\Contract\MediaPipelineInterface:
+        alias: phpbb\content\Pipeline\MediaPipeline
+        public: true
+
+    phpbb\content\Service\MetadataService: ~
+
+    phpbb\content\Contract\MetadataServiceInterface:
+        alias: phpbb\content\Service\MetadataService
+        public: true

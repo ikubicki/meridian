@@ -18,6 +18,8 @@ namespace phpbb\api\Controller;
 
 use phpbb\api\DTO\PaginationContext;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
+use phpbb\content\Contract\PostContentPipelineInterface;
+use phpbb\content\DTO\ContentContext;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\PostDTO;
@@ -38,6 +40,7 @@ class PostsController
 		private readonly AuthorizationServiceInterface $authorizationService,
 		private readonly UserRepositoryInterface $userRepository,
 		private readonly EventDispatcherInterface $dispatcher,
+		private readonly PostContentPipelineInterface $contentPipeline,
 	) {
 	}
 
@@ -194,13 +197,16 @@ class PostsController
 
 	private function postToArray(PostDTO $dto): array
 	{
+		$ctx     = new ContentContext(actorId: $dto->authorId, forumId: $dto->forumId, topicId: $dto->topicId);
+		$content = $this->contentPipeline->processForOutput($dto->content, $ctx);
+
 		return [
 			'id'             => $dto->id,
 			'topicId'        => $dto->topicId,
 			'forumId'        => $dto->forumId,
 			'authorId'       => $dto->authorId,
 			'authorUsername' => $dto->authorUsername,
-			'content'        => $dto->content,
+			'content'        => $content,
 			'createdAt'      => $dto->createdAt,
 		];
 	}

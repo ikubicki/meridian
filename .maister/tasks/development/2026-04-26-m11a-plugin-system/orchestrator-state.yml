@@ -1,0 +1,55 @@
+task:
+  path: .maister/tasks/development/2026-04-26-m11a-plugin-system
+  description: "M11a: Plugin System — content pipeline (PRE_SAVE/POST_SAVE/PRE_OUTPUT), media plugins, metadata plugins + schema cleanup"
+  status: in-progress
+  created: 2026-04-26
+
+orchestrator:
+  current_phase: 1
+  completed_phases: []
+  options:
+    spec_audit_enabled: true
+    skip_test_suite: false
+    e2e_enabled: true
+    user_docs_enabled: false
+    code_review_enabled: true
+    pragmatic_review_enabled: true
+    reality_check_enabled: true
+    production_check_enabled: true
+  task_context:
+    risk_level: null
+    clarifications_resolved: false
+    scope_expanded: false
+    architecture_decision: null
+    task_characteristics:
+      has_reproducible_defect: false
+      modifies_existing_code: true
+      creates_new_entities: true
+      involves_data_operations: true
+      ui_heavy: false
+    research_reference:
+      path: .maister/tasks/research/2026-04-26-content-plugins
+      research_question: "How to inject content-type plugins (bbcode, markdown, smiles, censor) to process content before saving or before sending in responses?"
+      research_type: mixed
+      confidence_level: high
+    phase_summaries:
+      research:
+        summary: "Zero-config plugin architecture using #[AutoconfigureTag] + #[AutowireIterator]. Three plugin interfaces: PostContentPluginInterface (post text), MediaPluginInterface (avatars/media, async), MetadataPluginInterface (JSON fields on entities). ContentStage enum enforces PRE_SAVE/POST_SAVE/PRE_OUTPUT. Config-driven via phpbb_config (no content_format column). 8 ADRs documented."
+        key_findings:
+          - "PostContentPluginInterface tagged with phpbb.post_plugin — auto-discovered by DI"
+          - "Two injection points: ThreadsService (PRE_SAVE) + PostsController::postToArray() (PRE_OUTPUT)"
+          - "MediaPlugin async via Symfony Messenger Bus dispatch"
+          - "MetadataPlugin: ADD COLUMN metadata MEDIUMTEXT NULL on 5 tables"
+          - "s9e legacy = plugin with canProcess() detecting bbcode_uid patterns"
+          - "ConfigTextService needed for phpbb_config_text (already in DB, no service layer yet)"
+        recommended_approach: "Symfony #[AutoconfigureTag] + #[AutowireIterator] with ContentStage enum enforcement"
+      codebase_analysis:
+        key_files: []
+        primary_language: PHP
+        summary: null
+      clarifications: []
+      gap_analysis:
+        integration_points: []
+        summary: null
+      specification:
+        summary: null

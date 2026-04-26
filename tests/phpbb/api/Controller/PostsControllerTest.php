@@ -19,6 +19,7 @@ namespace phpbb\Tests\api\Controller;
 use phpbb\api\Controller\PostsController;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
 use phpbb\common\Event\DomainEventCollection;
+use phpbb\content\Pipeline\NullPostContentPipeline;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\PostDTO;
 use phpbb\threads\DTO\TopicDTO;
@@ -53,6 +54,7 @@ class PostsControllerTest extends TestCase
 			$this->authorizationService,
 			$this->userRepository,
 			$this->dispatcher,
+			new NullPostContentPipeline(),
 		);
 	}
 

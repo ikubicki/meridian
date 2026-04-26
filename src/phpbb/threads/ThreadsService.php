@@ -19,6 +19,8 @@ namespace phpbb\threads;
 use Doctrine\DBAL\Connection;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\common\Event\DomainEventCollection;
+use phpbb\content\Contract\PostContentPipelineInterface;
+use phpbb\content\DTO\ContentContext;
 use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;
@@ -44,6 +46,7 @@ final class ThreadsService implements ThreadsServiceInterface
 		private readonly PostRepositoryInterface $postRepository,
 		private readonly Connection $connection,
 		private readonly SearchIndexerInterface $searchIndexer,
+		private readonly PostContentPipelineInterface $contentPipeline,
 	) {
 	}
 
@@ -84,6 +87,8 @@ final class ThreadsService implements ThreadsServiceInterface
 	public function createTopic(CreateTopicRequest $request): DomainEventCollection
 	{
 		$now = time();
+		$ctx            = new ContentContext(actorId: $request->actorId, forumId: $request->forumId);
+		$processedContent = $this->contentPipeline->processForSave($request->content, $ctx);
 
 		$this->connection->beginTransaction();
 
@@ -96,7 +101,7 @@ final class ThreadsService implements ThreadsServiceInterface
 				posterId:       $request->actorId,
 				posterUsername: $request->actorUsername,
 				posterIp:       $request->posterIp,
-				content:        $request->content,
+				content:        $processedContent,
 				subject:        $request->title,
 				now:            $now,
 				visibility:     1,
@@ -112,7 +117,7 @@ final class ThreadsService implements ThreadsServiceInterface
 			throw new \RuntimeException('Failed to create topic', previous: $e);
 		}
 
-		$this->searchIndexer->indexPost($postId, $request->content, $request->title, $request->forumId);
+		$this->searchIndexer->indexPost($postId, $processedContent, $request->title, $request->forumId);
 
 		return new DomainEventCollection([
 			new TopicCreatedEvent(entityId: $topicId, actorId: $request->actorId),
@@ -142,6 +147,8 @@ final class ThreadsService implements ThreadsServiceInterface
 		}
 
 		$now = time();
+		$ctx              = new ContentContext(actorId: $request->actorId, forumId: $topic->forumId, topicId: $request->topicId);
+		$processedContent = $this->contentPipeline->processForSave($request->content, $ctx);
 
 		$this->connection->beginTransaction();
 
@@ -152,7 +159,7 @@ final class ThreadsService implements ThreadsServiceInterface
 				posterId:       $request->actorId,
 				posterUsername: $request->actorUsername,
 				posterIp:       $request->posterIp,
-				content:        $request->content,
+				content:        $processedContent,
 				subject:        'Re: ' . $topic->title,
 				now:            $now,
 				visibility:     1,
@@ -176,7 +183,7 @@ final class ThreadsService implements ThreadsServiceInterface
 			throw new \RuntimeException('Failed to create post', previous: $e);
 		}
 
-		$this->searchIndexer->indexPost($postId, $request->content, 'Re: ' . $topic->title, $topic->forumId);
+		$this->searchIndexer->indexPost($postId, $processedContent, 'Re: ' . $topic->title, $topic->forumId);
 
 		return new DomainEventCollection([
 			new PostCreatedEvent(entityId: $postId, actorId: $request->actorId),
@@ -226,7 +233,10 @@ final class ThreadsService implements ThreadsServiceInterface
 			throw new \InvalidArgumentException('Content must not be empty');
 		}
 
-		$this->postRepository->updateContent($request->postId, $content);
+		$ctx              = new ContentContext(actorId: $request->actorId, forumId: $post->forumId, topicId: $post->topicId);
+		$processedContent = $this->contentPipeline->processForSave($content, $ctx);
+
+		$this->postRepository->updateContent($request->postId, $processedContent);
 
 		return new DomainEventCollection([
 			new PostUpdatedEvent(entityId: $request->postId, actorId: $request->actorId),

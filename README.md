@@ -54,7 +54,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M8 | Notifications Service (`phpbb\notifications`) — HTTP polling, mark-read | ✅ Done |
 | M9 | Search Service (`phpbb\search`) — full-text, NativeDriver, cache | ✅ Done |
 | M10 | React SPA Frontend | ⏳ Planned |
-| M11a | Plugin System (`phpbb\plugin`) — content pipeline, media plugins, metadata + schema cleanup | 🔬 Research done |
+| M11a | Plugin System (`phpbb\content`) — content pipeline, media plugins, metadata + schema cleanup | ✅ Done |
 | M11b | Content Formatting Plugins — BBCode, Markdown, Smilies _(wymaga M11a)_ | ⏳ Planned |
 | M12 | Moderation Service (`phpbb\moderation`) — reports, queue, lock/move | ⏳ Planned |
 | M13 | Configuration Service (`phpbb\config`) — config read/write API | ✅ Done |
@@ -145,7 +145,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **532 PHPUnit tests · 216 E2E tests · 0 CS issues**
+Current coverage: **557 PHPUnit tests · 216 E2E tests · 0 CS issues**
 
 ---
 
