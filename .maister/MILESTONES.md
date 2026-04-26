@@ -107,7 +107,7 @@ Related plans: `.maister/plans/`
 | 4.4 | Real controllers (health, auth, forums, users) | ✅ | `df82bb3` |
 | 4.5 | Playwright E2E (47 tests) | ✅ | `df82bb3` |
 | 4.6 | Wire topics/posts controllers (`phpbb\threads`) | ✅ | `7efa440` (5 endpoints: GET/POST topics, GET/POST posts) |
-| 4.7 | Update E2E tests po wdrożeniu `phpbb\threads` | ✅ | `7efa440` (45 E2E tests, all passing) |
+| 4.7 | Update E2E tests after `phpbb\threads` deployment | ✅ | `7efa440` (45 E2E tests, all passing) |
 
 ---
 
@@ -240,13 +240,13 @@ Related plans: `.maister/plans/`
 | 9.2 | Initial implementation plan (LikeDriver / FullTextDriver / Elasticsearch stub) | ✅ | — |
 | 9.3 | SearchQuery DTO + interface refactor (`sortBy`, `searchIn`, `dateFrom`, `dateTo`) | ✅ | `plans/2026-04-26-search-service.md` Group 1 |
 | 9.4 | DB Migration: `phpbb_search_wordlist` + `phpbb_search_wordmatch` | ✅ | `plans/2026-04-26-search-service.md` Group 2 |
-| 9.5 | NativeTokenizer + NativeDriver (własny indeks słów) | ✅ | `plans/2026-04-26-search-service.md` Group 3 |
+| 9.5 | NativeTokenizer + NativeDriver (custom word index) | ✅ | `plans/2026-04-26-search-service.md` Group 3 |
 | 9.6 | SearchIndexerService + NullSearchIndexer + ThreadsService wiring (create) | ✅ | `plans/2026-04-26-search-service.md` Group 4 |
-| 9.7 | Cache wyników (TagAwareCacheInterface, tag `search`, TTL z config) | ✅ | `plans/2026-04-26-search-service.md` Group 5 |
-| 9.8 | PHPUnit tests (494 total, +36 nowych) | ✅ | `plans/2026-04-26-search-service.md` Group 6 |
-| 9.9 | Playwright E2E tests — 10 testów (`/api/v1/search/`), UC-S1–S5 + UC-SR4/5/6/9 | ✅ | `plans/2026-04-26-search-service.md` Group 7 |
-| 9.10 | LikeDriver / FullTextDriver / ElasticsearchDriver (podstawowe backendy) | ✅ | Initial implementation |
-| 9.11 | SearchIndexerService wiring: editPost / deletePost | ✅ | M6 6.10 dostarcza editPost/deletePost |
+| 9.7 | Result cache (TagAwareCacheInterface, tag `search`, TTL from config) | ✅ | `plans/2026-04-26-search-service.md` Group 5 |
+| 9.8 | PHPUnit tests (494 total, +36 new) | ✅ | `plans/2026-04-26-search-service.md` Group 6 |
+| 9.9 | Playwright E2E tests — 10 tests (`/api/v1/search/`), UC-S1–S5 + UC-SR4/5/6/9 | ✅ | `plans/2026-04-26-search-service.md` Group 7 |
+| 9.10 | LikeDriver / FullTextDriver / ElasticsearchDriver (basic backends) | ✅ | Initial implementation |
+| 9.11 | SearchIndexerService wiring: editPost / deletePost | ✅ | M6 6.10 provides editPost/deletePost |
 
 ---
 
@@ -266,7 +266,7 @@ Related plans: `.maister/plans/`
 
 ## M11a — Plugin System (`phpbb\plugin`)
 
-> Źródło: `.maister/tasks/research/2026-04-26-content-plugins/`
+> Source: `.maister/tasks/research/2026-04-26-content-plugins/`
 
 ### Content Pipeline
 
@@ -277,14 +277,14 @@ Related plans: `.maister/plans/`
 | 11a.3 | `ContentStage` enum (PRE_SAVE, POST_SAVE, PRE_OUTPUT) | ✅ | `src/phpbb/content/ContentStage.php` |
 | 11a.4 | `ThreadsPluginInterface` + `#[AutoconfigureTag]` | ✅ | `src/phpbb/threads/Contract/ThreadsPluginInterface.php` |
 | 11a.5 | `ThreadsPipeline` (AutowireIterator, NullPipeline) | ✅ | `src/phpbb/threads/Pipeline/ThreadsPipeline.php` |
-| 11a.6 | Injection w `ThreadsService` ($threadsPipeline, PRE_SAVE) + `PostsController` (PRE_OUTPUT) | ✅ | `src/phpbb/threads/ThreadsService.php`, `src/phpbb/api/Controller/PostsController.php` |
+| 11a.6 | Injection in `ThreadsService` ($threadsPipeline, PRE_SAVE) + `PostsController` (PRE_OUTPUT) | ✅ | `src/phpbb/threads/ThreadsService.php`, `src/phpbb/api/Controller/PostsController.php` |
 | 11a.7 | `StoragePluginInterface` + `StoragePipeline` (POST_SAVE, sync) | ✅ | `src/phpbb/content/Pipeline/StoragePipeline.php` |
-| 11a.8 | Wbudowany plugin: Censor (`CensorPlugin`) | ⏳ | M11b |
-| 11a.9 | Wbudowany plugin: s9e Legacy (`S9eLegacyPlugin`, `canProcess()`) | ⏳ | M11b |
+| 11a.8 | Built-in plugin: Censor (`CensorPlugin`) | ⏳ | M11b |
+| 11a.9 | Built-in plugin: s9e Legacy (`S9eLegacyPlugin`, `canProcess()`) | ⏳ | M11b |
 | 11a.10 | `ConfigTextService` (serwis dla `phpbb_config_text`) | ✅ | `src/phpbb/config/Service/ConfigTextService.php` |
 | 11a.11 | PHPUnit tests (pipeline, metadata, config-text, SmiliesPlugin) | ✅ | `tests/phpbb/threads/`, `tests/phpbb/plugins/`, `tests/phpbb/config/` |
 | 11a.12 | Playwright E2E tests | ✅ | 216 passed |
-| 11a.12a | SmiliesPlugin — phpBB smilies → Unicode emoji (PRE_OUTPUT) | ✅ | `src/phpbb/plugins/SmiliesPlugin.php` — 34 testy, live `:)` → `😊` |
+| 11a.12a | SmiliesPlugin — phpBB smilies → Unicode emoji (PRE_OUTPUT) | ✅ | `src/phpbb/plugins/SmiliesPlugin.php` — 34 tests, live `:)` → `😊` |
 
 ### Metadata Plugin System
 
@@ -295,19 +295,19 @@ Related plans: `.maister/plans/`
 | 11a.15 | `MetadataEntity` enum (POST, TOPIC, FORUM, USER, ATTACHMENT) | ⏳ | — |
 | 11a.16 | `MetadataPluginInterface` + `#[AutoconfigureTag('phpbb.metadata_plugin')]` | ✅ | `src/phpbb/content/Contract/MetadataPluginInterface.php` |
 | 11a.17 | `MetadataService` (collect + saveForPost) | ✅ | `src/phpbb/content/Service/MetadataService.php` |
-| 11a.18 | DB migration: `ADD COLUMN metadata MEDIUMTEXT NULL` (5 tabel) | ✅ | `src/phpbb/migrations/m11a_metadata_columns.sql` |
-| 11a.19 | REST: pole `metadata` w odpowiedziach encji + PATCH partial update | ⏳ | — |
+| 11a.18 | DB migration: `ADD COLUMN metadata MEDIUMTEXT NULL` (5 tables) | ✅ | `src/phpbb/migrations/m11a_metadata_columns.sql` |
+| 11a.19 | REST: `metadata` field in entity responses + PATCH partial update | ⏳ | — |
 | 11a.20 | REST: `GET /api/v1/metadata/schema?entity={type}` | ⏳ | — |
-| 11a.21 | Wbudowane pluginy `phpbb_users`: birthday, jabber, sig, rank, UI prefs (6×) | ⏳ | — |
-| 11a.22 | Migracja danych: kolumny → JSON blob (15 kolumn `phpbb_users`) | ⏳ | — |
-| 11a.23 | `DROP COLUMN` dla zmigrowanych kolumn | ⏳ | — |
-| 11a.24 | Likwidacja tabel `phpbb_profile_fields*` (4 tabele → metadata) | ⏳ | — |
+| 11a.21 | Built-in plugins `phpbb_users`: birthday, jabber, sig, rank, UI prefs (6×) | ⏳ | — |
+| 11a.22 | Data migration: columns → JSON blob (15 columns `phpbb_users`) | ⏳ | — |
+| 11a.23 | `DROP COLUMN` for migrated columns | ⏳ | — |
+| 11a.24 | Drop tables `phpbb_profile_fields*` (4 tables → metadata) | ⏳ | — |
 | 11a.25 | PHPUnit tests | ⏳ | — |
 | 11a.26 | Playwright E2E tests | ⏳ | — |
 
 ---
 
-## M11b — Content Formatting Plugins _(wymaga M11a)_
+## M11b — Content Formatting Plugins _(requires M11a)_
 
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
@@ -316,7 +316,7 @@ Related plans: `.maister/plans/`
 | 11b.3 | s9e text-formatter integration | ⏳ | — |
 | 11b.4 | BBCode plugin (`ThreadsPluginInterface`) | ⏳ | — |
 | 11b.5 | Markdown plugin (`ThreadsPluginInterface`) | ⏳ | — |
-| 11b.6 | Smilies plugin via s9e (`ThreadsPluginInterface`) | ⏳ | SmiliesPlugin (unicode) już istnieje w `phpbb\plugins` |
+| 11b.6 | Smilies plugin via s9e (`ThreadsPluginInterface`) | ⏳ | SmiliesPlugin (unicode) already exists in `phpbb\plugins` |
 | 11b.7 | PHPUnit tests | ⏳ | — |
 | 11b.8 | Playwright E2E tests | ⏳ | — |
 
@@ -396,7 +396,7 @@ Research available: `tasks/research/`
 
 **⏳ Priority Backlog:**
 
-1. **M11b: Content Formatting Plugins** _(wymaga M11a ✅)_ — BBCode, Markdown, Smilies (s9e), CensorPlugin
+1. **M11b: Content Formatting Plugins** _(requires M11a ✅)_ — BBCode, Markdown, Smilies (s9e), CensorPlugin
 2. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
 3. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
 4. **M12: Moderation Service** — reports, queue, moderator actions
@@ -405,4 +405,4 @@ Research available: `tasks/research/`
 
 ---
 
-*Last updated: 2026-04-26 (M11a Plugin System ✅ — 591 PHPUnit + 216 E2E; SmiliesPlugin + refaktory: MediaPlugin→StoragePlugin, PostContentPlugin→ThreadsPlugin, phpbb\plugins namespace)*
+*Last updated: 2026-04-26 (M11a Plugin System ✅ — 591 PHPUnit + 216 E2E; SmiliesPlugin + refactors: MediaPlugin→StoragePlugin, PostContentPlugin→ThreadsPlugin, phpbb\plugins namespace)*
