@@ -487,4 +487,5 @@ services:
         alias: phpbb\content\Service\MetadataService
         public: true
 
-    phpbb\content\Plugin\SmiliesPlugin: ~
+    phpbb\content\Plugin\:
+        resource: '../content/Plugin/'
