@@ -18,7 +18,7 @@ namespace phpbb\content\Contract;
 
 use phpbb\content\DTO\ContentContext;
 
-interface MediaPipelineInterface
+interface StoragePipelineInterface
 {
 	public function processPostSave(int $postId, string $content, ContentContext $context): void;
 }

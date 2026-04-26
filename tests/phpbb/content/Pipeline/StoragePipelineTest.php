@@ -17,14 +17,14 @@ declare(strict_types=1);
 namespace phpbb\Tests\content\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\MediaPluginInterface;
+use phpbb\content\Contract\StoragePluginInterface;
 use phpbb\content\DTO\ContentContext;
-use phpbb\content\Pipeline\MediaPipeline;
+use phpbb\content\Pipeline\StoragePipeline;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class MediaPipelineTest extends TestCase
+class StoragePipelineTest extends TestCase
 {
 	private ContentContext $ctx;
 
@@ -33,9 +33,9 @@ class MediaPipelineTest extends TestCase
 		$this->ctx = new ContentContext(actorId: 1, forumId: 2, topicId: 3);
 	}
 
-	private function makePlugin(ContentStage $stage): MediaPluginInterface&MockObject
+	private function makePlugin(ContentStage $stage): StoragePluginInterface&MockObject
 	{
-		$plugin = $this->createMock(MediaPluginInterface::class);
+		$plugin = $this->createMock(StoragePluginInterface::class);
 		$plugin->method('supportsStage')->willReturnCallback(static fn (ContentStage $s) => $s === $stage);
 		$plugin->method('process')->willReturnArgument(0);
 
@@ -51,14 +51,14 @@ class MediaPipelineTest extends TestCase
 		$postSave->expects($this->once())->method('process');
 		$preSave->expects($this->never())->method('process');
 
-		$pipeline = new MediaPipeline([$postSave, $preSave]);
+		$pipeline = new StoragePipeline([$postSave, $preSave]);
 		$pipeline->processPostSave(42, 'content', $this->ctx);
 	}
 
 	#[Test]
 	public function processPostSaveWithNoPluginsDoesNotThrow(): void
 	{
-		$pipeline = new MediaPipeline([]);
+		$pipeline = new StoragePipeline([]);
 		$pipeline->processPostSave(42, 'content', $this->ctx);
 
 		$this->addToAssertionCount(1);
@@ -67,11 +67,11 @@ class MediaPipelineTest extends TestCase
 	#[Test]
 	public function pluginNotSupportingPostSaveIsSkipped(): void
 	{
-		$plugin = $this->createMock(MediaPluginInterface::class);
+		$plugin = $this->createMock(StoragePluginInterface::class);
 		$plugin->method('supportsStage')->willReturn(false);
 		$plugin->expects($this->never())->method('process');
 
-		$pipeline = new MediaPipeline([$plugin]);
+		$pipeline = new StoragePipeline([$plugin]);
 		$pipeline->processPostSave(1, 'text', $this->ctx);
 	}
 }

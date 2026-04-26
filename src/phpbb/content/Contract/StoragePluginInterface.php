@@ -20,8 +20,8 @@ use phpbb\content\ContentStage;
 use phpbb\content\DTO\ContentContext;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-#[AutoconfigureTag('phpbb.media_plugin')]
-interface MediaPluginInterface
+#[AutoconfigureTag('phpbb.storage_plugin')]
+interface StoragePluginInterface
 {
 	public function getName(): string;
 

@@ -7,8 +7,8 @@ services:
     _instanceof:
         phpbb\content\Contract\PostContentPluginInterface:
             tags: ['phpbb.post_plugin']
-        phpbb\content\Contract\MediaPluginInterface:
-            tags: ['phpbb.media_plugin']
+        phpbb\content\Contract\StoragePluginInterface:
+            tags: ['phpbb.storage_plugin']
         phpbb\content\Contract\MetadataPluginInterface:
             tags: ['phpbb.metadata_plugin']
 
@@ -475,10 +475,10 @@ services:
         alias: phpbb\content\Pipeline\PostContentPipeline
         public: true
 
-    phpbb\content\Pipeline\MediaPipeline: ~
+    phpbb\content\Pipeline\StoragePipeline: ~
 
-    phpbb\content\Contract\MediaPipelineInterface:
-        alias: phpbb\content\Pipeline\MediaPipeline
+    phpbb\content\Contract\StoragePipelineInterface:
+        alias: phpbb\content\Pipeline\StoragePipeline
         public: true
 
     phpbb\content\Service\MetadataService: ~

@@ -17,18 +17,18 @@ declare(strict_types=1);
 namespace phpbb\content\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\MediaPipelineInterface;
-use phpbb\content\Contract\MediaPluginInterface;
+use phpbb\content\Contract\StoragePipelineInterface;
+use phpbb\content\Contract\StoragePluginInterface;
 use phpbb\content\DTO\ContentContext;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-final class MediaPipeline implements MediaPipelineInterface
+final class StoragePipeline implements StoragePipelineInterface
 {
 	/**
-	 * @param iterable<MediaPluginInterface> $plugins
+	 * @param iterable<StoragePluginInterface> $plugins
 	 */
 	public function __construct(
-		#[AutowireIterator('phpbb.media_plugin')] private readonly iterable $plugins,
+		#[AutowireIterator('phpbb.storage_plugin')] private readonly iterable $plugins,
 	) {
 	}
 
