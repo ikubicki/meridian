@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace phpbb\content\Contract;
+namespace phpbb\threads\Contract;
 
 use phpbb\content\DTO\ContentContext;
 

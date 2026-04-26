@@ -14,12 +14,12 @@
 
 declare(strict_types=1);
 
-namespace phpbb\Tests\content\Pipeline;
+namespace phpbb\Tests\threads\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
-use phpbb\content\Pipeline\ThreadsPipeline;
+use phpbb\threads\Contract\ThreadsPluginInterface;
+use phpbb\threads\Pipeline\ThreadsPipeline;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;

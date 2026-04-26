@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace phpbb\Tests\threads\Service;
 
 use Doctrine\DBAL\Connection;
-use phpbb\content\Pipeline\NullThreadsPipeline;
+use phpbb\threads\Pipeline\NullThreadsPipeline;
 use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;

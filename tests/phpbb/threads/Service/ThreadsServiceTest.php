@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace phpbb\Tests\threads\Service;
 
 use phpbb\api\DTO\PaginationContext;
-use phpbb\content\Pipeline\NullThreadsPipeline;
+use phpbb\threads\Pipeline\NullThreadsPipeline;
 use phpbb\search\Service\NullSearchIndexer;
 use phpbb\Tests\Integration\IntegrationTestCase;
 use phpbb\threads\DTO\CreatePostRequest;

@@ -19,7 +19,7 @@ namespace phpbb\Tests\api\Controller;
 use phpbb\api\Controller\PostsController;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
 use phpbb\common\Event\DomainEventCollection;
-use phpbb\content\Pipeline\NullThreadsPipeline;
+use phpbb\threads\Pipeline\NullThreadsPipeline;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\PostDTO;
 use phpbb\threads\DTO\TopicDTO;

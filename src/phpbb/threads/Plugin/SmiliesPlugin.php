@@ -14,11 +14,11 @@
 
 declare(strict_types=1);
 
-namespace phpbb\content\Plugin;
+namespace phpbb\threads\Plugin;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
+use phpbb\threads\Contract\ThreadsPluginInterface;
 
 /**
  * Converts phpBB smilies text codes to Unicode emoji.

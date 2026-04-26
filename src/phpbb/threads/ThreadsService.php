@@ -19,7 +19,7 @@ namespace phpbb\threads;
 use Doctrine\DBAL\Connection;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\common\Event\DomainEventCollection;
-use phpbb\content\Contract\ThreadsPipelineInterface;
+use phpbb\threads\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
 use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;

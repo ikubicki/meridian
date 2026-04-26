@@ -14,10 +14,10 @@
 
 declare(strict_types=1);
 
-namespace phpbb\content\Pipeline;
+namespace phpbb\threads\Pipeline;
 
-use phpbb\content\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
+use phpbb\threads\Contract\ThreadsPipelineInterface;
 
 /**
  * No-op pipeline used in tests and environments with no plugins registered.

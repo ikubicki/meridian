@@ -18,7 +18,7 @@ namespace phpbb\api\Controller;
 
 use phpbb\api\DTO\PaginationContext;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
-use phpbb\content\Contract\ThreadsPipelineInterface;
+use phpbb\threads\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\CreatePostRequest;

@@ -14,12 +14,12 @@
 
 declare(strict_types=1);
 
-namespace phpbb\content\Pipeline;
+namespace phpbb\threads\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\ThreadsPipelineInterface;
-use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
+use phpbb\threads\Contract\ThreadsPipelineInterface;
+use phpbb\threads\Contract\ThreadsPluginInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 final class ThreadsPipeline implements ThreadsPipelineInterface

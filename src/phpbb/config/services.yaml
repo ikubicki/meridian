@@ -5,7 +5,7 @@ services:
         public: false
 
     _instanceof:
-        phpbb\content\Contract\ThreadsPluginInterface:
+        phpbb\threads\Contract\ThreadsPluginInterface:
             tags: ['phpbb.threads_plugin']
         phpbb\content\Contract\StoragePluginInterface:
             tags: ['phpbb.storage_plugin']
@@ -215,7 +215,7 @@ services:
             $postRepository: '@phpbb\threads\Contract\PostRepositoryInterface'
             $connection: '@Doctrine\DBAL\Connection'
             $searchIndexer: '@phpbb\search\Contract\SearchIndexerInterface'
-            $contentPipeline: '@phpbb\content\Contract\ThreadsPipelineInterface'
+            $contentPipeline: '@phpbb\threads\Contract\ThreadsPipelineInterface'
 
     phpbb\threads\Contract\ThreadsServiceInterface:
         alias: phpbb\threads\ThreadsService
@@ -469,10 +469,10 @@ services:
     # Content module (M11a — plugin pipeline)
     # ---------------------------------------------------------------------------
 
-    phpbb\content\Pipeline\ThreadsPipeline: ~
+    phpbb\threads\Pipeline\ThreadsPipeline: ~
 
-    phpbb\content\Contract\ThreadsPipelineInterface:
-        alias: phpbb\content\Pipeline\ThreadsPipeline
+    phpbb\threads\Contract\ThreadsPipelineInterface:
+        alias: phpbb\threads\Pipeline\ThreadsPipeline
         public: true
 
     phpbb\content\Pipeline\StoragePipeline: ~
@@ -487,5 +487,5 @@ services:
         alias: phpbb\content\Service\MetadataService
         public: true
 
-    phpbb\content\Plugin\:
-        resource: '../content/Plugin/'
+    phpbb\threads\Plugin\:
+        resource: '../threads/Plugin/'
