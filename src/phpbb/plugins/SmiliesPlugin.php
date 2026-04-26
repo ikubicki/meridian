@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace phpbb\threads\Plugin;
+namespace phpbb\plugins;
 
 use phpbb\content\ContentStage;
 use phpbb\content\DTO\ContentContext;

@@ -14,11 +14,11 @@
 
 declare(strict_types=1);
 
-namespace phpbb\Tests\threads\Plugin;
+namespace phpbb\Tests\plugins;
 
 use phpbb\content\ContentStage;
 use phpbb\content\DTO\ContentContext;
-use phpbb\threads\Plugin\SmiliesPlugin;
+use phpbb\plugins\SmiliesPlugin;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

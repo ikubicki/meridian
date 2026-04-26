@@ -487,5 +487,5 @@ services:
         alias: phpbb\content\Service\MetadataService
         public: true
 
-    phpbb\threads\Plugin\:
-        resource: '../threads/Plugin/'
+    phpbb\plugins\:
+        resource: '../plugins/'
