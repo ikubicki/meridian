@@ -22,7 +22,7 @@
  * stale entries by operating directly on the host filesystem.
  */
 
-import mysql, { RowDataPacket } from 'mysql2/promise';
+import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import * as fs   from 'fs';
 import * as path from 'path';
 
@@ -151,5 +151,90 @@ export async function closePool(): Promise<void> {
 	if (pool !== null) {
 		await pool.end();
 		pool = null;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Search helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Ensure search_driver is set to 'like' in phpbb_config.
+ * Uses ON DUPLICATE KEY UPDATE so it is safe to call even if the key exists.
+ */
+export async function setupSearchConfig(): Promise<void> {
+	await getPool().execute(
+		"INSERT INTO phpbb_config (config_name, config_value, is_dynamic) VALUES ('search_driver', 'like', 0) ON DUPLICATE KEY UPDATE config_value = 'like'",
+	);
+}
+
+/**
+ * Remove the search_driver key from phpbb_config.
+ * Called during afterAll cleanup only — does not restore any previous value.
+ */
+export async function cleanupSearchConfig(): Promise<void> {
+	await getPool().execute("DELETE FROM phpbb_config WHERE config_name = 'search_driver'");
+}
+
+export interface SeedSearchPostParams {
+	/** Existing forum_id (must already exist in phpbb_forums). */
+	forumId:  number;
+	/** poster_id — e.g. 200 (alice). */
+	posterId: number;
+	subject:  string;
+	text:     string;
+	/** Optional UNIX timestamp for post_time / topic_time. Defaults to UNIX_TIMESTAMP(). */
+	postTime?: number;
+}
+
+export interface SeedSearchPostResult {
+	postId:  number;
+	topicId: number;
+}
+
+/**
+ * Seed one phpbb_topic + one phpbb_post with post_visibility = 1.
+ * Returns the auto-assigned post_id and topic_id for later cleanup.
+ */
+export async function seedSearchPost(params: SeedSearchPostParams): Promise<SeedSearchPostResult> {
+	const conn = await getPool().getConnection();
+	try {
+		const hasTime     = params.postTime !== undefined;
+		const timeSql     = hasTime ? '?' : 'UNIX_TIMESTAMP()';
+		const timeTopicArgs = hasTime ? [params.postTime] : [];
+
+		const [topicResult] = await conn.execute<ResultSetHeader>(
+			`INSERT INTO phpbb_topics (forum_id, topic_title, topic_poster, topic_time, topic_visibility)
+			 VALUES (?, ?, ?, ${timeSql}, 1)`,
+			[params.forumId, params.subject, params.posterId, ...timeTopicArgs],
+		);
+		const topicId = topicResult.insertId;
+
+		const timePostArgs = hasTime ? [params.postTime] : [];
+
+		const [postResult] = await conn.execute<ResultSetHeader>(
+			`INSERT INTO phpbb_posts (topic_id, forum_id, poster_id, post_text, post_subject, post_time, post_visibility)
+			 VALUES (?, ?, ?, ?, ?, ${timeSql}, 1)`,
+			[topicId, params.forumId, params.posterId, params.text, params.subject, ...timePostArgs],
+		);
+		const postId = postResult.insertId;
+
+		return { postId, topicId };
+	} finally {
+		conn.release();
+	}
+}
+
+/**
+ * Remove seeded posts and topics created by seedSearchPost.
+ */
+export async function cleanupSearchData(postIds: number[], topicIds: number[]): Promise<void> {
+	if (postIds.length > 0) {
+		const pp = postIds.map(() => '?').join(',');
+		await getPool().execute(`DELETE FROM phpbb_posts WHERE post_id IN (${pp})`, postIds);
+	}
+	if (topicIds.length > 0) {
+		const tp = topicIds.map(() => '?').join(',');
+		await getPool().execute(`DELETE FROM phpbb_topics WHERE topic_id IN (${tp})`, topicIds);
 	}
 }

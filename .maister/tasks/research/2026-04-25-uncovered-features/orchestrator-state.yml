@@ -1,0 +1,31 @@
+task_path: .maister/tasks/research/2026-04-25-uncovered-features
+research_context:
+  research_type: technical
+  research_question: "Jakie funkcjonalności są jeszcze niepokryte według milestone'ów? Czego brakuje w M0-M8 relative do phpBB3, co jest zaplanowane w M9-M14, jakie luki są niezaplanowane?"
+  scope:
+    included:
+      - MILESTONES.md zadania i statusy
+      - roadmap.md milestony M0-M14
+      - services-architecture.md
+      - phpbb3 legacy codebase jako punkt odniesienia
+      - istniejące src/phpbb/ moduły
+    excluded:
+      - szczegóły implementacji już ukończonych serwisów
+      - zewnętrzne biblioteki vendor
+    constraints:
+      - skupić się na lukach funkcjonalnych, nie na długu technicznym
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy:
+    categories: []
+    count: 0
+    source: default
+  phase_summaries:
+    phase-1:
+      summary: ""
+      steps_completed: []
+
+options:
+  brainstorming_enabled: false
+  design_enabled: false

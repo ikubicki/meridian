@@ -38,6 +38,11 @@ services:
         alias: phpbb\cache\CachePoolFactory
         public: true
 
+    phpbb.cache.pool.search:
+        class: phpbb\cache\CachePool
+        factory: ['@phpbb\cache\CachePoolFactoryInterface', 'getPool']
+        arguments: ['search']
+
     # ---------------------------------------------------------------------------
     # Database connection (Doctrine DBAL 4 — no ORM, no DoctrineBundle)
     # ---------------------------------------------------------------------------
@@ -188,6 +193,7 @@ services:
             $topicRepository: '@phpbb\threads\Contract\TopicRepositoryInterface'
             $postRepository: '@phpbb\threads\Contract\PostRepositoryInterface'
             $connection: '@Doctrine\DBAL\Connection'
+            $searchIndexer: '@phpbb\search\Contract\SearchIndexerInterface'
 
     phpbb\threads\Contract\ThreadsServiceInterface:
         alias: phpbb\threads\ThreadsService
@@ -389,3 +395,39 @@ services:
             $cacheFactory: '@phpbb\cache\CachePoolFactoryInterface'
         tags:
             - { name: kernel.event_subscriber }
+
+    # ---------------------------------------------------------------------------
+    # Config module (M9 — phpbb_config reader)
+    # ---------------------------------------------------------------------------
+
+    phpbb\config\ConfigRepository: ~
+
+    phpbb\config\Contract\ConfigRepositoryInterface:
+        alias: phpbb\config\ConfigRepository
+
+    # ---------------------------------------------------------------------------
+    # Search module (M10)
+    # ---------------------------------------------------------------------------
+
+    phpbb\search\Driver\LikeDriver: ~
+    phpbb\search\Driver\FullTextDriver: ~
+    phpbb\search\Driver\ElasticsearchDriver: ~
+    phpbb\search\Tokenizer\NativeTokenizer: ~
+    phpbb\search\Driver\NativeDriver: ~
+    phpbb\search\Service\SearchService:
+        arguments:
+            $fullTextDriver: '@phpbb\search\Driver\FullTextDriver'
+            $likeDriver: '@phpbb\search\Driver\LikeDriver'
+            $elasticsearchDriver: '@phpbb\search\Driver\ElasticsearchDriver'
+            $nativeDriver: '@phpbb\search\Driver\NativeDriver'
+            $configRepository: '@phpbb\config\Contract\ConfigRepositoryInterface'
+            $cache: '@phpbb.cache.pool.search'
+    phpbb\search\Contract\SearchServiceInterface:
+        alias: phpbb\search\Service\SearchService
+
+    phpbb\search\Service\SearchIndexerService:
+        arguments:
+            $cache: '@phpbb.cache.pool.search'
+    phpbb\search\Service\NullSearchIndexer: ~
+    phpbb\search\Contract\SearchIndexerInterface:
+        alias: phpbb\search\Service\SearchIndexerService

@@ -1,0 +1,40 @@
+task_path: .maister/tasks/development/2026-04-26-search-service
+task_description: "Implementacja M9 — Search Service (phpbb\\search) — full-text search service dla phpBB4 Meridian"
+task_context:
+  risk_level: medium
+  clarifications_resolved: true
+  tech_clarified: true
+  architecture_decision: "pluggable driver abstraction: FullTextDriver (MySQL/PG/SQLite), LikeDriver (fallback), ElasticsearchDriver (stub)"
+  task_characteristics:
+    has_reproducible_defect: false
+    modifies_existing_code: false
+    creates_new_entities: true
+    involves_data_operations: true
+    ui_heavy: false
+  scope_expanded: false
+completed_phases: [1, 2, 5, 6, 7, 8, 10, 11, 12, 14]
+phase_summaries:
+  codebase_analysis: "Zidentyfikowano wzorce: Repository/DBAL4, Entity fromRow(), thin Controller, DI via services.yaml. DB: phpbb_posts (post_text, post_subject). Architektura: pluggable driver z konfiguracją admin."
+  gap_analysis: "Nowe pliki: phpbb\\config\\ConfigRepository + 8 klas w phpbb\\search\\. Modyfikacje: services.yaml, routes.yaml. Config via DB ConfigRepository. Testy: DBAL mock + E2E MySQL."
+  specification: "Pluggable driver (FullText/Like/Elasticsearch stub), ConfigRepositoryInterface, executeQuery not QueryBuilder, perPage=25/max50, FULLTEXT index migration w E2E setup, 14 unit + 5 E2E tests."
+  implementation: |
+    COMPLETED 2026-04-26. 9 grup implementacyjnych:
+    G1: ConfigRepository + interface (3 testy)
+    G2: SearchQuery DTO + refactor interfejsu (sortBy, searchIn, dateFrom, dateTo; walidacja konstruktora)
+    G3: LikeDriver / FullTextDriver / ElasticsearchDriver (pierwotna implementacja) — zaktualizowane do SearchQuery
+    G4: NativeTokenizer + NativeDriver (własny indeks slow, CJK bigrams, LikeDriver fallback)
+    G5: SearchIndexerService + NullSearchIndexer + wiring w ThreadsService (createTopic/createPost)
+    G6: Cache wyników (TagAwareCacheInterface, tag 'search', TTL z search_cache_ttl config)
+    G7: SearchController (sort_by, search_in, date_from, date_to params)
+    G8: PHPUnit gap-fill (SearchQueryTest)
+    G9: E2E Tests (10 testów: UC-S1–S5 + UC-SR4/5/6/9)
+    Wynik końcowy: 494 unit, 178 E2E, 0 cs:fix violations
+  verification: "Wszystkie 3 komendy przeszły: composer test (494/494), composer test:e2e (178/178), composer cs:fix (0 naruszeń)."
+options:
+  e2e_enabled: true
+  user_docs_enabled: false
+  spec_audit_enabled: true
+  code_review_enabled: true
+  pragmatic_review_enabled: true
+  reality_check_enabled: true
+  production_check_enabled: true
