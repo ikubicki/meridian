@@ -56,4 +56,19 @@ interface TopicRepositoryInterface
 		string $posterColour,
 		int $now,
 	): void;
+
+	/**
+	 * @throws RepositoryException
+	 */
+	public function updateTitle(int $topicId, string $title): void;
+
+	/**
+	 * @throws RepositoryException
+	 */
+	public function softDelete(int $topicId): void;
+
+	/**
+	 * @throws RepositoryException
+	 */
+	public function decrementPostCount(int $topicId): void;
 }

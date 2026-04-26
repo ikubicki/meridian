@@ -22,11 +22,15 @@ use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\CreateTopicRequest;
 use phpbb\threads\DTO\PostDTO;
 use phpbb\threads\DTO\TopicDTO;
+use phpbb\threads\DTO\UpdatePostRequest;
+use phpbb\threads\DTO\UpdateTopicRequest;
 use phpbb\user\DTO\PaginatedResult;
 
 interface ThreadsServiceInterface
 {
 	public function getTopic(int $topicId): TopicDTO;
+
+	public function getPost(int $postId): PostDTO;
 
 	/**
 	 * @return PaginatedResult<TopicDTO>
@@ -41,4 +45,12 @@ interface ThreadsServiceInterface
 	public function listPosts(int $topicId, PaginationContext $ctx): PaginatedResult;
 
 	public function createPost(CreatePostRequest $request): DomainEventCollection;
+
+	public function updateTopic(UpdateTopicRequest $request): DomainEventCollection;
+
+	public function updatePost(UpdatePostRequest $request): DomainEventCollection;
+
+	public function deleteTopic(int $topicId, int $actorId): DomainEventCollection;
+
+	public function deletePost(int $postId, int $actorId): DomainEventCollection;
 }

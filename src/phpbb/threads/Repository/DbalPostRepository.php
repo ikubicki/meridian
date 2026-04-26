@@ -168,4 +168,33 @@ class DbalPostRepository implements PostRepositoryInterface
 			visibility: (int) $row['post_visibility'],
 		);
 	}
+
+	public function updateContent(int $postId, string $content): void
+	{
+		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('post_text', ':content')
+				->where($qb->expr()->eq('post_id', ':postId'))
+				->setParameter('content', $content)
+				->setParameter('postId', $postId)
+				->executeStatement();
+		} catch (\Doctrine\DBAL\Exception $e) {
+			throw new RepositoryException('Failed to update post content', previous: $e);
+		}
+	}
+
+	public function softDelete(int $postId): void
+	{
+		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('post_visibility', '0')
+				->where($qb->expr()->eq('post_id', ':postId'))
+				->setParameter('postId', $postId)
+				->executeStatement();
+		} catch (\Doctrine\DBAL\Exception $e) {
+			throw new RepositoryException('Failed to soft-delete post', previous: $e);
+		}
+	}
 }

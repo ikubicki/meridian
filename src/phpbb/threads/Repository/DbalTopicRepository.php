@@ -222,4 +222,48 @@ class DbalTopicRepository implements TopicRepositoryInterface
 			firstPosterColour:  (string) $row['topic_first_poster_colour'],
 		);
 	}
+
+	public function updateTitle(int $topicId, string $title): void
+	{
+		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('topic_title', ':title')
+				->where($qb->expr()->eq('topic_id', ':topicId'))
+				->setParameter('title', $title)
+				->setParameter('topicId', $topicId)
+				->executeStatement();
+		} catch (\Doctrine\DBAL\Exception $e) {
+			throw new RepositoryException('Failed to update topic title', previous: $e);
+		}
+	}
+
+	public function softDelete(int $topicId): void
+	{
+		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('topic_visibility', '0')
+				->where($qb->expr()->eq('topic_id', ':topicId'))
+				->setParameter('topicId', $topicId)
+				->executeStatement();
+		} catch (\Doctrine\DBAL\Exception $e) {
+			throw new RepositoryException('Failed to soft-delete topic', previous: $e);
+		}
+	}
+
+	public function decrementPostCount(int $topicId): void
+	{
+		try {
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('topic_posts_approved', 'topic_posts_approved - 1')
+				->where($qb->expr()->eq('topic_id', ':topicId'))
+				->andWhere('topic_posts_approved > 0')
+				->setParameter('topicId', $topicId)
+				->executeStatement();
+		} catch (\Doctrine\DBAL\Exception $e) {
+			throw new RepositoryException('Failed to decrement topic post count', previous: $e);
+		}
+	}
 }

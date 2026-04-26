@@ -27,8 +27,14 @@ use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\CreateTopicRequest;
 use phpbb\threads\DTO\PostDTO;
 use phpbb\threads\DTO\TopicDTO;
+use phpbb\threads\DTO\UpdatePostRequest;
+use phpbb\threads\DTO\UpdateTopicRequest;
 use phpbb\threads\Event\PostCreatedEvent;
+use phpbb\threads\Event\PostDeletedEvent;
+use phpbb\threads\Event\PostUpdatedEvent;
 use phpbb\threads\Event\TopicCreatedEvent;
+use phpbb\threads\Event\TopicDeletedEvent;
+use phpbb\threads\Event\TopicUpdatedEvent;
 use phpbb\user\DTO\PaginatedResult;
 
 final class ThreadsService implements ThreadsServiceInterface
@@ -54,6 +60,17 @@ final class ThreadsService implements ThreadsServiceInterface
 		}
 
 		return TopicDTO::fromEntity($topic);
+	}
+
+	public function getPost(int $postId): PostDTO
+	{
+		$post = $this->postRepository->findById($postId);
+
+		if ($post === null || $post->visibility !== 1) {
+			throw new \InvalidArgumentException("Post {$postId} not found");
+		}
+
+		return PostDTO::fromEntity($post);
 	}
 
 	/**
@@ -163,6 +180,106 @@ final class ThreadsService implements ThreadsServiceInterface
 
 		return new DomainEventCollection([
 			new PostCreatedEvent(entityId: $postId, actorId: $request->actorId),
+		]);
+	}
+
+	public function updateTopic(UpdateTopicRequest $request): DomainEventCollection
+	{
+		$topic = $this->topicRepository->findById($request->topicId);
+
+		if ($topic === null || $topic->visibility !== 1) {
+			throw new \InvalidArgumentException("Topic {$request->topicId} not found");
+		}
+
+		if ($topic->posterId !== $request->actorId) {
+			throw new \RuntimeException('Forbidden', 403);
+		}
+
+		$title = trim($request->title);
+
+		if ($title === '') {
+			throw new \InvalidArgumentException('Title must not be empty');
+		}
+
+		$this->topicRepository->updateTitle($request->topicId, $title);
+
+		return new DomainEventCollection([
+			new TopicUpdatedEvent(entityId: $request->topicId, actorId: $request->actorId),
+		]);
+	}
+
+	public function updatePost(UpdatePostRequest $request): DomainEventCollection
+	{
+		$post = $this->postRepository->findById($request->postId);
+
+		if ($post === null || $post->visibility !== 1) {
+			throw new \InvalidArgumentException("Post {$request->postId} not found");
+		}
+
+		if ($post->posterId !== $request->actorId) {
+			throw new \RuntimeException('Forbidden', 403);
+		}
+
+		$content = trim($request->content);
+
+		if ($content === '') {
+			throw new \InvalidArgumentException('Content must not be empty');
+		}
+
+		$this->postRepository->updateContent($request->postId, $content);
+
+		return new DomainEventCollection([
+			new PostUpdatedEvent(entityId: $request->postId, actorId: $request->actorId),
+		]);
+	}
+
+	public function deleteTopic(int $topicId, int $actorId): DomainEventCollection
+	{
+		$topic = $this->topicRepository->findById($topicId);
+
+		if ($topic === null || $topic->visibility !== 1) {
+			throw new \InvalidArgumentException("Topic {$topicId} not found");
+		}
+
+		if ($topic->posterId !== $actorId) {
+			throw new \RuntimeException('Forbidden', 403);
+		}
+
+		$this->topicRepository->softDelete($topicId);
+
+		return new DomainEventCollection([
+			new TopicDeletedEvent(entityId: $topicId, actorId: $actorId),
+		]);
+	}
+
+	public function deletePost(int $postId, int $actorId): DomainEventCollection
+	{
+		$post = $this->postRepository->findById($postId);
+
+		if ($post === null || $post->visibility !== 1) {
+			throw new \InvalidArgumentException("Post {$postId} not found");
+		}
+
+		if ($post->posterId !== $actorId) {
+			throw new \RuntimeException('Forbidden', 403);
+		}
+
+		$this->connection->beginTransaction();
+
+		try {
+			$this->postRepository->softDelete($postId);
+			$this->topicRepository->decrementPostCount($post->topicId);
+			$this->connection->commit();
+		} catch (\Throwable $e) {
+			if ($this->connection->isTransactionActive()) {
+				$this->connection->rollBack();
+			}
+
+			throw new \RuntimeException('Failed to delete post', previous: $e);
+		}
+
+		return new DomainEventCollection([
+			new PostDeletedEvent(entityId: $postId, actorId: $actorId),
 		]);
 	}
 }

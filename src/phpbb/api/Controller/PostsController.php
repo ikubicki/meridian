@@ -21,6 +21,7 @@ use phpbb\auth\Contract\AuthorizationServiceInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\PostDTO;
+use phpbb\threads\DTO\UpdatePostRequest;
 use phpbb\user\Contract\UserRepositoryInterface;
 use phpbb\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -114,18 +115,7 @@ class PostsController
 				throw new \RuntimeException('Missing post-created event');
 			}
 
-			$posts = $this->threadsService->listPosts($topicId, new PaginationContext(page: 1, perPage: 1));
-			$dto   = $posts->items[0] ?? null;
-
-			if ($dto === null || $dto->id !== $event->entityId) {
-				$dto = new PostDTO(
-					id: $event->entityId,
-					topicId: $topicId,
-					forumId: $topic->forumId,
-					authorId: $user->id,
-					content: $content,
-				);
-			}
+			$dto = $this->threadsService->getPost($event->entityId);
 		} catch (\InvalidArgumentException) {
 			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
 		} catch (\Throwable) {
@@ -138,14 +128,80 @@ class PostsController
 		], 201);
 	}
 
+	#[Route('/topics/{topicId}/posts/{postId}', name: 'api_v1_topics_posts_update', methods: ['PATCH'])]
+	public function update(int $topicId, int $postId, Request $request): JsonResponse
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		if ($user === null) {
+			return new JsonResponse(['error' => 'Authentication required', 'status' => 401], 401);
+		}
+
+		$body    = json_decode($request->getContent(), true) ?? [];
+		$content = trim((string) ($body['content'] ?? ''));
+
+		if ($content === '') {
+			return new JsonResponse(['error' => 'Content is required', 'status' => 400], 400);
+		}
+
+		try {
+			$events = $this->threadsService->updatePost(new UpdatePostRequest(
+				postId:  $postId,
+				content: $content,
+				actorId: $user->id,
+			));
+			$events->dispatch($this->dispatcher);
+			$dto = $this->threadsService->getPost($postId);
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Post not found', 'status' => 404], 404);
+		} catch (\RuntimeException $e) {
+			if ($e->getCode() === 403) {
+				return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+			}
+
+			return new JsonResponse(['error' => 'Internal server error', 'status' => 500], 500);
+		}
+
+		return new JsonResponse(['data' => $this->postToArray($dto)]);
+	}
+
+	#[Route('/topics/{topicId}/posts/{postId}', name: 'api_v1_topics_posts_delete', methods: ['DELETE'])]
+	public function delete(int $topicId, int $postId, Request $request): JsonResponse
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		if ($user === null) {
+			return new JsonResponse(['error' => 'Authentication required', 'status' => 401], 401);
+		}
+
+		try {
+			$events = $this->threadsService->deletePost($postId, $user->id);
+			$events->dispatch($this->dispatcher);
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Post not found', 'status' => 404], 404);
+		} catch (\RuntimeException $e) {
+			if ($e->getCode() === 403) {
+				return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+			}
+
+			return new JsonResponse(['error' => 'Internal server error', 'status' => 500], 500);
+		}
+
+		return new JsonResponse(null, 204);
+	}
+
 	private function postToArray(PostDTO $dto): array
 	{
 		return [
-			'id'       => $dto->id,
-			'topicId'  => $dto->topicId,
-			'forumId'  => $dto->forumId,
-			'authorId' => $dto->authorId,
-			'content'  => $dto->content,
+			'id'             => $dto->id,
+			'topicId'        => $dto->topicId,
+			'forumId'        => $dto->forumId,
+			'authorId'       => $dto->authorId,
+			'authorUsername' => $dto->authorUsername,
+			'content'        => $dto->content,
+			'createdAt'      => $dto->createdAt,
 		];
 	}
 }

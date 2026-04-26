@@ -21,6 +21,12 @@ let apiCtx: APIRequestContext;
 let accessToken: string;
 let createdTopicId: number;
 
+// State for edit/delete lifecycle tests
+let editTopicId: number;
+let editPostId: number;
+let deleteTopicId: number;
+let deletePostId: number;
+
 test.beforeAll(async () => {
 	apiCtx = await playwrightRequest.newContext({
 		baseURL: process.env.API_BASE_URL ?? 'http://localhost:8181',
@@ -255,11 +261,13 @@ test('GET /topics/{newId}/posts — returns initial post with full PostDTO shape
 
 	const post = body.data[0];
 	expect(post).toMatchObject({
-		id:       expect.any(Number),
-		topicId:  createdTopicId,
-		forumId:  1,
-		authorId: expect.any(Number),
-		content:  expect.any(String),
+		id:             expect.any(Number),
+		topicId:        createdTopicId,
+		forumId:        1,
+		authorId:       expect.any(Number),
+		authorUsername: expect.any(String),
+		content:        expect.any(String),
+		createdAt:      expect.any(Number),
 	});
 });
 
@@ -367,4 +375,232 @@ test('GET /topics/{newId}/posts — all posts have correct topicId and forumId',
 		expect(post.topicId).toBe(createdTopicId);
 		expect(post.forumId).toBe(1);
 	}
+});
+
+// ---------------------------------------------------------------------------
+// UC-A: Edit lifecycle — PATCH topic, PATCH post
+// ---------------------------------------------------------------------------
+test('UC-A setup — create topic for edit tests', async () => {
+	const res = await apiCtx.post(`${API}/forums/1/topics`, {
+		data: { title: 'Edit UC-A Original Title', content: 'Original first post' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+	editTopicId = (await res.json()).data.id;
+	expect(editTopicId).toBeGreaterThan(0);
+});
+
+test('UC-A setup — create reply post for edit tests', async () => {
+	const res = await apiCtx.post(`${API}/topics/${editTopicId}/posts`, {
+		data: { content: 'Original reply content' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+	editPostId = (await res.json()).data.id;
+	expect(editPostId).toBeGreaterThan(0);
+});
+
+test('PATCH /topics/{editTopicId} without auth — 401', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}`, {
+		data: { title: 'Should fail' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+test('PATCH /topics/{editTopicId} with empty title — 400', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}`, {
+		data:    { title: '   ' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(400);
+
+	const body = await res.json();
+	expect(body.error).toBeTruthy();
+});
+
+test('PATCH /topics/2 as alice — 403 (not the owner)', async () => {
+	const res = await apiCtx.patch(`${API}/topics/2`, {
+		data:    { title: 'Hijack' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(403);
+});
+
+test('PATCH /topics/{editTopicId} as alice — 200 with updated title', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}`, {
+		data:    { title: 'Edit UC-A Updated Title' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	expect(data.title).toBe('Edit UC-A Updated Title');
+	expect(data.id).toBe(editTopicId);
+});
+
+test('GET /topics/{editTopicId} — title reflects the edit', async () => {
+	const res = await apiCtx.get(`${API}/topics/${editTopicId}`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	expect(data.title).toBe('Edit UC-A Updated Title');
+});
+
+test('PATCH /topics/{editTopicId}/posts/{editPostId} without auth — 401', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}/posts/${editPostId}`, {
+		data: { content: 'Should fail' },
+	});
+
+	expect(res.status()).toBe(401);
+});
+
+test('PATCH /topics/{editTopicId}/posts/{editPostId} with empty content — 400', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}/posts/${editPostId}`, {
+		data:    { content: '   ' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(400);
+});
+
+test('PATCH /topics/{editTopicId}/posts/{editPostId} as alice — 200 with updated content', async () => {
+	const res = await apiCtx.patch(`${API}/topics/${editTopicId}/posts/${editPostId}`, {
+		data:    { content: 'Updated reply content' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	expect(data.content).toBe('Updated reply content');
+	expect(data.id).toBe(editPostId);
+	expect(data.authorUsername).toEqual(expect.any(String));
+	expect(data.createdAt).toEqual(expect.any(Number));
+});
+
+test('GET /topics/{editTopicId}/posts — reply content reflects the edit', async () => {
+	const res = await apiCtx.get(`${API}/topics/${editTopicId}/posts`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	const edited = data.find((p: { id: number }) => p.id === editPostId);
+	expect(edited).toBeDefined();
+	expect(edited.content).toBe('Updated reply content');
+});
+
+// ---------------------------------------------------------------------------
+// UC-B: Delete post lifecycle
+// ---------------------------------------------------------------------------
+test('UC-B setup — create topic for delete-post tests', async () => {
+	const res = await apiCtx.post(`${API}/forums/1/topics`, {
+		data: { title: 'Delete Post UC-B', content: 'First post stays' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+	deleteTopicId = (await res.json()).data.id;
+	expect(deleteTopicId).toBeGreaterThan(0);
+});
+
+test('UC-B setup — create post to delete', async () => {
+	const res = await apiCtx.post(`${API}/topics/${deleteTopicId}/posts`, {
+		data:    { content: 'This post will be deleted' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+	deletePostId = (await res.json()).data.id;
+	expect(deletePostId).toBeGreaterThan(0);
+});
+
+test('DELETE /topics/{deleteTopicId}/posts/{deletePostId} without auth — 401', async () => {
+	const res = await apiCtx.delete(`${API}/topics/${deleteTopicId}/posts/${deletePostId}`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('DELETE /topics/{deleteTopicId}/posts/{deletePostId} as alice — 204', async () => {
+	const res = await apiCtx.delete(`${API}/topics/${deleteTopicId}/posts/${deletePostId}`, {
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(204);
+});
+
+test('GET /topics/{deleteTopicId}/posts — deleted post no longer in list', async () => {
+	const res = await apiCtx.get(`${API}/topics/${deleteTopicId}/posts`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	const found = data.find((p: { id: number }) => p.id === deletePostId);
+	expect(found).toBeUndefined();
+});
+
+test('GET /topics/{deleteTopicId} — topic still accessible after post delete', async () => {
+	const res = await apiCtx.get(`${API}/topics/${deleteTopicId}`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	// Topic itself is not deleted, only the reply post was removed
+	expect(data.id).toBe(deleteTopicId);
+});
+
+// ---------------------------------------------------------------------------
+// UC-C: Delete topic lifecycle
+// ---------------------------------------------------------------------------
+test('UC-C setup — create topic to delete', async () => {
+	const res = await apiCtx.post(`${API}/forums/1/topics`, {
+		data: { title: 'Topic To Delete UC-C', content: 'Will be gone' },
+		headers: auth(),
+	});
+
+	expect(res.status()).toBe(201);
+	const body = await res.json();
+	// Reuse deleteTopicId slot for this scenario
+	deleteTopicId = body.data.id;
+	expect(deleteTopicId).toBeGreaterThan(0);
+});
+
+test('DELETE /topics/{deleteTopicId} without auth — 401', async () => {
+	const res = await apiCtx.delete(`${API}/topics/${deleteTopicId}`);
+
+	expect(res.status()).toBe(401);
+});
+
+test('DELETE /topics/2 as alice — 403 (not the owner)', async () => {
+	const res = await apiCtx.delete(`${API}/topics/2`, { headers: auth() });
+
+	expect(res.status()).toBe(403);
+});
+
+test('DELETE /topics/{deleteTopicId} as alice — 204', async () => {
+	const res = await apiCtx.delete(`${API}/topics/${deleteTopicId}`, { headers: auth() });
+
+	expect(res.status()).toBe(204);
+});
+
+test('GET /topics/{deleteTopicId} after delete — 404', async () => {
+	const res = await apiCtx.get(`${API}/topics/${deleteTopicId}`, { headers: auth() });
+
+	expect(res.status()).toBe(404);
+});
+
+test('GET /forums/1/topics after delete — deleted topic not in list', async () => {
+	const res = await apiCtx.get(`${API}/forums/1/topics`, { headers: auth() });
+
+	expect(res.status()).toBe(200);
+
+	const { data } = await res.json();
+	const found = data.find((t: { id: number }) => t.id === deleteTopicId);
+	expect(found).toBeUndefined();
 });

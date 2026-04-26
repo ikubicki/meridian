@@ -99,11 +99,13 @@ class PostsControllerTest extends TestCase
 	private function makePostDto(int $id = 1): PostDTO
 	{
 		return new PostDTO(
-			id: $id,
-			topicId: 10,
-			forumId: 2,
-			authorId: 3,
-			content: 'Post content',
+			id:             $id,
+			topicId:        10,
+			forumId:        2,
+			authorId:       3,
+			authorUsername: 'alice',
+			content:        'Post content',
+			createdAt:      1700000000,
 		);
 	}
 
@@ -151,12 +153,7 @@ class PostsControllerTest extends TestCase
 		$this->threadsService->method('createPost')->willReturn(new DomainEventCollection([
 			new PostCreatedEvent(entityId: 501, actorId: 15),
 		]));
-		$this->threadsService->method('listPosts')->willReturn(new PaginatedResult(
-			items: [$this->makePostDto(501)],
-			total: 1,
-			page: 1,
-			perPage: 1,
-		));
+		$this->threadsService->method('getPost')->willReturn($this->makePostDto(501));
 
 		$response = $this->controller->create(10, $request);
 

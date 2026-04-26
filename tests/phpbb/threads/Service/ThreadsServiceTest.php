@@ -21,6 +21,8 @@ use phpbb\search\Service\NullSearchIndexer;
 use phpbb\Tests\Integration\IntegrationTestCase;
 use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\CreateTopicRequest;
+use phpbb\threads\DTO\UpdatePostRequest;
+use phpbb\threads\DTO\UpdateTopicRequest;
 use phpbb\threads\Repository\DbalPostRepository;
 use phpbb\threads\Repository\DbalTopicRepository;
 use phpbb\threads\ThreadsService;
@@ -106,6 +108,32 @@ class ThreadsServiceTest extends IntegrationTestCase
 
 		$this->connection->executeStatement(
 			'INSERT INTO phpbb_topics (' . $columns . ') VALUES (' . $placeholders . ')',
+			$row,
+		);
+
+		return (int) $this->connection->lastInsertId();
+	}
+
+	private function insertPost(array $overrides = []): int
+	{
+		$defaults = [
+			'topic_id'       => 1,
+			'forum_id'       => 1,
+			'poster_id'      => 10,
+			'post_time'      => 1000000,
+			'post_text'      => 'Default content',
+			'post_subject'   => 'Test Subject',
+			'post_username'  => 'testuser',
+			'poster_ip'      => '127.0.0.1',
+			'post_visibility' => 1,
+		];
+
+		$row          = array_merge($defaults, $overrides);
+		$columns      = implode(', ', array_keys($row));
+		$placeholders = implode(', ', array_map(static fn (string $k) => ':' . $k, array_keys($row)));
+
+		$this->connection->executeStatement(
+			'INSERT INTO phpbb_posts (' . $columns . ') VALUES (' . $placeholders . ')',
 			$row,
 		);
 
@@ -273,5 +301,220 @@ class ThreadsServiceTest extends IntegrationTestCase
 	{
 		$this->expectException(\InvalidArgumentException::class);
 		$this->service->listPosts(404, new PaginationContext(page: 1, perPage: 25));
+	}
+
+	// -------------------------------------------------------------------------
+	// getPost
+	// -------------------------------------------------------------------------
+
+	#[Test]
+	public function getPostThrowsForUnknownPost(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+		$this->service->getPost(99999);
+	}
+
+	#[Test]
+	public function getPostThrowsForInvisiblePost(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'post_visibility' => 0]);
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->service->getPost($postId);
+	}
+
+	#[Test]
+	public function getPostReturnsPostDTO(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 42, 'post_text' => 'Hello']);
+
+		$dto = $this->service->getPost($postId);
+
+		$this->assertSame($postId, $dto->id);
+		$this->assertSame($topicId, $dto->topicId);
+		$this->assertSame(42, $dto->authorId);
+		$this->assertSame('Hello', $dto->content);
+	}
+
+	// -------------------------------------------------------------------------
+	// updateTopic
+	// -------------------------------------------------------------------------
+
+	#[Test]
+	public function updateTopicChangesTitle(): void
+	{
+		$topicId = $this->insertTopic(['topic_title' => 'Old Title', 'topic_poster' => 10]);
+
+		$events = $this->service->updateTopic(new UpdateTopicRequest(
+			topicId: $topicId,
+			title:   'New Title',
+			actorId: 10,
+		));
+
+		$this->assertNotNull($events->first());
+		$this->assertSame('New Title', $this->topicRepository->findById($topicId)?->title);
+	}
+
+	#[Test]
+	public function updateTopicThrowsForUnknownTopic(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+
+		$this->service->updateTopic(new UpdateTopicRequest(
+			topicId: 99999,
+			title:   'Never',
+			actorId: 1,
+		));
+	}
+
+	#[Test]
+	public function updateTopicThrowsForWrongActor(): void
+	{
+		$topicId = $this->insertTopic(['topic_poster' => 10]);
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(403);
+
+		$this->service->updateTopic(new UpdateTopicRequest(
+			topicId: $topicId,
+			title:   'Hijack',
+			actorId: 99,
+		));
+	}
+
+	#[Test]
+	public function updateTopicThrowsForEmptyTitle(): void
+	{
+		$topicId = $this->insertTopic(['topic_poster' => 10]);
+
+		$this->expectException(\InvalidArgumentException::class);
+
+		$this->service->updateTopic(new UpdateTopicRequest(
+			topicId: $topicId,
+			title:   '   ',
+			actorId: 10,
+		));
+	}
+
+	// -------------------------------------------------------------------------
+	// updatePost
+	// -------------------------------------------------------------------------
+
+	#[Test]
+	public function updatePostChangesContent(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 20, 'post_text' => 'Original']);
+
+		$events = $this->service->updatePost(new UpdatePostRequest(
+			postId:  $postId,
+			content: 'Updated content',
+			actorId: 20,
+		));
+
+		$this->assertNotNull($events->first());
+		$this->assertSame('Updated content', $this->postRepository->findById($postId)?->text);
+	}
+
+	#[Test]
+	public function updatePostThrowsForWrongActor(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 20]);
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(403);
+
+		$this->service->updatePost(new UpdatePostRequest(
+			postId:  $postId,
+			content: 'Hijack',
+			actorId: 99,
+		));
+	}
+
+	#[Test]
+	public function updatePostThrowsForEmptyContent(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 20]);
+
+		$this->expectException(\InvalidArgumentException::class);
+
+		$this->service->updatePost(new UpdatePostRequest(
+			postId:  $postId,
+			content: '   ',
+			actorId: 20,
+		));
+	}
+
+	// -------------------------------------------------------------------------
+	// deleteTopic
+	// -------------------------------------------------------------------------
+
+	#[Test]
+	public function deleteTopicSoftDeletesTopic(): void
+	{
+		$topicId = $this->insertTopic(['topic_poster' => 10, 'topic_visibility' => 1]);
+
+		$events = $this->service->deleteTopic($topicId, 10);
+
+		$this->assertNotNull($events->first());
+		$this->assertSame(0, $this->topicRepository->findById($topicId)?->visibility);
+	}
+
+	#[Test]
+	public function deleteTopicThrowsForWrongActor(): void
+	{
+		$topicId = $this->insertTopic(['topic_poster' => 10]);
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(403);
+
+		$this->service->deleteTopic($topicId, 99);
+	}
+
+	#[Test]
+	public function deleteTopicThrowsForUnknownTopic(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+		$this->service->deleteTopic(99999, 1);
+	}
+
+	// -------------------------------------------------------------------------
+	// deletePost
+	// -------------------------------------------------------------------------
+
+	#[Test]
+	public function deletePostSoftDeletesPostAndDecrementsTopicCount(): void
+	{
+		$topicId = $this->insertTopic(['topic_poster' => 10, 'topic_posts_approved' => 2]);
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 20]);
+
+		$events = $this->service->deletePost($postId, 20);
+
+		$this->assertNotNull($events->first());
+		$this->assertSame(0, $this->postRepository->findById($postId)?->visibility);
+		$this->assertSame(1, $this->topicRepository->findById($topicId)?->postsApproved);
+	}
+
+	#[Test]
+	public function deletePostThrowsForWrongActor(): void
+	{
+		$topicId = $this->insertTopic();
+		$postId  = $this->insertPost(['topic_id' => $topicId, 'poster_id' => 20]);
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(403);
+
+		$this->service->deletePost($postId, 99);
+	}
+
+	#[Test]
+	public function deletePostThrowsForUnknownPost(): void
+	{
+		$this->expectException(\InvalidArgumentException::class);
+		$this->service->deletePost(99999, 1);
 	}
 }

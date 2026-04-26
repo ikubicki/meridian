@@ -48,4 +48,14 @@ interface PostRepositoryInterface
 		int $now,
 		int $visibility,
 	): int;
+
+	/**
+	 * @throws RepositoryException
+	 */
+	public function updateContent(int $postId, string $content): void;
+
+	/**
+	 * @throws RepositoryException
+	 */
+	public function softDelete(int $postId): void;
 }

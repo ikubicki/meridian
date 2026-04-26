@@ -25,18 +25,22 @@ final readonly class PostDTO
 		public int $topicId,
 		public int $forumId,
 		public int $authorId,
+		public string $authorUsername,
 		public string $content,
+		public int $createdAt,
 	) {
 	}
 
 	public static function fromEntity(Post $post): self
 	{
 		return new self(
-			id: $post->id,
-			topicId: $post->topicId,
-			forumId: $post->forumId,
-			authorId: $post->posterId,
-			content: $post->text,
+			id:             $post->id,
+			topicId:        $post->topicId,
+			forumId:        $post->forumId,
+			authorId:       $post->posterId,
+			authorUsername: $post->username,
+			content:        $post->text,
+			createdAt:      $post->time,
 		);
 	}
 }

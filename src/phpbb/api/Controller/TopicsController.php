@@ -21,6 +21,7 @@ use phpbb\auth\Contract\AuthorizationServiceInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\CreateTopicRequest;
 use phpbb\threads\DTO\TopicDTO;
+use phpbb\threads\DTO\UpdateTopicRequest;
 use phpbb\user\Contract\UserRepositoryInterface;
 use phpbb\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -132,6 +133,70 @@ class TopicsController
 		}
 
 		return new JsonResponse(['data' => $this->topicToArray($dto)], 201);
+	}
+
+	#[Route('/topics/{topicId}', name: 'api_v1_topics_update', methods: ['PATCH'])]
+	public function update(int $topicId, Request $request): JsonResponse
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		if ($user === null) {
+			return new JsonResponse(['error' => 'Authentication required', 'status' => 401], 401);
+		}
+
+		$body  = json_decode($request->getContent(), true) ?? [];
+		$title = trim((string) ($body['title'] ?? ''));
+
+		if ($title === '') {
+			return new JsonResponse(['error' => 'Title is required', 'status' => 400], 400);
+		}
+
+		try {
+			$events = $this->threadsService->updateTopic(new UpdateTopicRequest(
+				topicId: $topicId,
+				title:   $title,
+				actorId: $user->id,
+			));
+			$events->dispatch($this->dispatcher);
+			$dto = $this->threadsService->getTopic($topicId);
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
+		} catch (\RuntimeException $e) {
+			if ($e->getCode() === 403) {
+				return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+			}
+
+			return new JsonResponse(['error' => 'Internal server error', 'status' => 500], 500);
+		}
+
+		return new JsonResponse(['data' => $this->topicToArray($dto)]);
+	}
+
+	#[Route('/topics/{topicId}', name: 'api_v1_topics_delete', methods: ['DELETE'])]
+	public function delete(int $topicId, Request $request): JsonResponse
+	{
+		/** @var User|null $user */
+		$user = $request->attributes->get('_api_user');
+
+		if ($user === null) {
+			return new JsonResponse(['error' => 'Authentication required', 'status' => 401], 401);
+		}
+
+		try {
+			$events = $this->threadsService->deleteTopic($topicId, $user->id);
+			$events->dispatch($this->dispatcher);
+		} catch (\InvalidArgumentException) {
+			return new JsonResponse(['error' => 'Topic not found', 'status' => 404], 404);
+		} catch (\RuntimeException $e) {
+			if ($e->getCode() === 403) {
+				return new JsonResponse(['error' => 'Forbidden', 'status' => 403], 403);
+			}
+
+			return new JsonResponse(['error' => 'Internal server error', 'status' => 500], 500);
+		}
+
+		return new JsonResponse(null, 204);
 	}
 
 	private function topicToArray(TopicDTO $dto): array
