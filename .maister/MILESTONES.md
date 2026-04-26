@@ -275,15 +275,16 @@ Related plans: `.maister/plans/`
 | 11a.1 | Research content plugin injection | ✅ | `tasks/research/2026-04-26-content-plugins/` |
 | 11a.2 | High-level design (ADR-001…ADR-005) | ✅ | `tasks/research/2026-04-26-content-plugins/outputs/high-level-design.md` |
 | 11a.3 | `ContentStage` enum (PRE_SAVE, POST_SAVE, PRE_OUTPUT) | ✅ | `src/phpbb/content/ContentStage.php` |
-| 11a.4 | `PostContentPluginInterface` + `#[AutoconfigureTag]` | ✅ | `src/phpbb/content/Contract/PostContentPluginInterface.php` |
-| 11a.5 | `PostContentPipeline` (AutowireIterator, NullPipeline) | ✅ | `src/phpbb/content/Pipeline/PostContentPipeline.php` |
-| 11a.6 | Injection w `ThreadsService` (PRE_SAVE) + `PostsController::postToArray()` (PRE_OUTPUT) | ✅ | `src/phpbb/threads/ThreadsService.php`, `src/phpbb/api/Controller/PostsController.php` |
-| 11a.7 | `MediaPluginInterface` + `MediaPipeline` (sync, bez Messenger) | ✅ | `src/phpbb/content/Pipeline/MediaPipeline.php` |
+| 11a.4 | `ThreadsPluginInterface` + `#[AutoconfigureTag]` | ✅ | `src/phpbb/threads/Contract/ThreadsPluginInterface.php` |
+| 11a.5 | `ThreadsPipeline` (AutowireIterator, NullPipeline) | ✅ | `src/phpbb/threads/Pipeline/ThreadsPipeline.php` |
+| 11a.6 | Injection w `ThreadsService` ($threadsPipeline, PRE_SAVE) + `PostsController` (PRE_OUTPUT) | ✅ | `src/phpbb/threads/ThreadsService.php`, `src/phpbb/api/Controller/PostsController.php` |
+| 11a.7 | `StoragePluginInterface` + `StoragePipeline` (POST_SAVE, sync) | ✅ | `src/phpbb/content/Pipeline/StoragePipeline.php` |
 | 11a.8 | Wbudowany plugin: Censor (`CensorPlugin`) | ⏳ | M11b |
 | 11a.9 | Wbudowany plugin: s9e Legacy (`S9eLegacyPlugin`, `canProcess()`) | ⏳ | M11b |
 | 11a.10 | `ConfigTextService` (serwis dla `phpbb_config_text`) | ✅ | `src/phpbb/config/Service/ConfigTextService.php` |
-| 11a.11 | PHPUnit tests (pipeline, metadata, config-text) | ✅ | `tests/phpbb/content/`, `tests/phpbb/config/` |
+| 11a.11 | PHPUnit tests (pipeline, metadata, config-text, SmiliesPlugin) | ✅ | `tests/phpbb/threads/`, `tests/phpbb/plugins/`, `tests/phpbb/config/` |
 | 11a.12 | Playwright E2E tests | ✅ | 216 passed |
+| 11a.12a | SmiliesPlugin — phpBB smilies → Unicode emoji (PRE_OUTPUT) | ✅ | `src/phpbb/plugins/SmiliesPlugin.php` — 34 testy, live `:)` → `😊` |
 
 ### Metadata Plugin System
 
@@ -313,9 +314,9 @@ Related plans: `.maister/plans/`
 | 11b.1 | Research content pipeline (BBCode, Markdown, Smilies) | ⏳ | — |
 | 11b.2 | Implementation plan | ⏳ | — |
 | 11b.3 | s9e text-formatter integration | ⏳ | — |
-| 11b.4 | BBCode plugin (`PostContentPluginInterface`) | ⏳ | — |
-| 11b.5 | Markdown plugin (`PostContentPluginInterface`) | ⏳ | — |
-| 11b.6 | Smilies plugin (`PostContentPluginInterface`) | ⏳ | — |
+| 11b.4 | BBCode plugin (`ThreadsPluginInterface`) | ⏳ | — |
+| 11b.5 | Markdown plugin (`ThreadsPluginInterface`) | ⏳ | — |
+| 11b.6 | Smilies plugin via s9e (`ThreadsPluginInterface`) | ⏳ | SmiliesPlugin (unicode) już istnieje w `phpbb\plugins` |
 | 11b.7 | PHPUnit tests | ⏳ | — |
 | 11b.8 | Playwright E2E tests | ⏳ | — |
 
@@ -404,4 +405,4 @@ Research available: `tasks/research/`
 
 ---
 
-*Last updated: 2026-04-26 (M11a Plugin System ✅ zaimplementowany — 557 PHPUnit + 216 E2E; M11b Content Plugins zależy od M11a)*
+*Last updated: 2026-04-26 (M11a Plugin System ✅ — 591 PHPUnit + 216 E2E; SmiliesPlugin + refaktory: MediaPlugin→StoragePlugin, PostContentPlugin→ThreadsPlugin, phpbb\plugins namespace)*
