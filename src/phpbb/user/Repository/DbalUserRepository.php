@@ -39,10 +39,14 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function findById(int $id): ?User
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE user_id = :id LIMIT 1',
-				['id' => $id],
-			)->fetchAssociative();
+			$qb  = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('user_id', ':id'))
+				->setParameter('id', $id)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -57,11 +61,13 @@ class DbalUserRepository implements UserRepositoryInterface
 		}
 
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE user_id IN (?)',
-				[$ids],
-				[ArrayParameterType::INTEGER],
-			)->fetchAllAssociative();
+			$rows = $this->connection->createQueryBuilder()
+				->select('*')
+				->from(self::TABLE)
+				->where('user_id IN (:ids)')
+				->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$result = [];
 			foreach ($rows as $row) {
@@ -78,10 +84,14 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function findByUsername(string $username): ?User
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE username_clean = :clean LIMIT 1',
-				['clean' => mb_strtolower($username)],
-			)->fetchAssociative();
+			$qb  = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('username_clean', ':clean'))
+				->setParameter('clean', mb_strtolower($username))
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -92,10 +102,14 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function findByEmail(string $email): ?User
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT * FROM ' . self::TABLE . ' WHERE user_email = :email LIMIT 1',
-				['email' => mb_strtolower($email)],
-			)->fetchAssociative();
+			$qb  = $this->connection->createQueryBuilder();
+			$row = $qb->select('*')
+				->from(self::TABLE)
+				->where($qb->expr()->eq('user_email', ':email'))
+				->setParameter('email', mb_strtolower($email))
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -106,40 +120,45 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function create(array $data): User
 	{
 		try {
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-				(user_type, username, username_clean, user_email, user_password,
-				 user_colour, group_id, user_avatar, user_regdate, user_lastmark,
-				 user_posts, user_new, user_rank, user_ip, user_login_attempts,
-				 user_inactive_reason, user_form_salt, user_actkey)
-				VALUES
-				(:type, :username, :usernameClean, :email, :passwordHash,
-				 :colour, :defaultGroupId, :avatarUrl, :registeredAt, :lastmark,
-				 :posts, :isNew, :rank, :registrationIp, :loginAttempts,
-				 :inactiveReason, :formSalt, :activationKey)',
-				[
-					'type'           => $data['type'] instanceof UserType ? $data['type']->value : (int) $data['type'],
-					'username'       => $data['username'],
-					'usernameClean'  => mb_strtolower((string) $data['username']),
-					'email'          => mb_strtolower((string) $data['email']),
-					'passwordHash'   => $data['passwordHash'] ?? '',
-					'colour'         => $data['colour'] ?? '',
-					'defaultGroupId' => $data['defaultGroupId'] ?? 0,
-					'avatarUrl'      => $data['avatarUrl'] ?? '',
-					'registeredAt'   => time(),
-					'lastmark'       => time(),
-					'posts'          => 0,
-					'isNew'          => 1,
-					'rank'           => 0,
-					'registrationIp' => $data['registrationIp'] ?? '',
-					'loginAttempts'  => 0,
-					'inactiveReason' => isset($data['inactiveReason'])
-						? ($data['inactiveReason'] instanceof InactiveReason ? $data['inactiveReason']->value : (int) $data['inactiveReason'])
-						: 0,
-					'formSalt'       => $data['formSalt'] ?? '',
-					'activationKey'  => $data['activationKey'] ?? '',
-				],
-			);
+			$this->connection->createQueryBuilder()
+				->insert(self::TABLE)
+				->values([
+					'user_type'            => ':type',
+					'username'             => ':username',
+					'username_clean'       => ':usernameClean',
+					'user_email'           => ':email',
+					'user_password'        => ':passwordHash',
+					'user_colour'          => ':colour',
+					'group_id'             => ':defaultGroupId',
+					'user_avatar'          => ':avatarUrl',
+					'user_regdate'         => ':registeredAt',
+					'user_lastmark'        => ':lastmark',
+					'user_posts'           => '0',
+					'user_new'             => '1',
+					'user_rank'            => '0',
+					'user_ip'              => ':registrationIp',
+					'user_login_attempts'  => '0',
+					'user_inactive_reason' => ':inactiveReason',
+					'user_form_salt'       => ':formSalt',
+					'user_actkey'          => ':activationKey',
+				])
+				->setParameter('type', $data['type'] instanceof UserType ? $data['type']->value : (int) $data['type'])
+				->setParameter('username', $data['username'])
+				->setParameter('usernameClean', mb_strtolower((string) $data['username']))
+				->setParameter('email', mb_strtolower((string) $data['email']))
+				->setParameter('passwordHash', $data['passwordHash'] ?? '')
+				->setParameter('colour', $data['colour'] ?? '')
+				->setParameter('defaultGroupId', $data['defaultGroupId'] ?? 0)
+				->setParameter('avatarUrl', $data['avatarUrl'] ?? '')
+				->setParameter('registeredAt', time())
+				->setParameter('lastmark', time())
+				->setParameter('registrationIp', $data['registrationIp'] ?? '')
+				->setParameter('inactiveReason', isset($data['inactiveReason'])
+					? ($data['inactiveReason'] instanceof InactiveReason ? $data['inactiveReason']->value : (int) $data['inactiveReason'])
+					: 0)
+				->setParameter('formSalt', $data['formSalt'] ?? '')
+				->setParameter('activationKey', $data['activationKey'] ?? '')
+				->executeStatement();
 
 			$newId = (int) $this->connection->lastInsertId();
 
@@ -207,10 +226,11 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function delete(int $id): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE . ' WHERE user_id = :id',
-				['id' => $id],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->delete(self::TABLE)
+				->where($qb->expr()->eq('user_id', ':id'))
+				->setParameter('id', $id)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete user', previous: $e);
 		}
@@ -267,11 +287,13 @@ class DbalUserRepository implements UserRepositoryInterface
 		}
 
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT user_id, username, user_colour, user_avatar FROM ' . self::TABLE . ' WHERE user_id IN (?)',
-				[$ids],
-				[ArrayParameterType::INTEGER],
-			)->fetchAllAssociative();
+			$rows = $this->connection->createQueryBuilder()
+				->select('user_id', 'username', 'user_colour', 'user_avatar')
+				->from(self::TABLE)
+				->where('user_id IN (:ids)')
+				->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			$result = [];
 			foreach ($rows as $row) {
@@ -293,10 +315,12 @@ class DbalUserRepository implements UserRepositoryInterface
 	public function incrementTokenGeneration(int $userId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET token_generation = token_generation + 1 WHERE user_id = :id',
-				['id' => $userId],
-			);
+			$qb = $this->connection->createQueryBuilder();
+			$qb->update(self::TABLE)
+				->set('token_generation', 'token_generation + 1')
+				->where($qb->expr()->eq('user_id', ':id'))
+				->setParameter('id', $userId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to increment token generation', previous: $e);
 		}

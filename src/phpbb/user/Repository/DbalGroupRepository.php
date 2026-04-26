@@ -104,6 +104,7 @@ class DbalGroupRepository implements GroupRepositoryInterface
 		try {
 			$platform = $this->connection->getDatabasePlatform();
 			if ($platform instanceof MySQLPlatform) {
+				// ON DUPLICATE KEY UPDATE — raw SQL required; QueryBuilder cannot express upsert portably
 				$this->connection->executeStatement(
 					'INSERT INTO ' . self::TABLE_PIVOT .
 					' (group_id, user_id, group_leader, user_pending)
@@ -113,14 +114,26 @@ class DbalGroupRepository implements GroupRepositoryInterface
 				);
 			} else {
 				$this->connection->transactional(function (\Doctrine\DBAL\Connection $conn) use ($groupId, $userId, $isLeader): void {
-					$conn->executeStatement(
-						'DELETE FROM ' . self::TABLE_PIVOT . ' WHERE group_id = :groupId AND user_id = :userId',
-						['groupId' => $groupId, 'userId' => $userId],
-					);
-					$conn->executeStatement(
-						'INSERT INTO ' . self::TABLE_PIVOT . ' (group_id, user_id, group_leader, user_pending) VALUES (:groupId, :userId, :isLeader, 0)',
-						['groupId' => $groupId, 'userId' => $userId, 'isLeader' => (int) $isLeader],
-					);
+					$conn->createQueryBuilder()
+						->delete(self::TABLE_PIVOT)
+						->where('group_id = :groupId')
+						->andWhere('user_id = :userId')
+						->setParameter('groupId', $groupId)
+						->setParameter('userId', $userId)
+						->executeStatement();
+
+					$conn->createQueryBuilder()
+						->insert(self::TABLE_PIVOT)
+						->values([
+							'group_id'     => ':groupId',
+							'user_id'      => ':userId',
+							'group_leader' => ':isLeader',
+							'user_pending' => '0',
+						])
+						->setParameter('groupId', $groupId)
+						->setParameter('userId', $userId)
+						->setParameter('isLeader', (int) $isLeader)
+						->executeStatement();
 				});
 			}
 		} catch (\Doctrine\DBAL\Exception $e) {
