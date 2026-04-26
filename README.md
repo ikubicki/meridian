@@ -54,6 +54,10 @@ service with its own repository layer, service facade, REST controller, and full
 | M8 | Notifications Service (`phpbb\notifications`) — HTTP polling, mark-read | ✅ Done |
 | M9 | Search Service (`phpbb\search`) — full-text, NativeDriver, cache | ✅ Done |
 | M10 | React SPA Frontend | ⏳ Planned |
+| M11 | Content Formatting Plugins — BBCode, Markdown, Smilies | ⏳ Planned |
+| M12 | Moderation Service (`phpbb\moderation`) — reports, queue, lock/move | ⏳ Planned |
+| M13 | Configuration Service (`phpbb\config`) — config read/write API | ⏳ Planned |
+| M14 | Admin Panel (`phpbb\admin`) — admin REST API + React UI | ⏳ Planned |
 
 Security reviews (OWASP Top 10) and load tests (k6) are scheduled between milestones as
 explicit checkpoints, not afterthoughts.
