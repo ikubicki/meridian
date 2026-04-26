@@ -49,7 +49,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M4 | REST API Framework — routing, auth middleware | ✅ Done |
 | M5a | Hierarchy Service (`phpbb\hierarchy`) — forums/categories | ✅ Done |
 | M5b | Storage Service (`phpbb\storage`) — file/attachment storage | ✅ Done |
-| M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
+| M6 | Threads Service (`phpbb\threads`) — topics + posts, full CRUD (edit/delete) | ✅ Done |
 | M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
 | M8 | Notifications Service (`phpbb\notifications`) — HTTP polling, mark-read | ✅ Done |
 | M9 | Search Service (`phpbb\search`) — full-text, NativeDriver, cache | ✅ Done |

@@ -153,7 +153,12 @@ Related plans: `.maister/plans/`
 | 6.6 | Hybrid counters (Tiered Counter Pattern) | ⏳ | Future optimization (not critical for MVP) |
 | 6.7 | REST API controllers (TopicsController, PostsController) | ✅ | `7efa440` (all 5 endpoints) |
 | 6.8 | PHPUnit tests | ✅ | 273 unit/integration tests + 45 E2E (all passing) |
-| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | ✅ | `a6ac5a9` (post.spec.ts verified)
+| 6.9 | Playwright E2E tests (`/api/v1/topics/`, `/api/v1/posts/`) | ✅ | `a6ac5a9` (post.spec.ts verified) |
+| 6.10 | Edit/delete topics and posts (PATCH + DELETE endpoints) | ✅ | `73e30cf` |
+| 6.11 | Domain events: TopicUpdated, PostUpdated, TopicDeleted, PostDeleted | ✅ | `73e30cf` |
+| 6.12 | PostDTO extended: authorUsername + createdAt | ✅ | `73e30cf` |
+| 6.13 | PHPUnit tests updated (510 total) | ✅ | `73e30cf` |
+| 6.14 | E2E: edit/delete lifecycle tests — UC-A, UC-B, UC-C (201 total) | ✅ | `73e30cf` |
 
 ---
 
@@ -241,7 +246,7 @@ Related plans: `.maister/plans/`
 | 9.8 | PHPUnit tests (494 total, +36 nowych) | ✅ | `plans/2026-04-26-search-service.md` Group 6 |
 | 9.9 | Playwright E2E tests — 10 testów (`/api/v1/search/`), UC-S1–S5 + UC-SR4/5/6/9 | ✅ | `plans/2026-04-26-search-service.md` Group 7 |
 | 9.10 | LikeDriver / FullTextDriver / ElasticsearchDriver (podstawowe backendy) | ✅ | Initial implementation |
-| 9.11 | SearchIndexerService wiring: editPost / deletePost | ⏳ | Wymaga M6 editPost/deletePost |
+| 9.11 | SearchIndexerService wiring: editPost / deletePost | ✅ | M6 6.10 dostarcza editPost/deletePost |
 
 ---
 
