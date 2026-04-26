@@ -26,6 +26,15 @@ composer cs:fix
 
 All three must pass before considering the change complete.
 
+## Before Every `git push`
+
+Update project progress documentation before pushing any feature or fix:
+
+1. **MILESTONES** — find the relevant milestone entry and mark completed items; update counts/status.
+2. **README** — update test coverage counts (unit tests, E2E tests) and milestone status table if applicable.
+
+Commit these documentation updates together with the feature commit (or as a follow-up commit in the same push).
+
 ## Decision-Making Rule
 
 **When uncertain, never guess — ask the user first.**

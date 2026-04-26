@@ -297,12 +297,13 @@ Related plans: `.maister/plans/`
 
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
-| 13.1 | Research config access patterns | ⏳ | — |
-| 13.2 | Implementation plan | ⏳ | — |
-| 13.3 | ConfigRepository (DBAL, `phpbb_config` table) | ⏳ | — |
-| 13.4 | ConfigService (get/set/delete) | ⏳ | — |
-| 13.5 | REST API (`/api/v1/config/` — admin-only) | ⏳ | — |
-| 13.6 | PHPUnit tests | ⏳ | — |
+| 13.1 | Research config access patterns | ✅ | `3a10891` |
+| 13.2 | Implementation plan | ✅ | `3a10891` |
+| 13.3 | ConfigRepository (DBAL, `phpbb_config` table, QB) | ✅ | `3a10891` |
+| 13.4 | ConfigService (get/set/delete/increment, cache) | ✅ | `3a10891` |
+| 13.5 | REST API (`/api/v1/config/` — admin-only, 4 endpoints) | ✅ | `3a10891` |
+| 13.6 | PHPUnit unit + integration tests (22 tests) | ✅ | `3a10891` |
+| 13.7 | Playwright E2E tests (15 tests) | ✅ | `3a10891` |
 
 ---
 

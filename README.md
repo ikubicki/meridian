@@ -56,7 +56,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M10 | React SPA Frontend | ⏳ Planned |
 | M11 | Content Formatting Plugins — BBCode, Markdown, Smilies | ⏳ Planned |
 | M12 | Moderation Service (`phpbb\moderation`) — reports, queue, lock/move | ⏳ Planned |
-| M13 | Configuration Service (`phpbb\config`) — config read/write API | ⏳ Planned |
+| M13 | Configuration Service (`phpbb\config`) — config read/write API | ✅ Done |
 | M14 | Admin Panel (`phpbb\admin`) — admin REST API + React UI | ⏳ Planned |
 
 Security reviews (OWASP Top 10) and load tests (k6) are scheduled between milestones as
@@ -144,7 +144,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **510 PHPUnit tests · 201 E2E tests · 0 CS issues**
+Current coverage: **532 PHPUnit tests · 216 E2E tests · 0 CS issues**
 
 ---
 
