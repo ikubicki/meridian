@@ -4,6 +4,14 @@ services:
         autoconfigure: true
         public: false
 
+    _instanceof:
+        phpbb\content\Contract\PostContentPluginInterface:
+            tags: ['phpbb.post_plugin']
+        phpbb\content\Contract\MediaPluginInterface:
+            tags: ['phpbb.media_plugin']
+        phpbb\content\Contract\MetadataPluginInterface:
+            tags: ['phpbb.metadata_plugin']
+
     phpbb\api\Controller\:
         resource: '../api/Controller/'
         tags: ['controller.service_arguments']
@@ -478,3 +486,5 @@ services:
     phpbb\content\Contract\MetadataServiceInterface:
         alias: phpbb\content\Service\MetadataService
         public: true
+
+    phpbb\content\Plugin\SmiliesPlugin: ~
