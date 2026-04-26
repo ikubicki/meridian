@@ -18,7 +18,7 @@ namespace phpbb\content\Contract;
 
 use phpbb\content\DTO\ContentContext;
 
-interface PostContentPipelineInterface
+interface ThreadsPipelineInterface
 {
 	public function processForSave(string $content, ContentContext $context): string;
 

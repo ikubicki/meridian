@@ -18,7 +18,7 @@ namespace phpbb\api\Controller;
 
 use phpbb\api\DTO\PaginationContext;
 use phpbb\auth\Contract\AuthorizationServiceInterface;
-use phpbb\content\Contract\PostContentPipelineInterface;
+use phpbb\content\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\DTO\CreatePostRequest;
@@ -40,7 +40,7 @@ class PostsController
 		private readonly AuthorizationServiceInterface $authorizationService,
 		private readonly UserRepositoryInterface $userRepository,
 		private readonly EventDispatcherInterface $dispatcher,
-		private readonly PostContentPipelineInterface $contentPipeline,
+		private readonly ThreadsPipelineInterface $contentPipeline,
 	) {
 	}
 

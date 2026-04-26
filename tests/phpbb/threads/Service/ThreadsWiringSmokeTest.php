@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace phpbb\Tests\threads\Service;
 
 use Doctrine\DBAL\Connection;
-use phpbb\content\Pipeline\NullPostContentPipeline;
+use phpbb\content\Pipeline\NullThreadsPipeline;
 use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;
@@ -38,7 +38,7 @@ class ThreadsWiringSmokeTest extends TestCase
 		$connection = $this->createMock(Connection::class);
 		$searchIndexer = $this->createMock(SearchIndexerInterface::class);
 
-		$service = new ThreadsService($topicRepository, $postRepository, $connection, $searchIndexer, new NullPostContentPipeline());
+		$service = new ThreadsService($topicRepository, $postRepository, $connection, $searchIndexer, new NullThreadsPipeline());
 
 		self::assertInstanceOf(ThreadsServiceInterface::class, $service);
 	}

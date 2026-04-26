@@ -17,18 +17,18 @@ declare(strict_types=1);
 namespace phpbb\content\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\PostContentPipelineInterface;
-use phpbb\content\Contract\PostContentPluginInterface;
+use phpbb\content\Contract\ThreadsPipelineInterface;
+use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-final class PostContentPipeline implements PostContentPipelineInterface
+final class ThreadsPipeline implements ThreadsPipelineInterface
 {
 	/**
-	 * @param iterable<PostContentPluginInterface> $plugins
+	 * @param iterable<ThreadsPluginInterface> $plugins
 	 */
 	public function __construct(
-		#[AutowireIterator('phpbb.post_plugin')] private readonly iterable $plugins,
+		#[AutowireIterator('phpbb.threads_plugin')] private readonly iterable $plugins,
 	) {
 	}
 

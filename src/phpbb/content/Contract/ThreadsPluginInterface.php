@@ -20,8 +20,8 @@ use phpbb\content\ContentStage;
 use phpbb\content\DTO\ContentContext;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-#[AutoconfigureTag('phpbb.post_plugin')]
-interface PostContentPluginInterface
+#[AutoconfigureTag('phpbb.threads_plugin')]
+interface ThreadsPluginInterface
 {
 	public function getName(): string;
 

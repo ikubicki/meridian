@@ -16,13 +16,13 @@ declare(strict_types=1);
 
 namespace phpbb\content\Pipeline;
 
-use phpbb\content\Contract\PostContentPipelineInterface;
+use phpbb\content\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
 
 /**
  * No-op pipeline used in tests and environments with no plugins registered.
  */
-final class NullPostContentPipeline implements PostContentPipelineInterface
+final class NullThreadsPipeline implements ThreadsPipelineInterface
 {
 	public function processForSave(string $content, ContentContext $context): string
 	{

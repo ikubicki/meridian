@@ -19,7 +19,7 @@ namespace phpbb\threads;
 use Doctrine\DBAL\Connection;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\common\Event\DomainEventCollection;
-use phpbb\content\Contract\PostContentPipelineInterface;
+use phpbb\content\Contract\ThreadsPipelineInterface;
 use phpbb\content\DTO\ContentContext;
 use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;
@@ -46,7 +46,7 @@ final class ThreadsService implements ThreadsServiceInterface
 		private readonly PostRepositoryInterface $postRepository,
 		private readonly Connection $connection,
 		private readonly SearchIndexerInterface $searchIndexer,
-		private readonly PostContentPipelineInterface $contentPipeline,
+		private readonly ThreadsPipelineInterface $contentPipeline,
 	) {
 	}
 

@@ -17,14 +17,14 @@ declare(strict_types=1);
 namespace phpbb\content\Plugin;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\PostContentPluginInterface;
+use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
 
 /**
  * Converts phpBB smilies text codes to Unicode emoji.
  * Runs at PRE_OUTPUT so emoji are displayed but raw codes are stored.
  */
-final class SmiliesPlugin implements PostContentPluginInterface
+final class SmiliesPlugin implements ThreadsPluginInterface
 {
 	/**
 	 * Map of phpBB smilie codes → Unicode emoji.

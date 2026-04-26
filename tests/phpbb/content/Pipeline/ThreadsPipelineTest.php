@@ -17,14 +17,14 @@ declare(strict_types=1);
 namespace phpbb\Tests\content\Pipeline;
 
 use phpbb\content\ContentStage;
-use phpbb\content\Contract\PostContentPluginInterface;
+use phpbb\content\Contract\ThreadsPluginInterface;
 use phpbb\content\DTO\ContentContext;
-use phpbb\content\Pipeline\PostContentPipeline;
+use phpbb\content\Pipeline\ThreadsPipeline;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class PostContentPipelineTest extends TestCase
+class ThreadsPipelineTest extends TestCase
 {
 	private ContentContext $ctx;
 
@@ -33,9 +33,9 @@ class PostContentPipelineTest extends TestCase
 		$this->ctx = new ContentContext(actorId: 1, forumId: 2, topicId: 3);
 	}
 
-	private function makePlugin(ContentStage $stage, string $suffix): PostContentPluginInterface&MockObject
+	private function makePlugin(ContentStage $stage, string $suffix): ThreadsPluginInterface&MockObject
 	{
-		$plugin = $this->createMock(PostContentPluginInterface::class);
+		$plugin = $this->createMock(ThreadsPluginInterface::class);
 		$plugin->method('supportsStage')->willReturnCallback(static fn (ContentStage $s) => $s === $stage);
 		$plugin->method('process')->willReturnCallback(static fn (string $c) => $c . $suffix);
 
@@ -47,7 +47,7 @@ class PostContentPipelineTest extends TestCase
 	{
 		$preSave    = $this->makePlugin(ContentStage::PRE_SAVE, '[pre]');
 		$preOutput  = $this->makePlugin(ContentStage::PRE_OUTPUT, '[out]');
-		$pipeline   = new PostContentPipeline([$preSave, $preOutput]);
+		$pipeline   = new ThreadsPipeline([$preSave, $preOutput]);
 
 		$result = $pipeline->processForSave('hello', $this->ctx);
 
@@ -59,7 +59,7 @@ class PostContentPipelineTest extends TestCase
 	{
 		$preSave   = $this->makePlugin(ContentStage::PRE_SAVE, '[pre]');
 		$preOutput = $this->makePlugin(ContentStage::PRE_OUTPUT, '[out]');
-		$pipeline  = new PostContentPipeline([$preSave, $preOutput]);
+		$pipeline  = new ThreadsPipeline([$preSave, $preOutput]);
 
 		$result = $pipeline->processForOutput('hello', $this->ctx);
 
@@ -69,7 +69,7 @@ class PostContentPipelineTest extends TestCase
 	#[Test]
 	public function processForSaveWithNoPluginsReturnsOriginalContent(): void
 	{
-		$pipeline = new PostContentPipeline([]);
+		$pipeline = new ThreadsPipeline([]);
 
 		$result = $pipeline->processForSave('original', $this->ctx);
 
@@ -79,7 +79,7 @@ class PostContentPipelineTest extends TestCase
 	#[Test]
 	public function processForOutputWithNoPluginsReturnsOriginalContent(): void
 	{
-		$pipeline = new PostContentPipeline([]);
+		$pipeline = new ThreadsPipeline([]);
 
 		$result = $pipeline->processForOutput('original', $this->ctx);
 
@@ -91,7 +91,7 @@ class PostContentPipelineTest extends TestCase
 	{
 		$first  = $this->makePlugin(ContentStage::PRE_SAVE, '_first');
 		$second = $this->makePlugin(ContentStage::PRE_SAVE, '_second');
-		$pipeline = new PostContentPipeline([$first, $second]);
+		$pipeline = new ThreadsPipeline([$first, $second]);
 
 		$result = $pipeline->processForSave('text', $this->ctx);
 
@@ -101,25 +101,25 @@ class PostContentPipelineTest extends TestCase
 	#[Test]
 	public function pluginNotSupportingStageIsSkipped(): void
 	{
-		$plugin = $this->createMock(PostContentPluginInterface::class);
+		$plugin = $this->createMock(ThreadsPluginInterface::class);
 		$plugin->method('supportsStage')->willReturn(false);
 		$plugin->expects($this->never())->method('process');
 
-		$pipeline = new PostContentPipeline([$plugin]);
+		$pipeline = new ThreadsPipeline([$plugin]);
 		$pipeline->processForSave('text', $this->ctx);
 	}
 
 	#[Test]
 	public function contextIsPassedToPlugin(): void
 	{
-		$plugin = $this->createMock(PostContentPluginInterface::class);
+		$plugin = $this->createMock(ThreadsPluginInterface::class);
 		$plugin->method('supportsStage')->willReturn(true);
 		$plugin->expects($this->once())
 			->method('process')
 			->with('text', $this->ctx)
 			->willReturn('text');
 
-		$pipeline = new PostContentPipeline([$plugin]);
+		$pipeline = new ThreadsPipeline([$plugin]);
 		$pipeline->processForSave('text', $this->ctx);
 	}
 }
