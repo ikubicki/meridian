@@ -34,6 +34,10 @@ final class DbalStoredFileRepositoryTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->connection = $this->createMock(Connection::class);
+		$this->connection->method('createQueryBuilder')
+			->willReturnCallback(fn () => new \Doctrine\DBAL\Query\QueryBuilder($this->connection));
+		$this->connection->method('getDatabasePlatform')
+			->willReturn(new \Doctrine\DBAL\Platforms\SQLitePlatform());
 		$this->repository = new DbalStoredFileRepository($this->connection);
 	}
 
@@ -133,7 +137,7 @@ final class DbalStoredFileRepositoryTest extends TestCase
 	private function makeRow(): array
 	{
 		return [
-			'id'            => 'ABC123',
+			'id'            => 'abc123',
 			'asset_type'    => 'avatar',
 			'visibility'    => 'public',
 			'original_name' => 'avatar.png',

@@ -3,7 +3,7 @@
 -- @license GNU General Public License, version 2 (GPL-2.0)
 
 CREATE TABLE phpbb_stored_files (
-	id            BINARY(16)      NOT NULL,
+	id            CHAR(32)        NOT NULL,
 	asset_type    VARCHAR(20)     NOT NULL,
 	visibility    VARCHAR(10)     NOT NULL,
 	original_name VARCHAR(255)    NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE phpbb_stored_files (
 	filesize      INT UNSIGNED    NOT NULL,
 	checksum      CHAR(64)        NOT NULL,
 	is_orphan     TINYINT(1)      NOT NULL DEFAULT 1,
-	parent_id     BINARY(16)      DEFAULT NULL,
+	parent_id     CHAR(32)        DEFAULT NULL,
 	variant_type  VARCHAR(20)     DEFAULT NULL,
 	uploader_id   INT UNSIGNED    NOT NULL,
 	forum_id      INT UNSIGNED    NOT NULL DEFAULT 0,

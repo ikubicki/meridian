@@ -36,15 +36,12 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function findById(string $fileId): ?StoredFile
 	{
 		try {
-			$row = $this->connection->executeQuery(
-				'SELECT HEX(id) AS id, asset_type, visibility, original_name, physical_name,
-				        mime_type, filesize, checksum, is_orphan, HEX(parent_id) AS parent_id,
-				        variant_type, uploader_id, forum_id, created_at, claimed_at
-				 FROM ' . self::TABLE . '
-				 WHERE id = UNHEX(:id)
-				 LIMIT 1',
-				['id' => $fileId],
-			)->fetchAssociative();
+			$row = $this->buildSelectBase()
+				->where('id = :id')
+				->setParameter('id', $fileId)
+				->setMaxResults(1)
+				->executeQuery()
+				->fetchAssociative();
 
 			return $row !== false ? $this->hydrate($row) : null;
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -55,31 +52,41 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function save(StoredFile $file): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'INSERT INTO ' . self::TABLE . '
-				 (id, asset_type, visibility, original_name, physical_name, mime_type, filesize,
-				  checksum, is_orphan, parent_id, variant_type, uploader_id, forum_id, created_at, claimed_at)
-				 VALUES
-				 (UNHEX(:id), :asset_type, :visibility, :original_name, :physical_name, :mime_type, :filesize,
-				  :checksum, :is_orphan, UNHEX(:parent_id), :variant_type, :uploader_id, :forum_id, :created_at, :claimed_at)',
-				[
-					'id'            => $file->id,
-					'asset_type'    => $file->assetType->value,
-					'visibility'    => $file->visibility->value,
-					'original_name' => $file->originalName,
-					'physical_name' => $file->physicalName,
-					'mime_type'     => $file->mimeType,
-					'filesize'      => $file->filesize,
-					'checksum'      => $file->checksum,
-					'is_orphan'     => (int) $file->isOrphan,
-					'parent_id'     => $file->parentId,
-					'variant_type'  => $file->variantType?->value,
-					'uploader_id'   => $file->uploaderId,
-					'forum_id'      => $file->forumId,
-					'created_at'    => $file->createdAt,
-					'claimed_at'    => $file->claimedAt,
-				],
-			);
+			$this->connection->createQueryBuilder()
+				->insert(self::TABLE)
+				->values([
+					'id'            => ':id',
+					'asset_type'    => ':assetType',
+					'visibility'    => ':visibility',
+					'original_name' => ':originalName',
+					'physical_name' => ':physicalName',
+					'mime_type'     => ':mimeType',
+					'filesize'      => ':filesize',
+					'checksum'      => ':checksum',
+					'is_orphan'     => ':isOrphan',
+					'parent_id'     => ':parentId',
+					'variant_type'  => ':variantType',
+					'uploader_id'   => ':uploaderId',
+					'forum_id'      => ':forumId',
+					'created_at'    => ':createdAt',
+					'claimed_at'    => ':claimedAt',
+				])
+				->setParameter('id', $file->id)
+				->setParameter('assetType', $file->assetType->value)
+				->setParameter('visibility', $file->visibility->value)
+				->setParameter('originalName', $file->originalName)
+				->setParameter('physicalName', $file->physicalName)
+				->setParameter('mimeType', $file->mimeType)
+				->setParameter('filesize', $file->filesize)
+				->setParameter('checksum', $file->checksum)
+				->setParameter('isOrphan', (int) $file->isOrphan)
+				->setParameter('parentId', $file->parentId)
+				->setParameter('variantType', $file->variantType?->value)
+				->setParameter('uploaderId', $file->uploaderId)
+				->setParameter('forumId', $file->forumId)
+				->setParameter('createdAt', $file->createdAt)
+				->setParameter('claimedAt', $file->claimedAt)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to save stored file', previous: $e);
 		}
@@ -88,10 +95,11 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function delete(string $fileId): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'DELETE FROM ' . self::TABLE . ' WHERE id = UNHEX(:id)',
-				['id' => $fileId],
-			);
+			$this->connection->createQueryBuilder()
+				->delete(self::TABLE)
+				->where('id = :id')
+				->setParameter('id', $fileId)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to delete stored file', previous: $e);
 		}
@@ -100,14 +108,12 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function findOrphansBefore(int $timestamp): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT HEX(id) AS id, asset_type, visibility, original_name, physical_name,
-				        mime_type, filesize, checksum, is_orphan, HEX(parent_id) AS parent_id,
-				        variant_type, uploader_id, forum_id, created_at, claimed_at
-				 FROM ' . self::TABLE . '
-				 WHERE is_orphan = 1 AND created_at < :ts',
-				['ts' => $timestamp],
-			)->fetchAllAssociative();
+			$rows = $this->buildSelectBase()
+				->where('is_orphan = 1')
+				->andWhere('created_at < :ts')
+				->setParameter('ts', $timestamp)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			return array_map($this->hydrate(...), $rows);
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -118,10 +124,14 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function markClaimed(string $fileId, int $claimedAt): void
 	{
 		try {
-			$this->connection->executeStatement(
-				'UPDATE ' . self::TABLE . ' SET is_orphan = 0, claimed_at = :claimed_at WHERE id = UNHEX(:id)',
-				['id' => $fileId, 'claimed_at' => $claimedAt],
-			);
+			$this->connection->createQueryBuilder()
+				->update(self::TABLE)
+				->set('is_orphan', '0')
+				->set('claimed_at', ':claimedAt')
+				->where('id = :id')
+				->setParameter('id', $fileId)
+				->setParameter('claimedAt', $claimedAt)
+				->executeStatement();
 		} catch (\Doctrine\DBAL\Exception $e) {
 			throw new RepositoryException('Failed to mark file as claimed', previous: $e);
 		}
@@ -130,14 +140,11 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 	public function findVariants(string $parentId): array
 	{
 		try {
-			$rows = $this->connection->executeQuery(
-				'SELECT HEX(id) AS id, asset_type, visibility, original_name, physical_name,
-				        mime_type, filesize, checksum, is_orphan, HEX(parent_id) AS parent_id,
-				        variant_type, uploader_id, forum_id, created_at, claimed_at
-				 FROM ' . self::TABLE . '
-				 WHERE parent_id = UNHEX(:parent_id)',
-				['parent_id' => $parentId],
-			)->fetchAllAssociative();
+			$rows = $this->buildSelectBase()
+				->where('parent_id = :parentId')
+				->setParameter('parentId', $parentId)
+				->executeQuery()
+				->fetchAllAssociative();
 
 			return array_map($this->hydrate(...), $rows);
 		} catch (\Doctrine\DBAL\Exception $e) {
@@ -145,10 +152,33 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 		}
 	}
 
+	private function buildSelectBase(): \Doctrine\DBAL\Query\QueryBuilder
+	{
+		return $this->connection->createQueryBuilder()
+			->select(
+				'id',
+				'asset_type',
+				'visibility',
+				'original_name',
+				'physical_name',
+				'mime_type',
+				'filesize',
+				'checksum',
+				'is_orphan',
+				'parent_id',
+				'variant_type',
+				'uploader_id',
+				'forum_id',
+				'created_at',
+				'claimed_at',
+			)
+			->from(self::TABLE);
+	}
+
 	private function hydrate(array $row): StoredFile
 	{
 		return new StoredFile(
-			id:           strtolower((string) $row['id']),
+			id:           (string) $row['id'],
 			assetType:    AssetType::from($row['asset_type']),
 			visibility:   FileVisibility::from($row['visibility']),
 			originalName: $row['original_name'],
@@ -157,7 +187,7 @@ final class DbalStoredFileRepository implements StoredFileRepositoryInterface
 			filesize:     (int) $row['filesize'],
 			checksum:     $row['checksum'],
 			isOrphan:     (bool) $row['is_orphan'],
-			parentId:     isset($row['parent_id']) ? strtolower((string) $row['parent_id']) : null,
+			parentId:     isset($row['parent_id']) ? (string) $row['parent_id'] : null,
 			variantType:  isset($row['variant_type']) ? VariantType::tryFrom($row['variant_type']) : null,
 			uploaderId:   (int) $row['uploader_id'],
 			forumId:      (int) $row['forum_id'],
