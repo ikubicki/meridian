@@ -16,13 +16,17 @@ declare(strict_types=1);
 
 namespace phpbb\config\Contract;
 
-interface ConfigRepositoryInterface
+interface ConfigServiceInterface
 {
 	public function get(string $key, string $default = ''): string;
 
-	public function set(string $key, string $value, bool $isDynamic = false): void;
+	public function getInt(string $key, int $default = 0): int;
 
-	public function getAll(bool $dynamicOnly = false): array;
+	public function getBool(string $key, bool $default = false): bool;
+
+	public function getAll(): array;
+
+	public function set(string $key, string $value, bool $isDynamic = false): void;
 
 	public function increment(string $key, int $by = 1): void;
 

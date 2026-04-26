@@ -43,6 +43,19 @@ services:
         factory: ['@phpbb\cache\CachePoolFactoryInterface', 'getPool']
         arguments: ['search']
 
+    phpbb.cache.pool.config:
+        class: phpbb\cache\CachePool
+        factory: ['@phpbb\cache\CachePoolFactoryInterface', 'getPool']
+        arguments: ['config']
+
+    phpbb\config\Service\ConfigService:
+        arguments:
+            $cacheTtl: 3600
+
+    phpbb\config\Contract\ConfigServiceInterface:
+        alias: phpbb\config\Service\ConfigService
+        public: true
+
     # ---------------------------------------------------------------------------
     # Database connection (Doctrine DBAL 4 — no ORM, no DoctrineBundle)
     # ---------------------------------------------------------------------------
