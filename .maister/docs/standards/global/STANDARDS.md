@@ -3,6 +3,15 @@
 Conventions for the phpBB Vibed project targeting **PHP 8.2+** (minimum requirement) and PSR-1/PSR-12 compliance. The current runtime is **PHP 8.4** (8.4.20).
 Legacy rules (phpBB 3.3 `includes/` layer) are preserved in a clearly labelled section below.
 
+## Documentation Language
+
+**All documentation must be written in English.** This covers:
+- Standards and architecture documents (`.maister/docs/`)
+- `MILESTONES.md`, `README.md`, and all project-level markdown
+- Code comments, PHPDoc blocks, and inline notes
+- Commit messages
+- Task plans, research notes, and implementation plans (`.maister/tasks/`)
+
 ## Naming Conventions
 
 ### New Code (PHP 8.2+ / PSR-1)

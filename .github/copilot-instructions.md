@@ -40,6 +40,17 @@ Commit these documentation updates together with the feature commit (or as a fol
 **When uncertain, never guess — ask the user first.**
 If the user doesn't know either, analyse the codebase to find the answer before proceeding.
 
+## Documentation Language
+
+**All documentation must be written in English.** This applies to:
+- `.maister/docs/` standards and architecture documents
+- `.maister/MILESTONES.md` and `README.md`
+- Code comments, PHPDoc blocks, and inline notes
+- Commit messages
+- Task plans, research notes, and implementation plans under `.maister/tasks/`
+
+Conversations with the user may remain in any language.
+
 ## Key Reminders
 
 - This is a **phpBB rewrite** targeting **Symfony 8.x**, **PHP 8.2+**, **React SPA** frontend.
