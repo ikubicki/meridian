@@ -52,7 +52,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M6 | Threads Service (`phpbb\threads`) — topics + posts | ✅ Done |
 | M7 | Messaging Service (`phpbb\messaging`) — private conversations | ✅ Done |
 | M8 | Notifications Service (`phpbb\notifications`) — HTTP polling, mark-read | ✅ Done |
-| M9 | Search Service (`phpbb\search`) | ⏳ Planned |
+| M9 | Search Service (`phpbb\search`) — full-text, NativeDriver, cache | ✅ Done |
 | M10 | React SPA Frontend | ⏳ Planned |
 
 Security reviews (OWASP Top 10) and load tests (k6) are scheduled between milestones as
@@ -92,6 +92,8 @@ src/
     db/               # DBAL connection factory + migrations
     hierarchy/        # Forum/category tree (M5a)
     messaging/        # Private conversations (M7)
+    notifications/    # HTTP-polling notifications (M8)
+    search/           # Pluggable full-text search: Like/FullText/Native drivers (M9)
     storage/          # File/attachment storage — Flysystem (M5b)
     threads/          # Topics + posts
     user/             # User entities, ban service
@@ -138,7 +140,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **436 PHPUnit tests · 168 E2E tests · 0 CS issues**
+Current coverage: **494 PHPUnit tests · 178 E2E tests · 0 CS issues**
 
 ---
 

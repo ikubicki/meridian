@@ -232,10 +232,16 @@ Related plans: `.maister/plans/`
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
 | 9.1 | Research search | ✅ | `tasks/research/` |
-| 9.2 | Implementation plan | ⏳ | — |
-| 9.3 | ISP architecture + backends | ⏳ | — |
-| 9.4 | PHPUnit tests | ⏳ | — |
-| 9.5 | Playwright E2E tests (`/api/v1/search/`) | ⏳ | — |
+| 9.2 | Initial implementation plan (LikeDriver / FullTextDriver / Elasticsearch stub) | ✅ | — |
+| 9.3 | SearchQuery DTO + interface refactor (`sortBy`, `searchIn`, `dateFrom`, `dateTo`) | ✅ | `plans/2026-04-26-search-service.md` Group 1 |
+| 9.4 | DB Migration: `phpbb_search_wordlist` + `phpbb_search_wordmatch` | ✅ | `plans/2026-04-26-search-service.md` Group 2 |
+| 9.5 | NativeTokenizer + NativeDriver (własny indeks słów) | ✅ | `plans/2026-04-26-search-service.md` Group 3 |
+| 9.6 | SearchIndexerService + NullSearchIndexer + ThreadsService wiring (create) | ✅ | `plans/2026-04-26-search-service.md` Group 4 |
+| 9.7 | Cache wyników (TagAwareCacheInterface, tag `search`, TTL z config) | ✅ | `plans/2026-04-26-search-service.md` Group 5 |
+| 9.8 | PHPUnit tests (494 total, +36 nowych) | ✅ | `plans/2026-04-26-search-service.md` Group 6 |
+| 9.9 | Playwright E2E tests — 10 testów (`/api/v1/search/`), UC-S1–S5 + UC-SR4/5/6/9 | ✅ | `plans/2026-04-26-search-service.md` Group 7 |
+| 9.10 | LikeDriver / FullTextDriver / ElasticsearchDriver (podstawowe backendy) | ✅ | Initial implementation |
+| 9.11 | SearchIndexerService wiring: editPost / deletePost | ⏳ | Wymaga M6 editPost/deletePost |
 
 ---
 
