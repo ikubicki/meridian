@@ -19,6 +19,7 @@ namespace phpbb\threads;
 use Doctrine\DBAL\Connection;
 use phpbb\api\DTO\PaginationContext;
 use phpbb\common\Event\DomainEventCollection;
+use phpbb\search\Contract\SearchIndexerInterface;
 use phpbb\threads\Contract\PostRepositoryInterface;
 use phpbb\threads\Contract\ThreadsServiceInterface;
 use phpbb\threads\Contract\TopicRepositoryInterface;
@@ -36,6 +37,7 @@ final class ThreadsService implements ThreadsServiceInterface
 		private readonly TopicRepositoryInterface $topicRepository,
 		private readonly PostRepositoryInterface $postRepository,
 		private readonly Connection $connection,
+		private readonly SearchIndexerInterface $searchIndexer,
 	) {
 	}
 
@@ -92,6 +94,8 @@ final class ThreadsService implements ThreadsServiceInterface
 
 			throw new \RuntimeException('Failed to create topic', previous: $e);
 		}
+
+		$this->searchIndexer->indexPost($postId, $request->content, $request->title, $request->forumId);
 
 		return new DomainEventCollection([
 			new TopicCreatedEvent(entityId: $topicId, actorId: $request->actorId),
@@ -154,6 +158,8 @@ final class ThreadsService implements ThreadsServiceInterface
 
 			throw new \RuntimeException('Failed to create post', previous: $e);
 		}
+
+		$this->searchIndexer->indexPost($postId, $request->content, 'Re: ' . $topic->title, $topic->forumId);
 
 		return new DomainEventCollection([
 			new PostCreatedEvent(entityId: $postId, actorId: $request->actorId),

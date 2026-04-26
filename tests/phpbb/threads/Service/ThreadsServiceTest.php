@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace phpbb\Tests\threads\Service;
 
 use phpbb\api\DTO\PaginationContext;
+use phpbb\search\Service\NullSearchIndexer;
 use phpbb\Tests\Integration\IntegrationTestCase;
 use phpbb\threads\DTO\CreatePostRequest;
 use phpbb\threads\DTO\CreateTopicRequest;
@@ -75,6 +76,7 @@ class ThreadsServiceTest extends IntegrationTestCase
 			topicRepository: $this->topicRepository,
 			postRepository: $this->postRepository,
 			connection: $this->connection,
+			searchIndexer: new NullSearchIndexer(),
 		);
 	}
 
