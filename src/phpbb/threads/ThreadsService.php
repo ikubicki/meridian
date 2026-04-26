@@ -46,7 +46,7 @@ final class ThreadsService implements ThreadsServiceInterface
 		private readonly PostRepositoryInterface $postRepository,
 		private readonly Connection $connection,
 		private readonly SearchIndexerInterface $searchIndexer,
-		private readonly ThreadsPipelineInterface $contentPipeline,
+		private readonly ThreadsPipelineInterface $threadsPipeline,
 	) {
 	}
 
@@ -88,7 +88,7 @@ final class ThreadsService implements ThreadsServiceInterface
 	{
 		$now = time();
 		$ctx            = new ContentContext(actorId: $request->actorId, forumId: $request->forumId);
-		$processedContent = $this->contentPipeline->processForSave($request->content, $ctx);
+		$processedContent = $this->threadsPipeline->processForSave($request->content, $ctx);
 
 		$this->connection->beginTransaction();
 
@@ -148,7 +148,7 @@ final class ThreadsService implements ThreadsServiceInterface
 
 		$now = time();
 		$ctx              = new ContentContext(actorId: $request->actorId, forumId: $topic->forumId, topicId: $request->topicId);
-		$processedContent = $this->contentPipeline->processForSave($request->content, $ctx);
+		$processedContent = $this->threadsPipeline->processForSave($request->content, $ctx);
 
 		$this->connection->beginTransaction();
 
@@ -234,7 +234,7 @@ final class ThreadsService implements ThreadsServiceInterface
 		}
 
 		$ctx              = new ContentContext(actorId: $request->actorId, forumId: $post->forumId, topicId: $post->topicId);
-		$processedContent = $this->contentPipeline->processForSave($content, $ctx);
+		$processedContent = $this->threadsPipeline->processForSave($content, $ctx);
 
 		$this->postRepository->updateContent($request->postId, $processedContent);
 

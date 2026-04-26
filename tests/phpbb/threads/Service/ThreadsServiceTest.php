@@ -80,7 +80,7 @@ class ThreadsServiceTest extends IntegrationTestCase
 			postRepository: $this->postRepository,
 			connection: $this->connection,
 			searchIndexer: new NullSearchIndexer(),
-			contentPipeline: new NullThreadsPipeline(),
+			threadsPipeline: new NullThreadsPipeline(),
 		);
 	}
 

@@ -40,7 +40,7 @@ class PostsController
 		private readonly AuthorizationServiceInterface $authorizationService,
 		private readonly UserRepositoryInterface $userRepository,
 		private readonly EventDispatcherInterface $dispatcher,
-		private readonly ThreadsPipelineInterface $contentPipeline,
+		private readonly ThreadsPipelineInterface $threadsPipeline,
 	) {
 	}
 
@@ -198,7 +198,7 @@ class PostsController
 	private function postToArray(PostDTO $dto): array
 	{
 		$ctx     = new ContentContext(actorId: $dto->authorId, forumId: $dto->forumId, topicId: $dto->topicId);
-		$content = $this->contentPipeline->processForOutput($dto->content, $ctx);
+		$content = $this->threadsPipeline->processForOutput($dto->content, $ctx);
 
 		return [
 			'id'             => $dto->id,

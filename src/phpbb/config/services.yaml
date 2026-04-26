@@ -215,7 +215,7 @@ services:
             $postRepository: '@phpbb\threads\Contract\PostRepositoryInterface'
             $connection: '@Doctrine\DBAL\Connection'
             $searchIndexer: '@phpbb\search\Contract\SearchIndexerInterface'
-            $contentPipeline: '@phpbb\threads\Contract\ThreadsPipelineInterface'
+            $threadsPipeline: '@phpbb\threads\Contract\ThreadsPipelineInterface'
 
     phpbb\threads\Contract\ThreadsServiceInterface:
         alias: phpbb\threads\ThreadsService
