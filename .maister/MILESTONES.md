@@ -264,17 +264,60 @@ Related plans: `.maister/plans/`
 
 ---
 
-## M11 — Content Formatting Plugins
+## M11a — Plugin System (`phpbb\plugin`)
+
+> Źródło: `.maister/tasks/research/2026-04-26-content-plugins/`
+
+### Content Pipeline
 
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
-| 11.1 | Research content pipeline (BBCode, Markdown, Smilies) | ⏳ | — |
-| 11.2 | Implementation plan | ⏳ | — |
-| 11.3 | s9e text-formatter integration + `encoding_engine` column | ⏳ | — |
-| 11.4 | BBCode plugin | ⏳ | — |
-| 11.5 | Markdown plugin | ⏳ | — |
-| 11.6 | Smilies plugin | ⏳ | — |
-| 11.7 | PHPUnit tests | ⏳ | — |
+| 11a.1 | Research content plugin injection | ✅ | `tasks/research/2026-04-26-content-plugins/` |
+| 11a.2 | High-level design (ADR-001…ADR-005) | ✅ | `tasks/research/2026-04-26-content-plugins/outputs/high-level-design.md` |
+| 11a.3 | `ContentStage` enum (PRE_SAVE, POST_SAVE, PRE_OUTPUT) | ⏳ | — |
+| 11a.4 | `PostContentPluginInterface` + `#[AutoconfigureTag]` | ⏳ | — |
+| 11a.5 | `PostContentPipeline` (priority, config-driven enable) | ⏳ | — |
+| 11a.6 | Injection w `ThreadsService` (PRE_SAVE) + `PostsController::postToArray()` (PRE_OUTPUT) | ⏳ | — |
+| 11a.7 | `MediaPluginInterface` + `MediaPipeline` (async Messenger) | ⏳ | — |
+| 11a.8 | Wbudowany plugin: Censor (`CensorPlugin`) | ⏳ | — |
+| 11a.9 | Wbudowany plugin: s9e Legacy (`S9eLegacyPlugin`, `canProcess()`) | ⏳ | — |
+| 11a.10 | `ConfigTextService` (serwis dla `phpbb_config_text`) | ⏳ | — |
+| 11a.11 | PHPUnit tests | ⏳ | — |
+| 11a.12 | Playwright E2E tests | ⏳ | — |
+
+### Metadata Plugin System
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 11a.13 | High-level design (ADR-006…ADR-008) | ✅ | `tasks/research/2026-04-26-content-plugins/outputs/high-level-design.md` |
+| 11a.14 | Kandydaci do metadata (schema analysis) | ✅ | `tasks/research/2026-04-26-content-plugins/outputs/schema-metadata-candidates.md` |
+| 11a.15 | `MetadataEntity` enum (POST, TOPIC, FORUM, USER, ATTACHMENT) | ⏳ | — |
+| 11a.16 | `MetadataPluginInterface` + `#[AutoconfigureTag('phpbb.metadata_plugin')]` | ⏳ | — |
+| 11a.17 | `MetadataService` (read/write JSON blob, schema validation, permission filter) | ⏳ | — |
+| 11a.18 | DB migration: `ADD COLUMN metadata MEDIUMTEXT NULL` (5 tabel) | ⏳ | — |
+| 11a.19 | REST: pole `metadata` w odpowiedziach encji + PATCH partial update | ⏳ | — |
+| 11a.20 | REST: `GET /api/v1/metadata/schema?entity={type}` | ⏳ | — |
+| 11a.21 | Wbudowane pluginy `phpbb_users`: birthday, jabber, sig, rank, UI prefs (6×) | ⏳ | — |
+| 11a.22 | Migracja danych: kolumny → JSON blob (15 kolumn `phpbb_users`) | ⏳ | — |
+| 11a.23 | `DROP COLUMN` dla zmigrowanych kolumn | ⏳ | — |
+| 11a.24 | Likwidacja tabel `phpbb_profile_fields*` (4 tabele → metadata) | ⏳ | — |
+| 11a.25 | PHPUnit tests | ⏳ | — |
+| 11a.26 | Playwright E2E tests | ⏳ | — |
+
+---
+
+## M11b — Content Formatting Plugins _(wymaga M11a)_
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 11b.1 | Research content pipeline (BBCode, Markdown, Smilies) | ⏳ | — |
+| 11b.2 | Implementation plan | ⏳ | — |
+| 11b.3 | s9e text-formatter integration | ⏳ | — |
+| 11b.4 | BBCode plugin (`PostContentPluginInterface`) | ⏳ | — |
+| 11b.5 | Markdown plugin (`PostContentPluginInterface`) | ⏳ | — |
+| 11b.6 | Smilies plugin (`PostContentPluginInterface`) | ⏳ | — |
+| 11b.7 | PHPUnit tests | ⏳ | — |
+| 11b.8 | Playwright E2E tests | ⏳ | — |
 
 ---
 
@@ -352,11 +395,12 @@ Research available: `tasks/research/`
 
 1. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
 2. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
-3. **M11: Content Formatting Plugins** — BBCode, Markdown, Smilies (s9e)
-4. **M12: Moderation Service** — reports, queue, moderator actions
-5. **M13: Configuration Service** — unified config replacing `$config` global
-6. **M14: Admin Panel** — ACP REST API + React admin UI
+3. **M11a: Plugin System** — content pipeline (PRE_SAVE/POST_SAVE/PRE_OUTPUT), media plugins, metadata plugins + schema cleanup
+4. **M11b: Content Formatting Plugins** _(wymaga M11a)_ — BBCode, Markdown, Smilies (s9e)
+5. **M12: Moderation Service** — reports, queue, moderator actions
+6. **M13: Configuration Service** — unified config replacing `$config` global
+7. **M14: Admin Panel** — ACP REST API + React admin UI
 
 ---
 
-*Last updated: 2026-04-25 (M8 Notifications Service complete; 436 PHPUnit / 168 E2E)*
+*Last updated: 2026-04-26 (M11a Plugin System zaplanowany; research + HLD gotowe — M11b Content Plugins zależy od M11a)*

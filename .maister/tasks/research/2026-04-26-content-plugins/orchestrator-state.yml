@@ -1,0 +1,30 @@
+task_path: .maister/tasks/research/2026-04-26-content-plugins
+research_context:
+  research_type: mixed
+  research_question: "How to inject content-type plugins (bbcode, markdown, smiles, censor) to process content before saving or before sending in responses?"
+  scope:
+    included:
+      - Plugin/middleware injection architecture
+      - Processing pipeline for post/message content
+      - phpBB original event/hook system patterns
+      - Symfony EventDispatcher and tagged services
+      - Pre-save hooks (controller/service layer)
+      - Pre-response transformation (serialization layer)
+    excluded:
+      - Frontend rendering only (React-side rendering)
+      - CSS/styling of formatted output
+    constraints:
+      - Must follow phpbb\ namespace, Symfony 8.x DI, PSR-4
+      - Must be compatible with REST API response format
+  methodology: []
+  sources: []
+  confidence_level: null
+  gathering_strategy: null
+  phase_summaries: {}
+
+options:
+  brainstorming_enabled: null
+  design_enabled: null
+
+current_phase: 1
+current_step: 1
