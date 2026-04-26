@@ -140,7 +140,7 @@ composer cs:fix
 
 All three must pass before any change is considered complete.
 
-Current coverage: **494 PHPUnit tests · 178 E2E tests · 0 CS issues**
+Current coverage: **510 PHPUnit tests · 201 E2E tests · 0 CS issues**
 
 ---
 
