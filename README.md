@@ -56,6 +56,7 @@ service with its own repository layer, service facade, REST controller, and full
 | M10 | React SPA Frontend | ⏳ Planned |
 | M11a | Plugin System — content pipeline (`phpbb\threads`), storage pipeline, metadata + SmiliesPlugin | ✅ Done |
 | M11b | Content Formatting Plugins — BBCode, Markdown, Smilies _(requires M11a)_ | ⏳ Planned |
+| M11c | Plugin Registry + Install API — Ed25519-signed centralised registry _(requires M11a)_ | ⏳ Planned |
 | M12 | Moderation Service (`phpbb\moderation`) — reports, queue, lock/move | ⏳ Planned |
 | M13 | Configuration Service (`phpbb\config`) — config read/write API | ✅ Done |
 | M14 | Admin Panel (`phpbb\admin`) — admin REST API + React UI | ⏳ Planned |

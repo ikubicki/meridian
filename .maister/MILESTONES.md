@@ -322,6 +322,37 @@ Related plans: `.maister/plans/`
 
 ---
 
+## M11c — Plugin Registry + Install API _(requires M11a)_
+
+> Centralised plugin distribution with mandatory code review before release.
+> Plugins are signed by the registry; the install endpoint verifies signature before writing to disk.
+
+### Registry Service (external — `plugins.meridian.io`)
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 11c.1 | Design: data model (plugin, version, author, signature, status) | ⏳ | — |
+| 11c.2 | Registry REST API: `GET /plugins`, `GET /plugins/{slug}/{version}`, `POST /plugins` (submit) | ⏳ | — |
+| 11c.3 | Ed25519 signing service — signs approved `.php` payload after review | ⏳ | — |
+| 11c.4 | Review workflow: submitted → under-review → approved / rejected | ⏳ | — |
+| 11c.5 | SHA-256 manifest per version | ⏳ | — |
+
+### Meridian Install API (`phpbb\plugins\registry`)
+
+| # | Task | Status | Plan / Commit |
+|---|------|--------|---------------|
+| 11c.6 | `POST /api/v1/plugins/install` — admin elevated token required | ⏳ | — |
+| 11c.7 | Fetch plugin manifest + `.php` from registry | ⏳ | — |
+| 11c.8 | Verify Ed25519 signature + SHA-256 hash (reject if mismatch) | ⏳ | — |
+| 11c.9 | Write to `src/phpbb/plugins/{ClassName}.php` | ⏳ | — |
+| 11c.10 | Clear DI cache + warm-up trigger (`GET /api/v1/health` internally) | ⏳ | — |
+| 11c.11 | `DELETE /api/v1/plugins/{slug}` — remove plugin + clear cache | ⏳ | — |
+| 11c.12 | `GET /api/v1/plugins` — list installed plugins (name, version, interface) | ⏳ | — |
+| 11c.13 | PHPUnit tests | ⏳ | — |
+| 11c.14 | Playwright E2E tests | ⏳ | — |
+
+---
+
 ## M12 — Moderation Service (`phpbb\moderation`)
 
 | # | Task | Status | Plan / Commit |
@@ -397,12 +428,13 @@ Research available: `tasks/research/`
 **⏳ Priority Backlog:**
 
 1. **M11b: Content Formatting Plugins** _(requires M11a ✅)_ — BBCode, Markdown, Smilies (s9e), CensorPlugin
-2. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
-3. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
-4. **M12: Moderation Service** — reports, queue, moderator actions
-5. **M13: Configuration Service** — unified config replacing `$config` global
-6. **M14: Admin Panel** — ACP REST API + React admin UI
+2. **M11c: Plugin Registry + Install API** _(requires M11a ✅)_ — centralised registry, Ed25519 signing, install endpoint
+3. **M9: Search Service** — MySQL FT + Sphinx + pluggable ISP backends
+4. **M10: React SPA Frontend** — Vite + TypeScript, consuming `/api/v1/`
+5. **M12: Moderation Service** — reports, queue, moderator actions
+6. **M13: Configuration Service** — unified config replacing `$config` global
+7. **M14: Admin Panel** — ACP REST API + React admin UI
 
 ---
 
-*Last updated: 2026-04-26 (M11a Plugin System ✅ — 591 PHPUnit + 216 E2E; SmiliesPlugin + refactors: MediaPlugin→StoragePlugin, PostContentPlugin→ThreadsPlugin, phpbb\plugins namespace)*
+*Last updated: 2026-04-27 (M11c Plugin Registry + Install API added to backlog)*
