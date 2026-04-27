@@ -327,7 +327,7 @@ Related plans: `.maister/plans/`
 > Centralised plugin distribution with mandatory code review before release.
 > Plugins are signed by the registry; the install endpoint verifies signature before writing to disk.
 
-### Registry Service (external — `plugins.meridian.io`)
+### Registry Service (external — `plugins.phpbb.com`)
 
 | # | Task | Status | Plan / Commit |
 |---|------|--------|---------------|
